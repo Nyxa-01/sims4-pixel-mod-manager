@@ -38,9 +38,7 @@ class TestModManagerException:
 
     def test_exception_with_recovery_hint(self):
         """Test exception with recovery suggestion."""
-        exc = ModManagerException(
-            "Test error", error_code="TEST002", recovery_hint="Try again"
-        )
+        exc = ModManagerException("Test error", error_code="TEST002", recovery_hint="Try again")
         assert "Try again" in str(exc)
         assert exc.recovery_hint == "Try again"
 
@@ -126,9 +124,7 @@ class TestBackupError:
     def test_backup_error_auto_message(self):
         """Test backup error builds message from parameters."""
         path = Path("C:/backups/mod_backup.zip")
-        exc = BackupError(
-            backup_path=path, operation_type="create", reason="Disk full"
-        )
+        exc = BackupError(backup_path=path, operation_type="create", reason="Disk full")
         assert "create" in str(exc)
         assert "Disk full" in str(exc)
         assert exc.backup_path == path
@@ -182,7 +178,7 @@ class TestSecurityError:
         exc = SecurityError(
             threat_type="oversized_file",
             affected_path=Path("huge.package"),
-            details="File exceeds 500MB limit"
+            details="File exceeds 500MB limit",
         )
         assert "oversized_file" in str(exc) or "500MB" in str(exc) or "exceeds" in str(exc)
 
@@ -193,9 +189,7 @@ class TestSecurityError:
 
     def test_security_error_with_kwargs(self):
         """Test security error stores additional context."""
-        exc = SecurityError(
-            threat_type="hash_mismatch", file_size=1024, expected_hash="abc123"
-        )
+        exc = SecurityError(threat_type="hash_mismatch", file_size=1024, expected_hash="abc123")
         assert exc.context["file_size"] == 1024
         assert exc.context["expected_hash"] == "abc123"
 
@@ -212,9 +206,7 @@ class TestGameProcessError:
 
     def test_game_process_error_with_action(self):
         """Test game process error with action."""
-        exc = GameProcessError(
-            process_name="TS4.exe", action="terminate", reason="Timeout"
-        )
+        exc = GameProcessError(process_name="TS4.exe", action="terminate", reason="Timeout")
         assert "terminate" in str(exc)
 
     def test_game_process_error_default_recovery_hint(self):
@@ -258,11 +250,7 @@ class TestLoadOrderError:
 
     def test_load_order_error_with_category(self):
         """Test load order error with category and slot."""
-        exc = LoadOrderError(
-            validation_failure="Invalid slot",
-            category="CoreScripts",
-            slot=1
-        )
+        exc = LoadOrderError(validation_failure="Invalid slot", category="CoreScripts", slot=1)
         assert "CoreScripts" in str(exc)
         assert "slot=1" in str(exc)
 

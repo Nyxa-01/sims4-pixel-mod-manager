@@ -12,7 +12,7 @@ from src.ui.main_window import HelpDialog, MainWindow, SettingsDialog
 # Skip all UI tests in CI environment (no display available)
 pytestmark = pytest.mark.skipif(
     os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true",
-    reason="UI tests require display (not available in CI)"
+    reason="UI tests require display (not available in CI)",
 )
 
 
@@ -88,7 +88,7 @@ class TestMainWindowInit:
                 "accent": "#0f3460",
                 "success": "#53d769",
                 "warning": "#ffd60a",
-                "error": "#ff453a"
+                "error": "#ff453a",
             }.get(k, "#000000")
             mock_theme.get_instance.return_value = mock_instance
 
@@ -172,7 +172,7 @@ class TestMainWindowActions:
         """Test scan prompts for folder if not configured."""
         # Config returns empty string, and Path("").exists() returns False
         main_window.config.get.return_value = ""
-        
+
         with (
             patch("src.ui.main_window.Path") as mock_path,
             patch("src.ui.main_window.filedialog.askdirectory") as mock_dialog,
@@ -500,4 +500,7 @@ class TestIntegration:
 
         # Verify deployment was initiated or structure generated
         status_text = main_window.status_label.cget("text")
-        assert any(keyword in status_text for keyword in ["Deploying", "cancelled", "generated", "Structure"])
+        assert any(
+            keyword in status_text
+            for keyword in ["Deploying", "cancelled", "generated", "Structure"]
+        )

@@ -31,7 +31,7 @@ class TestModScannerCoverageExtended:
         """Test scanning file that exceeds size limit."""
         # Create scanner with very small size limit
         small_scanner = ModScanner(max_file_size_mb=0)  # 0 MB limit
-        
+
         package = tmp_path / "large_mod.package"
         package.write_bytes(b"DBPF" + b"\x00" * 1000)
 
@@ -90,6 +90,7 @@ class TestModScannerCoverageExtended:
     def test_calculate_entropy_random_content(self, scanner, tmp_path):
         """Test entropy calculation on random-like content (high entropy)."""
         import os
+
         random_file = tmp_path / "random.package"
         random_file.write_bytes(os.urandom(8192))
 
@@ -100,6 +101,7 @@ class TestModScannerCoverageExtended:
     def test_calculate_entropy_exceeds_threshold(self, scanner, tmp_path):
         """Test entropy exceeding threshold raises SecurityError."""
         import os
+
         suspicious_file = tmp_path / "suspicious.package"
         suspicious_file.write_bytes(os.urandom(8192))
 

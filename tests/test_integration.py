@@ -20,7 +20,9 @@ from src.utils.game_detector import GameDetector
 class TestFullWorkflow:
     """Test complete mod management workflow."""
 
-    @pytest.mark.skip(reason="Workflow redesign needed - generate_structure() creates folders but doesn't copy mod files")
+    @pytest.mark.skip(
+        reason="Workflow redesign needed - generate_structure() creates folders but doesn't copy mod files"
+    )
     def test_scan_organize_deploy_cycle(
         self,
         temp_incoming_dir: Path,
@@ -487,7 +489,9 @@ class TestErrorRecovery:
         # Verify should detect corruption
         is_valid, message = backup_mgr.verify_backup(corrupted)
         assert not is_valid
-        assert "zip" in message.lower() or "corrupt" in message.lower() or "invalid" in message.lower()
+        assert (
+            "zip" in message.lower() or "corrupt" in message.lower() or "invalid" in message.lower()
+        )
 
         # Restore should fail gracefully (returns False, doesn't raise)
         try:

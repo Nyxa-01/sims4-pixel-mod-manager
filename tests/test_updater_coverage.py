@@ -31,10 +31,7 @@ class TestUpdaterCoverageExtended:
         mock_response.__exit__ = Mock(return_value=False)
 
         with patch("src.utils.updater.urlopen", return_value=mock_response):
-            result = updater.download_update(
-                "https://example.com/update.exe",
-                dest_file
-            )
+            result = updater.download_update("https://example.com/update.exe", dest_file)
 
         assert result is True
         assert dest_file.exists()
@@ -45,10 +42,7 @@ class TestUpdaterCoverageExtended:
         dest_file = tmp_path / "update.exe"
 
         with patch("src.utils.updater.urlopen", side_effect=URLError("Connection failed")):
-            result = updater.download_update(
-                "https://example.com/update.exe",
-                dest_file
-            )
+            result = updater.download_update("https://example.com/update.exe", dest_file)
 
         assert result is False
         assert not dest_file.exists()
@@ -60,10 +54,7 @@ class TestUpdaterCoverageExtended:
         with io.BytesIO(b"") as fp:
             http_error = HTTPError("https://example.com", 500, "Server Error", {}, fp)
             with patch("src.utils.updater.urlopen", side_effect=http_error):
-                result = updater.download_update(
-                    "https://example.com/update.exe",
-                    dest_file
-                )
+                result = updater.download_update("https://example.com/update.exe", dest_file)
 
         assert result is False
 
@@ -75,6 +66,7 @@ class TestUpdaterCoverageExtended:
 
         # Calculate actual SHA256
         import hashlib
+
         expected_hash = hashlib.sha256(test_content).hexdigest()
 
         result = updater.verify_checksum(test_file, expected_hash)
@@ -103,6 +95,7 @@ class TestUpdaterCoverageExtended:
         test_file.write_bytes(large_content)
 
         import hashlib
+
         expected_hash = hashlib.sha256(large_content).hexdigest()
 
         result = updater.verify_checksum(test_file, expected_hash)
@@ -112,7 +105,7 @@ class TestUpdaterCoverageExtended:
         """Test getting release notes from latest release."""
         updater.latest_release = {
             "tag_name": "v1.1.0",
-            "body": "## Release Notes\n- Bug fixes\n- New features"
+            "body": "## Release Notes\n- Bug fixes\n- New features",
         }
 
         notes = updater.get_release_notes()
@@ -188,10 +181,7 @@ class TestUpdaterUIComponents:
     def test_prompt_update_dialog_accepted(self, mock_askyesno, updater):
         """Test update dialog when user accepts."""
         mock_parent = Mock()
-        updater.latest_release = {
-            "tag_name": "v1.1.0",
-            "body": "New version"
-        }
+        updater.latest_release = {"tag_name": "v1.1.0", "body": "New version"}
         mock_askyesno.return_value = True
 
         # Mock the download handler
@@ -204,10 +194,7 @@ class TestUpdaterUIComponents:
     def test_prompt_update_dialog_declined(self, mock_askyesno, updater):
         """Test update dialog when user declines."""
         mock_parent = Mock()
-        updater.latest_release = {
-            "tag_name": "v1.1.0",
-            "body": "New version"
-        }
+        updater.latest_release = {"tag_name": "v1.1.0", "body": "New version"}
         mock_askyesno.return_value = False
 
         with patch.object(updater, "_handle_update_download") as mock_download:
@@ -232,10 +219,7 @@ class TestUpdaterUIComponents:
         """Test that long release notes are truncated."""
         mock_parent = Mock()
         long_notes = "x" * 500  # More than 300 chars
-        updater.latest_release = {
-            "tag_name": "v1.1.0",
-            "body": long_notes
-        }
+        updater.latest_release = {"tag_name": "v1.1.0", "body": long_notes}
         mock_askyesno.return_value = False
 
         updater.prompt_update_dialog(mock_parent)
@@ -310,7 +294,7 @@ class TestHandleUpdateDownload:
         mock_showinfo,
         mock_label,
         mock_toplevel,
-        updater
+        updater,
     ):
         """Test successful download on Windows."""
         mock_parent = Mock()
@@ -333,13 +317,7 @@ class TestHandleUpdateDownload:
     @patch.object(Updater, "get_download_url")
     @patch.object(Updater, "download_update")
     def test_handle_download_failure(
-        self,
-        mock_download,
-        mock_get_url,
-        mock_showerror,
-        mock_label,
-        mock_toplevel,
-        updater
+        self, mock_download, mock_get_url, mock_showerror, mock_label, mock_toplevel, updater
     ):
         """Test download failure handling."""
         mock_parent = Mock()

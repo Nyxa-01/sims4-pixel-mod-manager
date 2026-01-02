@@ -246,13 +246,13 @@ class TestGameProcessManager:
         # - Loop iterations check time.time() twice per iteration (while condition + next iteration)
         # - Need to exceed timeout=1 to exit wait loop and trigger force kill
         mock_time.side_effect = [
-            0,     # start_time
-            0.3,   # First while check
-            0.6,   # Second while check
-            0.9,   # Third while check
-            1.2,   # Fourth while check - exceeds timeout, exits loop
+            0,  # start_time
+            0.3,  # First while check
+            0.6,  # Second while check
+            0.9,  # Third while check
+            1.2,  # Fourth while check - exceeds timeout, exits loop
         ]
-        
+
         # Process persists through wait period, only dies after force kill
         mock_process_iter.side_effect = [
             [mock_game_process],  # get_game_processes() in close_game_safely
@@ -260,7 +260,7 @@ class TestGameProcessManager:
             [mock_game_process],  # is_game_running() check #2 in wait loop
             [mock_game_process],  # is_game_running() check #3 in wait loop
             [mock_game_process],  # get_game_processes() after wait timeout (for force kill)
-            [],                   # Final is_game_running() check after kill
+            [],  # Final is_game_running() check after kill
         ]
 
         result = manager.close_game_safely(timeout=1)
@@ -562,7 +562,9 @@ class TestProcessManagerExceptionPaths:
             [mock_proc],  # Initial detection
             [mock_proc],  # wait_for_game_exit check (still running)
             [mock_proc],  # Force kill: get_game_processes
-            [mock_proc],  # After kill: is_game_running check (still there - force kill failed in test)
+            [
+                mock_proc
+            ],  # After kill: is_game_running check (still there - force kill failed in test)
         ]
 
         result = manager.close_game_safely(timeout=0)

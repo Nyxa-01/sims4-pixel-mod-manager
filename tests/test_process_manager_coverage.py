@@ -168,7 +168,7 @@ class TestGameProcessManagerCoverage:
         proc = MagicMock()
         # Process name lookup triggers NoSuchProcess
         proc.info = {"pid": 123, "name": "TS4_x64.exe"}
-        
+
         mock_iter.return_value = [proc]
 
         # Should handle gracefully and return empty or found processes
@@ -196,11 +196,7 @@ class TestGameProcessManagerCoverage:
     @patch("psutil.process_iter")
     @patch("time.sleep")
     def test_close_game_safely_graceful_success(
-        self,
-        mock_sleep,
-        mock_iter,
-        manager,
-        mock_game_process
+        self, mock_sleep, mock_iter, manager, mock_game_process
     ):
         """Test graceful game close succeeds."""
         # First call returns game, subsequent calls return empty
@@ -217,13 +213,7 @@ class TestGameProcessManagerCoverage:
 
     @patch("psutil.process_iter")
     @patch("time.sleep")
-    def test_close_game_safely_force_kill(
-        self,
-        mock_sleep,
-        mock_iter,
-        manager,
-        mock_game_process
-    ):
+    def test_close_game_safely_force_kill(self, mock_sleep, mock_iter, manager, mock_game_process):
         """Test force kill when graceful fails."""
         mock_iter.side_effect = [
             [mock_game_process],  # initial get_game_processes
@@ -239,12 +229,7 @@ class TestGameProcessManagerCoverage:
         mock_game_process.kill.assert_called()
 
     @patch("psutil.process_iter")
-    def test_close_game_safely_access_denied_terminate(
-        self,
-        mock_iter,
-        manager,
-        mock_game_process
-    ):
+    def test_close_game_safely_access_denied_terminate(self, mock_iter, manager, mock_game_process):
         """Test access denied during terminate."""
         mock_game_process.terminate.side_effect = psutil.AccessDenied("No permission")
         mock_iter.return_value = [mock_game_process]
@@ -255,11 +240,7 @@ class TestGameProcessManagerCoverage:
     @patch("psutil.process_iter")
     @patch("time.sleep")
     def test_close_game_safely_access_denied_kill(
-        self,
-        mock_sleep,
-        mock_iter,
-        manager,
-        mock_game_process
+        self, mock_sleep, mock_iter, manager, mock_game_process
     ):
         """Test access denied during force kill."""
         mock_game_process.kill.side_effect = psutil.AccessDenied("No permission")
@@ -275,11 +256,7 @@ class TestGameProcessManagerCoverage:
     @patch("psutil.process_iter")
     @patch("time.sleep")
     def test_close_game_safely_process_already_exited(
-        self,
-        mock_sleep,
-        mock_iter,
-        manager,
-        mock_game_process
+        self, mock_sleep, mock_iter, manager, mock_game_process
     ):
         """Test process exits during close attempt."""
         mock_game_process.terminate.side_effect = psutil.NoSuchProcess(123)
@@ -296,11 +273,7 @@ class TestGameProcessManagerCoverage:
     @patch("psutil.process_iter")
     @patch("time.sleep")
     def test_close_game_safely_fails_completely(
-        self,
-        mock_sleep,
-        mock_iter,
-        manager,
-        mock_game_process
+        self, mock_sleep, mock_iter, manager, mock_game_process
     ):
         """Test close fails even after force kill."""
         mock_game_process.kill.side_effect = psutil.NoSuchProcess(123)
@@ -323,7 +296,7 @@ class TestGameProcessManagerCoverage:
         """Test successful launcher close method."""
         # Create manager without fixture to avoid attribute shadowing
         gpm = GameProcessManager(close_launchers=False)
-        
+
         launcher = MagicMock()
         launcher.pid = 9999
         launcher.name.return_value = "Origin.exe"
@@ -331,12 +304,13 @@ class TestGameProcessManagerCoverage:
 
         # First call returns launcher, then empty for subsequent calls
         call_count = [0]
+
         def iter_side_effect(*args, **kwargs):
             call_count[0] += 1
             if call_count[0] <= 1:  # First call for get_launcher_processes
                 return [launcher]
             return []  # Subsequent calls show no processes
-        
+
         mock_iter.side_effect = iter_side_effect
         mock_time.side_effect = [0, 0.5]
 
@@ -350,7 +324,7 @@ class TestGameProcessManagerCoverage:
     def test_close_launchers_method_timeout(self, mock_sleep, mock_iter):
         """Test launcher close method timeout."""
         gpm = GameProcessManager(close_launchers=False)
-        
+
         launcher = MagicMock()
         launcher.pid = 9999
         launcher.name.return_value = "Origin.exe"
@@ -371,7 +345,7 @@ class TestGameProcessManagerCoverage:
     def test_close_launchers_method_no_processes(self, mock_iter):
         """Test close launchers method when none running."""
         gpm = GameProcessManager(close_launchers=False)
-        
+
         mock_iter.return_value = []
 
         result = type(gpm).close_launchers(gpm)
@@ -384,7 +358,7 @@ class TestGameProcessManagerCoverage:
     def test_close_launchers_method_terminate_error(self, mock_time, mock_sleep, mock_iter):
         """Test launcher terminate error is handled."""
         gpm = GameProcessManager(close_launchers=False)
-        
+
         launcher = MagicMock()
         launcher.pid = 9999
         launcher.name.return_value = "Origin.exe"
@@ -393,12 +367,13 @@ class TestGameProcessManagerCoverage:
 
         # First call returns launcher, subsequent calls show it's gone
         call_count = [0]
+
         def iter_side_effect(*args, **kwargs):
             call_count[0] += 1
             if call_count[0] <= 1:
                 return [launcher]
             return []
-        
+
         mock_iter.side_effect = iter_side_effect
         mock_time.side_effect = [0, 0.5]
 
@@ -471,9 +446,7 @@ class TestGameProcessManagerCoverage:
     @patch("subprocess.Popen")
     def test_restore_processes_no_exe_path(self, mock_popen, manager):
         """Test restore when exe path not recorded."""
-        manager._terminated_processes = [
-            {"pid": 123, "name": "TS4_x64.exe"}  # No 'exe' key
-        ]
+        manager._terminated_processes = [{"pid": 123, "name": "TS4_x64.exe"}]  # No 'exe' key
 
         result = manager.restore_processes()
 

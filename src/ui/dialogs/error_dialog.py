@@ -15,9 +15,7 @@ class ErrorDialog(tk.Toplevel):
         )
     """
 
-    def __init__(
-        self, parent, message: str, details: str | None = None, hint: str | None = None
-    ):
+    def __init__(self, parent, message: str, details: str | None = None, hint: str | None = None):
         """Initialize error dialog.
 
         Args:

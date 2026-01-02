@@ -771,7 +771,7 @@ class TestLoadOrderEdgeCases:
     ) -> None:
         """Test load order with hidden files (starting with .)."""
         engine.generate_structure({}, tmp_path)
-        
+
         # Create files in a slot folder
         slot_dir = tmp_path / "020_MainMods"
         (slot_dir / "mod.package").write_text("mod")
@@ -793,7 +793,7 @@ class TestLoadOrderEdgeCases:
     ) -> None:
         """Test load order sorting is case-insensitive."""
         engine.generate_structure({}, tmp_path)
-        
+
         # Create files in a slot folder
         slot_dir = tmp_path / "020_MainMods"
         (slot_dir / "AAAA.package").write_text("a")
@@ -804,7 +804,7 @@ class TestLoadOrderEdgeCases:
 
         # Extract just filenames from paths for comparison
         filenames = [Path(p).name for p in load_order]
-        
+
         # Should be alphabetically sorted case-insensitively
         assert filenames.index("AAAA.package") < filenames.index("bbbb.package")
         assert filenames.index("bbbb.package") < filenames.index("CcCc.package")

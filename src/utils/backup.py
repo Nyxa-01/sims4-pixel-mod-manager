@@ -411,7 +411,7 @@ class BackupManager:
                 # Verify each file's CRC32 hash
                 for filepath, expected_crc_hex in manifest.get("files", {}).items():
                     expected_crc = int(expected_crc_hex, 16)
-                    
+
                     # Normalize path separators - zipfile uses forward slashes
                     normalized_path = filepath.replace("\\", "/")
 

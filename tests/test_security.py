@@ -134,9 +134,7 @@ class TestSecurityEdgeCases:
 
         assert decrypted == path_with_spaces.resolve()
 
-    def test_encrypt_decrypt_path_with_unicode(
-        self, mock_encryption_key: Path
-    ) -> None:
+    def test_encrypt_decrypt_path_with_unicode(self, mock_encryption_key: Path) -> None:
         """Test encryption handles unicode paths."""
         encryption = PathEncryption(mock_encryption_key)
 

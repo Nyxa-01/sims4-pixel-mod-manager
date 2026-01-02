@@ -17,7 +17,7 @@ from src.ui.pixel_theme import (
 # Skip all UI tests in CI environment (no display available)
 pytestmark = pytest.mark.skipif(
     os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true",
-    reason="UI tests require display (not available in CI)"
+    reason="UI tests require display (not available in CI)",
 )
 
 

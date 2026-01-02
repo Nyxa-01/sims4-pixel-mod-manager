@@ -277,6 +277,7 @@ class TestBackupManager:
 
         # Create multiple backups
         import time
+
         backup1 = manager.create_backup(sample_files, backup_dir)
         time.sleep(1.1)  # Ensure different timestamps (filename has 1-second resolution)
         backup2 = manager.create_backup(sample_files, backup_dir)
@@ -319,6 +320,7 @@ class TestBackupManager:
 
         # Create 2 backups (under default 10)
         import time
+
         manager.create_backup(sample_files, backup_dir)
         time.sleep(1.1)  # Ensure different timestamps
         manager.create_backup(sample_files, backup_dir)
@@ -339,6 +341,7 @@ class TestBackupManager:
 
         # Create 5 backups
         import time
+
         for i in range(5):
             manager.create_backup(sample_files, backup_dir)
             if i < 4:  # Don't sleep after last one
@@ -564,7 +567,9 @@ class TestBackupExceptionPaths:
         backup_dir = tmp_path / "backups"
 
         # Actual error is wrapped: "Backup creation failed: No files found..."
-        with pytest.raises(BackupError, match="(Source must be a directory|Backup creation failed)"):
+        with pytest.raises(
+            BackupError, match="(Source must be a directory|Backup creation failed)"
+        ):
             manager.create_backup(source_file, backup_dir)
 
     def test_create_backup_empty_directory(
@@ -875,9 +880,7 @@ class TestBackupExceptionPaths:
     ) -> None:
         """Test backup manifest includes all required metadata."""
         backup_dir = tmp_path / "backups"
-        backup_path = manager.create_backup(
-            sample_files, backup_dir, game_version="1.108.329"
-        )
+        backup_path = manager.create_backup(sample_files, backup_dir, game_version="1.108.329")
 
         with zipfile.ZipFile(backup_path, "r") as zf:
             manifest_data = zf.read(MANIFEST_FILENAME).decode()

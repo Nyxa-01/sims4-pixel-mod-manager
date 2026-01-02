@@ -123,9 +123,7 @@ class StateManager:
             logger.info(f"State transition: {old_state.value} → {new_state.value}")
             self._notify_observers()
 
-    def update_paths(
-        self, game_path: Path | None = None, mods_path: Path | None = None
-    ) -> None:
+    def update_paths(self, game_path: Path | None = None, mods_path: Path | None = None) -> None:
         """Update game paths (thread-safe).
 
         Args:

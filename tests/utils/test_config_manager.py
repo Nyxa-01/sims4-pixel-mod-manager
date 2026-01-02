@@ -358,7 +358,7 @@ class TestConfigManagerExceptionPaths:
         config_dir = tmp_path / "config_migration"
         config_dir.mkdir()
         (config_dir / "logs").mkdir()  # Required for setup
-        
+
         # Create old format config (missing new fields)
         old_config = {
             "max_mod_size_mb": 500,

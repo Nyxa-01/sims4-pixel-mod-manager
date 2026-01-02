@@ -15,6 +15,7 @@ class TestTimeoutDecorator:
 
     def test_function_completes_before_timeout(self):
         """Function completes within timeout period."""
+
         @timeout(1)
         def quick_func():
             return "success"
@@ -24,6 +25,7 @@ class TestTimeoutDecorator:
 
     def test_function_exceeds_timeout(self):
         """Function raises TimeoutError when exceeding limit."""
+
         @timeout(1)
         def slow_func():
             time.sleep(3)
@@ -34,6 +36,7 @@ class TestTimeoutDecorator:
 
     def test_timeout_preserves_function_name(self):
         """Decorated function preserves original name."""
+
         @timeout(5)
         def my_named_function():
             pass
@@ -42,6 +45,7 @@ class TestTimeoutDecorator:
 
     def test_timeout_preserves_return_value(self):
         """Decorated function returns correct value."""
+
         @timeout(5)
         def returns_dict():
             return {"key": "value", "number": 42}
@@ -51,6 +55,7 @@ class TestTimeoutDecorator:
 
     def test_timeout_preserves_exception(self):
         """Inner exception is properly propagated."""
+
         @timeout(5)
         def raises_value_error():
             raise ValueError("Inner error message")
@@ -60,6 +65,7 @@ class TestTimeoutDecorator:
 
     def test_timeout_with_args_and_kwargs(self):
         """Decorated function receives args and kwargs correctly."""
+
         @timeout(5)
         def func_with_args(a, b, c=10):
             return a + b + c
@@ -69,6 +75,7 @@ class TestTimeoutDecorator:
 
     def test_timeout_edge_case_near_limit(self):
         """Function completes just before timeout."""
+
         @timeout(1)
         def almost_timeout():
             time.sleep(0.3)
@@ -79,6 +86,7 @@ class TestTimeoutDecorator:
 
     def test_timeout_message_includes_function_name(self):
         """Timeout error message includes function name."""
+
         @timeout(1)
         def named_slow_function():
             time.sleep(5)
@@ -90,6 +98,7 @@ class TestTimeoutDecorator:
 
     def test_timeout_with_io_operation(self, tmp_path):
         """Timeout works with file I/O operations."""
+
         @timeout(5)
         def read_file(path):
             return path.read_text()
@@ -127,9 +136,10 @@ class TestTimeoutContext:
         if ctx.timer is not None:
             # Give a small delay for cleanup
             import time
+
             time.sleep(0.1)
             # Timer was started but should be cancelled
-            assert hasattr(ctx, 'timer')
+            assert hasattr(ctx, "timer")
 
     def test_context_cancels_timer_on_exception(self):
         """Timer is cancelled when exception occurs in context."""
@@ -141,7 +151,7 @@ class TestTimeoutContext:
             pass
 
         # Timer should exist (was created) - just verify no crash
-        assert hasattr(ctx, 'timer')
+        assert hasattr(ctx, "timer")
 
     def test_context_with_short_operation(self):
         """Context handles quick operations."""
@@ -158,6 +168,7 @@ class TestTimeoutPlatformBehavior:
     def test_windows_uses_threading(self):
         """On Windows, timeout uses threading approach."""
         with patch("platform.system", return_value="Windows"):
+
             @timeout(5)
             def quick_func():
                 return "result"
@@ -169,6 +180,7 @@ class TestTimeoutPlatformBehavior:
     @pytest.mark.skipif(platform.system() == "Windows", reason="Unix-only test")
     def test_unix_uses_signal(self):
         """On Unix, timeout uses signal.SIGALRM."""
+
         @timeout(5)
         def quick_func():
             return "result"
@@ -182,6 +194,7 @@ class TestTimeoutEdgeCases:
 
     def test_timeout_with_none_return(self):
         """Decorated function returning None works correctly."""
+
         @timeout(5)
         def returns_none():
             return None
@@ -191,6 +204,7 @@ class TestTimeoutEdgeCases:
 
     def test_timeout_with_generator_function(self):
         """Timeout works with generator-like operations."""
+
         @timeout(5)
         def process_items():
             items = []
@@ -203,6 +217,7 @@ class TestTimeoutEdgeCases:
 
     def test_timeout_with_nested_calls(self):
         """Timeout works with nested function calls."""
+
         @timeout(5)
         def outer():
             return inner()
@@ -221,6 +236,7 @@ class TestTimeoutEdgeCases:
 
     def test_multiple_decorated_functions(self):
         """Multiple functions can use timeout decorator independently."""
+
         @timeout(5)
         def func1():
             return "func1"
@@ -234,6 +250,7 @@ class TestTimeoutEdgeCases:
 
     def test_exception_type_preserved(self):
         """Specific exception types are preserved through timeout."""
+
         @timeout(5)
         def raises_key_error():
             raise KeyError("missing_key")
@@ -243,6 +260,7 @@ class TestTimeoutEdgeCases:
 
     def test_exception_with_complex_message(self):
         """Exceptions with complex messages are preserved."""
+
         @timeout(5)
         def raises_complex():
             raise RuntimeError({"error": "details", "code": 500})
@@ -256,6 +274,7 @@ class TestTimeoutThreadSafety:
 
     def test_concurrent_timeout_decorators(self):
         """Multiple timeouts can run concurrently."""
+
         @timeout(5)
         def concurrent_func(value):
             time.sleep(0.1)

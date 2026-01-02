@@ -163,7 +163,7 @@ class TestLoggingSetup:
 
         # INFO messages should be in app.log (parse last line)
         log_content = (log_dir / "app.log").read_text()
-        log_lines = [line for line in log_content.strip().split('\n') if line]
+        log_lines = [line for line in log_content.strip().split("\n") if line]
         log_data = json.loads(log_lines[-1])  # Last line is the info message
         assert log_data["message"] == "Info message"
 
@@ -206,7 +206,7 @@ class TestLoggingSetup:
         log_content = log_file.read_text().strip()
 
         # Should be valid JSON (parse last line, not whole file)
-        log_lines = [line for line in log_content.split('\n') if line]
+        log_lines = [line for line in log_content.split("\n") if line]
         log_data = json.loads(log_lines[-1])  # Last line is the test message
         assert log_data["message"] == "Test message"
         assert log_data["level"] == "INFO"
