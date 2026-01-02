@@ -1,0 +1,99 @@
+{
+  "version": "1.0.0",
+  "app": {
+    "name": "Sims 4 Pixel Mod Manager",
+    "window_width": 800,
+    "window_height": 600,
+    "theme": "dark_pixel",
+    "language": "en"
+  },
+  "paths": {
+    "game_path": null,
+    "mods_path": null,
+    "incoming_path": null,
+    "backup_path": null
+  },
+  "deployment": {
+    "auto_backup": true,
+    "backup_retention_days": 30,
+    "close_game_before_deploy": true,
+    "verify_after_deploy": true,
+    "use_symlinks": false,
+    "deployment_method": "copy"
+  },
+  "security": {
+    "max_file_size_mb": 500,
+    "entropy_threshold": 7.5,
+    "validate_signatures": true,
+    "validate_python_syntax": true,
+    "scan_timeout_seconds": 30
+  },
+  "updates": {
+    "auto_check_on_startup": true,
+    "check_interval_hours": 24,
+    "auto_download": false,
+    "include_prereleases": false
+  },
+  "logging": {
+    "level": "INFO",
+    "max_log_size_mb": 10,
+    "backup_count": 5,
+    "log_to_file": true,
+    "log_to_console": true
+  },
+  "load_order": {
+    "slots": {
+      "000_CoreScripts": {
+        "description": "Core gameplay scripts (MCCC, UI Cheats)",
+        "priority": 0
+      },
+      "100_Overrides": {
+        "description": "Tuning and XML overrides",
+        "priority": 100
+      },
+      "200_CAS": {
+        "description": "Create-a-Sim content",
+        "priority": 200
+      },
+      "300_BuildBuy": {
+        "description": "Build/Buy mode objects",
+        "priority": 300
+      },
+      "400_Worlds": {
+        "description": "World files and lots",
+        "priority": 400
+      },
+      "500_Gameplay": {
+        "description": "Gameplay mods and tweaks",
+        "priority": 500
+      },
+      "600_Poses": {
+        "description": "Pose packs and animations",
+        "priority": 600
+      },
+      "700_Library": {
+        "description": "Shared resources and libraries",
+        "priority": 700
+      },
+      "ZZZ_Overrides": {
+        "description": "Final overrides (load last)",
+        "priority": 999
+      }
+    },
+    "validate_alphabetical": true,
+    "max_nesting_depth": 5,
+    "max_path_length": 260
+  },
+  "ui": {
+    "show_tooltips": true,
+    "animation_speed": "normal",
+    "confirm_before_deploy": true,
+    "show_file_sizes": true,
+    "show_mod_count": true
+  },
+  "performance": {
+    "max_threads": 4,
+    "cache_scan_results": true,
+    "cache_duration_minutes": 30
+  }
+}
