@@ -1,5 +1,6 @@
 """Tests for pixel theme engine."""
 
+import os
 import tkinter as tk
 from unittest.mock import Mock, patch
 
@@ -11,6 +12,12 @@ from src.ui.pixel_theme import (
     FONT_FALLBACK,
     PixelTheme,
     get_theme,
+)
+
+# Skip all UI tests in CI environment (no display available)
+pytestmark = pytest.mark.skipif(
+    os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true",
+    reason="UI tests require display (not available in CI)"
 )
 
 

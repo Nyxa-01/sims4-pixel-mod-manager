@@ -276,7 +276,9 @@ class TestBackupManager:
         backup_dir = tmp_path / "backups"
 
         # Create multiple backups
+        import time
         backup1 = manager.create_backup(sample_files, backup_dir)
+        time.sleep(0.02)  # Ensure different timestamps
         backup2 = manager.create_backup(sample_files, backup_dir)
 
         backups = manager.list_backups(backup_dir)

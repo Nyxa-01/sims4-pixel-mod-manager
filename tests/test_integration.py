@@ -187,16 +187,17 @@ class TestConfigIntegration:
             tmp_path: Temporary directory
             mock_encryption_key: Encryption key
         """
-        config_path = tmp_path / "config.json"
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
 
         # Session 1: Create and save config
-        config1 = ConfigManager(config_path)
+        config1 = ConfigManager(config_dir)
         config1.set("incoming_folder", str(tmp_path / "incoming"))
         config1.set("backup_retention_count", 15)
         config1.save_config()
 
         # Session 2: Load config
-        config2 = ConfigManager(config_path)
+        config2 = ConfigManager(config_dir)
         assert config2.get("incoming_folder") == str(tmp_path / "incoming")
         assert config2.get("backup_retention_count") == 15
 
@@ -211,18 +212,19 @@ class TestConfigIntegration:
             tmp_path: Temporary directory
             mock_encryption_key: Encryption key
         """
-        config_path = tmp_path / "config.json"
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
 
         # Create valid config
-        config = ConfigManager(config_path)
+        config = ConfigManager(config_dir)
         config.set("test_key", "test_value")
         config.save_config()
 
         # Corrupt config file
-        config_path.write_text("CORRUPTED DATA {[}")
+        (config_dir / "config.json").write_text("invalid json")
 
-        # Should recover with defaults
-        config2 = ConfigManager(config_path)
+        # Try to load - should recover with defaults
+        config2 = ConfigManager(config_dir)
         assert config2.get("test_key", "default") == "default"
 
 
@@ -330,8 +332,9 @@ class TestSecurityIntegration:
             tmp_path: Temporary directory
             mock_encryption_key: Encryption key
         """
-        config_path = tmp_path / "config.json"
-        config = ConfigManager(config_path)
+        config_dir = tmp_path / "config"
+        config_dir.mkdir()
+        config = ConfigManager(config_dir)
 
         # Set sensitive path
         sensitive_path = str(tmp_path / "sensitive" / "path")
@@ -339,7 +342,7 @@ class TestSecurityIntegration:
         config.save_config()
 
         # Read raw config file
-        raw_content = config_path.read_text()
+        raw_content = (config_dir / "config.json").read_text()
 
         # Verify path is not in plain text
         assert sensitive_path not in raw_content, "Path should be encrypted"

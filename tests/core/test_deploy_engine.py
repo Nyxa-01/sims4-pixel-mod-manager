@@ -429,8 +429,9 @@ class TestDeployEngine:
 
         # Verify deployed removed and backup restored
         assert not deployed.exists()
-        restored = tmp_path / "Mods" / "original.txt"
+        restored = tmp_path / "original.txt"
         assert restored.exists()
+        assert restored.read_text() == "original"
 
     def test_report_progress_with_callback(self, engine: DeployEngine) -> None:
         """Test progress reporting with callback."""

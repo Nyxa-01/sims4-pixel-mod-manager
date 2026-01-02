@@ -331,10 +331,12 @@ class LoadOrderEngine:
             [d for d in path.iterdir() if d.is_dir() and PREFIX_PATTERN.match(d.name)]
         )
 
-        # Scripts in root (load first)
+        # Scripts in root (load first) - alphabetically sorted
+        scripts: list[str] = []
         for ext in SCRIPT_EXTENSIONS:
             for script in path.glob(f"*{ext}"):
-                load_order.append(script.name)
+                scripts.append(script.name)
+        load_order.extend(sorted(scripts))
 
         # Then slot folders
         for slot_folder in slot_folders:
