@@ -2,7 +2,7 @@
 
 import logging
 import tkinter as tk
-from typing import Callable, Optional
+from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ def animate_scale(
     widget: tk.Widget,
     target_scale: float,
     duration_ms: int = 100,
-    on_complete: Optional[Callable[[], None]] = None,
+    on_complete: Callable[[], None] | None = None,
 ) -> None:
     """Animate widget scale transition.
 
@@ -66,7 +66,7 @@ def animate_fade(
     widget: tk.Label,
     target_alpha: float,
     duration_ms: int = 200,
-    on_complete: Optional[Callable[[], None]] = None,
+    on_complete: Callable[[], None] | None = None,
 ) -> None:
     """Animate label text fade (color interpolation).
 

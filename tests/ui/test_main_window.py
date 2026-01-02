@@ -1,8 +1,7 @@
 """Tests for main window UI."""
 
 import tkinter as tk
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -24,12 +23,14 @@ def root():
 @pytest.fixture
 def mock_managers():
     """Mock all manager dependencies."""
-    with patch("src.ui.main_window.ConfigManager") as mock_config, \
-         patch("src.ui.main_window.ModScanner") as mock_scanner, \
-         patch("src.ui.main_window.LoadOrderEngine") as mock_lo_engine, \
-         patch("src.ui.main_window.DeployEngine") as mock_deploy, \
-         patch("src.ui.main_window.BackupManager") as mock_backup, \
-         patch("src.ui.main_window.GameDetector") as mock_detector:
+    with (
+        patch("src.ui.main_window.ConfigManager") as mock_config,
+        patch("src.ui.main_window.ModScanner") as mock_scanner,
+        patch("src.ui.main_window.LoadOrderEngine") as mock_lo_engine,
+        patch("src.ui.main_window.DeployEngine") as mock_deploy,
+        patch("src.ui.main_window.BackupManager") as mock_backup,
+        patch("src.ui.main_window.GameDetector") as mock_detector,
+    ):
 
         # Configure mocks
         mock_config.get_instance.return_value.get.return_value = ""
@@ -176,7 +177,9 @@ class TestMainWindowActions:
 
         # Mock threading to run synchronously
         with patch("src.ui.main_window.threading.Thread") as mock_thread:
-            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1]["target"]()
+            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1][
+                "target"
+            ]()
 
             main_window._scan_mods()
             main_window.root.update()  # Process after() calls
@@ -240,7 +243,9 @@ class TestMainWindowActions:
         active_path = tmp_path / "ActiveMods"
         active_path.mkdir()
 
-        main_window.config.get.side_effect = lambda k, d: str(active_path) if "active" in k else str(tmp_path)
+        main_window.config.get.side_effect = lambda k, d: (
+            str(active_path) if "active" in k else str(tmp_path)
+        )
         main_window.backup_manager.create_backup.return_value = tmp_path / "backup.zip"
 
         with patch("src.ui.main_window.messagebox.showinfo"):
@@ -348,11 +353,15 @@ class TestErrorHandling:
         main_window.scanner.scan_folder.side_effect = Exception("Test error")
         main_window.config.get.return_value = "./test"
 
-        with patch("src.ui.main_window.messagebox.showerror") as mock_error, \
-             patch("src.ui.main_window.threading.Thread") as mock_thread:
+        with (
+            patch("src.ui.main_window.messagebox.showerror") as mock_error,
+            patch("src.ui.main_window.threading.Thread") as mock_thread,
+        ):
 
             # Make thread run synchronously
-            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1]["target"]()
+            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1][
+                "target"
+            ]()
 
             main_window._scan_mods()
             main_window.root.update()
@@ -365,12 +374,16 @@ class TestErrorHandling:
         main_window.game_detector.is_game_running.return_value = False
         main_window.deploy_engine.deploy.side_effect = Exception("Deploy failed")
 
-        with patch("src.ui.main_window.messagebox.askyesno") as mock_confirm, \
-             patch("src.ui.main_window.messagebox.showerror") as mock_error, \
-             patch("src.ui.main_window.threading.Thread") as mock_thread:
+        with (
+            patch("src.ui.main_window.messagebox.askyesno") as mock_confirm,
+            patch("src.ui.main_window.messagebox.showerror") as mock_error,
+            patch("src.ui.main_window.threading.Thread") as mock_thread,
+        ):
 
             mock_confirm.return_value = True
-            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1]["target"]()
+            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1][
+                "target"
+            ]()
 
             main_window._deploy_mods()
             main_window.root.update()
@@ -395,8 +408,10 @@ class TestThreading:
         """Test deploy operation uses threading."""
         main_window.game_detector.is_game_running.return_value = False
 
-        with patch("src.ui.main_window.messagebox.askyesno") as mock_confirm, \
-             patch("src.ui.main_window.threading.Thread") as mock_thread:
+        with (
+            patch("src.ui.main_window.messagebox.askyesno") as mock_confirm,
+            patch("src.ui.main_window.threading.Thread") as mock_thread,
+        ):
 
             mock_confirm.return_value = True
 
@@ -425,7 +440,9 @@ class TestIntegration:
         main_window.scanner.scan_folder.return_value = {"package": [test_mod]}
 
         with patch("src.ui.main_window.threading.Thread") as mock_thread:
-            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1]["target"]()
+            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1][
+                "target"
+            ]()
             main_window._scan_mods()
             main_window.root.update()
 
@@ -444,8 +461,10 @@ class TestIntegration:
         main_window.game_detector.is_game_running.return_value = False
         main_window.game_detector.detect_mods_path.return_value = tmp_path / "Mods"
 
-        with patch("src.ui.main_window.messagebox.askyesno") as mock_confirm, \
-             patch("src.ui.main_window.messagebox.showinfo"):
+        with (
+            patch("src.ui.main_window.messagebox.askyesno") as mock_confirm,
+            patch("src.ui.main_window.messagebox.showinfo"),
+        ):
 
             mock_confirm.return_value = True
 
@@ -454,5 +473,6 @@ class TestIntegration:
                 main_window._deploy_mods()
 
         # Verify deployment was initiated
-        assert "Deploying" in main_window.status_label.cget("text") or \
-               "cancelled" in main_window.status_label.cget("text")
+        assert "Deploying" in main_window.status_label.cget(
+            "text"
+        ) or "cancelled" in main_window.status_label.cget("text")

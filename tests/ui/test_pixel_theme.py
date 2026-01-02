@@ -6,7 +6,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 from src.ui.pixel_theme import (
-    ANIM_HOVER_DURATION,
     BASE_FONT_SIZE,
     COLORS,
     FONT_FALLBACK,

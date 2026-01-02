@@ -1,6 +1,5 @@
 """Tests for game process manager."""
 
-import time
 from unittest.mock import MagicMock, Mock, patch
 
 import psutil
@@ -345,11 +344,13 @@ class TestGameProcessManager:
     ) -> None:
         """Test restoring terminated processes."""
         # Manually add terminated process
-        manager._terminated_processes.append({
-            "pid": 12345,
-            "name": "TS4_x64.exe",
-            "exe": "C:/path/to/game.exe",
-        })
+        manager._terminated_processes.append(
+            {
+                "pid": 12345,
+                "name": "TS4_x64.exe",
+                "exe": "C:/path/to/game.exe",
+            }
+        )
 
         result = manager.restore_processes()
 
@@ -386,12 +387,8 @@ class TestGameProcessManager:
     ) -> None:
         """Test all defined process names are detected."""
         # Create mock process for each name
-        game_procs = [
-            MagicMock(info={"name": name}) for name in GAME_PROCESS_NAMES
-        ]
-        launcher_procs = [
-            MagicMock(info={"name": name}) for name in LAUNCHER_PROCESS_NAMES
-        ]
+        game_procs = [MagicMock(info={"name": name}) for name in GAME_PROCESS_NAMES]
+        launcher_procs = [MagicMock(info={"name": name}) for name in LAUNCHER_PROCESS_NAMES]
 
         mock_process_iter.return_value = game_procs + launcher_procs
 

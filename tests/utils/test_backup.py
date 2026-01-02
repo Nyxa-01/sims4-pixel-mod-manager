@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.core.exceptions import BackupError, HashValidationError
+from src.core.exceptions import BackupError
 from src.utils.backup import (
     DEFAULT_RETENTION_COUNT,
     MANIFEST_FILENAME,
@@ -204,9 +204,7 @@ class TestBackupManager:
         backup_path = manager.create_backup(sample_files, backup_dir)
 
         # Restore with verification
-        result = manager.restore_backup(
-            backup_path, restore_dir, verify_hashes=True
-        )
+        result = manager.restore_backup(backup_path, restore_dir, verify_hashes=True)
 
         assert result is True
 

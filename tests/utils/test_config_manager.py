@@ -1,12 +1,12 @@
 """Tests for configuration manager."""
 
 import json
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 
-from src.core.exceptions import EncryptionError, PathError
+from src.core.exceptions import PathError
 from src.utils.config_manager import ConfigManager
 
 
@@ -234,7 +234,7 @@ class TestConfigManager:
         config_manager.set("mods_path", str(test_path))
 
         # Read raw config file
-        with open(config_manager.config_path, "r") as f:
+        with open(config_manager.config_path) as f:
             raw_config = json.load(f)
 
         # Path should be encrypted (not plain text)
