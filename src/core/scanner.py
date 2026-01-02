@@ -1,9 +1,8 @@
 """Mod detection and cataloging with hash validation."""
 
 import logging
-from pathlib import Path
-from typing import Optional
 import zlib
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +33,7 @@ class ModFile:
         self.name = path.stem
         self.extension = path.suffix.lower()
         self.size = path.stat().st_size
-        self._hash: Optional[int] = None
+        self._hash: int | None = None
 
     @property
     def hash(self) -> int:

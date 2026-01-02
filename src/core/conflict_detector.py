@@ -3,7 +3,6 @@
 import logging
 from pathlib import Path
 from struct import unpack
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +70,7 @@ class ConflictDetector:
         """Initialize conflict detector."""
         self.resource_map: dict[tuple[int, int, int], list[str]] = {}
 
-    def scan_mod(self, mod_path: Path) -> Optional[set[tuple[int, int, int]]]:
+    def scan_mod(self, mod_path: Path) -> set[tuple[int, int, int]] | None:
         """Scan single mod for resource IDs.
 
         Args:
@@ -159,8 +158,6 @@ class ConflictDetector:
                     conflicts.append(conflicting_mod)
 
         if conflicts:
-            logger.warning(
-                f"{mod_path.name} conflicts with: {', '.join(conflicts)}"
-            )
+            logger.warning(f"{mod_path.name} conflicts with: {', '.join(conflicts)}")
 
         return conflicts

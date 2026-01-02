@@ -3,16 +3,15 @@
 import os
 import zipfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from src.core.deploy_engine import (
-    DEPLOYMENT_METHODS,
     RESOURCE_CFG_TEMPLATE,
     DeployEngine,
 )
-from src.core.exceptions import DeployError, HashValidationError, PathError
+from src.core.exceptions import DeployError, PathError
 
 
 @pytest.fixture
@@ -291,9 +290,7 @@ class TestDeployEngine:
         success = engine._create_symlink(active_mods, target)
 
         assert success is True
-        mock_symlink.assert_called_once_with(
-            active_mods, target, target_is_directory=True
-        )
+        mock_symlink.assert_called_once_with(active_mods, target, target_is_directory=True)
 
     @patch("os.symlink", side_effect=OSError("Permission denied"))
     def test_create_symlink_failure(
@@ -432,8 +429,9 @@ class TestDeployEngine:
 
         # Verify deployed removed and backup restored
         assert not deployed.exists()
-        restored = tmp_path / "Mods" / "original.txt"
+        restored = tmp_path / "original.txt"
         assert restored.exists()
+        assert restored.read_text() == "original"
 
     def test_report_progress_with_callback(self, engine: DeployEngine) -> None:
         """Test progress reporting with callback."""
@@ -480,9 +478,7 @@ class TestDeployEngine:
 
         # Deploy
         with engine.transaction():
-            success = engine.deploy(
-                active_mods, game_mods, progress_callback, close_game=False
-            )
+            success = engine.deploy(active_mods, game_mods, progress_callback, close_game=False)
 
         assert success is True
         assert (game_mods / "resource.cfg").exists()
