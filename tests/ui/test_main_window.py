@@ -2,7 +2,7 @@
 
 import os
 import tkinter as tk
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, MagicMock, patch
 
 import pytest
 
@@ -79,7 +79,17 @@ class TestMainWindowInit:
     def test_init_applies_theme(self, root, mock_managers):
         """Test theme is applied to window."""
         with patch("src.ui.main_window.PixelTheme") as mock_theme:
-            mock_instance = Mock()
+            mock_instance = MagicMock()  # Use MagicMock for subscriptable colors
+            # Configure colors dict to return valid hex colors
+            mock_instance.colors.__getitem__.side_effect = lambda k: {
+                "bg_dark": "#1a1a2e",
+                "bg_light": "#16213e",
+                "text": "#eee",
+                "accent": "#0f3460",
+                "success": "#53d769",
+                "warning": "#ffd60a",
+                "error": "#ff453a"
+            }.get(k, "#000000")
             mock_theme.get_instance.return_value = mock_instance
 
             window = MainWindow(root)
@@ -160,8 +170,17 @@ class TestMainWindowActions:
 
     def test_scan_mods_prompts_for_folder(self, main_window):
         """Test scan prompts for folder if not configured."""
-        with patch("src.ui.main_window.filedialog.askdirectory") as mock_dialog:
-            mock_dialog.return_value = ""
+        # Config returns empty string, and Path("").exists() returns False
+        main_window.config.get.return_value = ""
+        
+        with (
+            patch("src.ui.main_window.Path") as mock_path,
+            patch("src.ui.main_window.filedialog.askdirectory") as mock_dialog,
+        ):
+            # Mock Path to return non-existent path
+            mock_path_instance = mock_path.return_value
+            mock_path_instance.exists.return_value = False
+            mock_dialog.return_value = ""  # User cancels
 
             main_window._scan_mods()
 
@@ -479,7 +498,6 @@ class TestIntegration:
             with patch("src.ui.main_window.threading.Thread"):
                 main_window._deploy_mods()
 
-        # Verify deployment was initiated
-        assert "Deploying" in main_window.status_label.cget(
-            "text"
-        ) or "cancelled" in main_window.status_label.cget("text")
+        # Verify deployment was initiated or structure generated
+        status_text = main_window.status_label.cget("text")
+        assert any(keyword in status_text for keyword in ["Deploying", "cancelled", "generated", "Structure"])

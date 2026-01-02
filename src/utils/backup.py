@@ -409,15 +409,17 @@ class BackupManager:
                     return (False, "Manifest has invalid structure")
 
                 # Verify each file's CRC32 hash
-                for file_info in manifest.get("files", []):
-                    filepath = file_info["path"]
-                    expected_crc = file_info["crc32"]
+                for filepath, expected_crc_hex in manifest.get("files", {}).items():
+                    expected_crc = int(expected_crc_hex, 16)
+                    
+                    # Normalize path separators - zipfile uses forward slashes
+                    normalized_path = filepath.replace("\\", "/")
 
-                    if filepath not in zf.namelist():
+                    if normalized_path not in zf.namelist():
                         return (False, f"Missing file in backup: {filepath}")
 
                     # Calculate actual CRC32
-                    file_data = zf.read(filepath)
+                    file_data = zf.read(normalized_path)
                     actual_crc = zlib.crc32(file_data) & 0xFFFFFFFF
 
                     if actual_crc != expected_crc:

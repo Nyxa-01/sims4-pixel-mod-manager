@@ -1,5 +1,6 @@
 """Tests for auto-update functionality."""
 
+import io
 import json
 from unittest.mock import Mock, patch
 from urllib.error import HTTPError, URLError
@@ -86,11 +87,14 @@ class TestUpdater:
     @patch("src.utils.updater.urlopen")
     def test_check_for_updates_http_error(self, mock_urlopen, updater):
         """Test handling HTTP errors."""
-        mock_urlopen.side_effect = HTTPError("https://example.com", 404, "Not Found", {}, None)
+        # Create HTTPError with proper cleanup using context manager
+        with io.BytesIO(b"") as fp:
+            http_error = HTTPError("https://example.com", 404, "Not Found", {}, fp)
+            mock_urlopen.side_effect = http_error
 
-        result = updater.check_for_updates()
+            result = updater.check_for_updates()
 
-        assert result is False
+            assert result is False
 
     @patch("src.utils.updater.urlopen")
     def test_check_for_updates_invalid_json(self, mock_urlopen, updater):

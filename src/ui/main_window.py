@@ -379,9 +379,10 @@ class MainWindow:
                         lambda: self._update_status(f"Scanned {len(self.incoming_mods)} mods", 1.0),
                     )
 
-                except Exception as e:
-                    logger.error(f"Scan failed: {e}")
-                    self.root.after(0, lambda: self._show_error("Scan Failed", str(e)))
+                except Exception as err:
+                    error_msg = str(err)  # Capture exception message before lambda
+                    logger.error(f"Scan failed: {error_msg}")
+                    self.root.after(0, lambda msg=error_msg: self._show_error("Scan Failed", msg))
                     self.root.after(0, lambda: self._update_status("Scan failed", 0.0))
 
             thread = threading.Thread(target=scan_thread, daemon=True)
@@ -499,9 +500,10 @@ class MainWindow:
                     )
                     self.root.after(0, lambda: self._update_status("Deployed successfully", 1.0))
 
-            except Exception as e:
-                logger.error(f"Deployment failed: {e}")
-                self.root.after(0, lambda: self._show_error("Deployment Failed", str(e)))
+            except Exception as err:
+                error_msg = str(err)  # Capture exception message before lambda
+                logger.error(f"Deployment failed: {error_msg}")
+                self.root.after(0, lambda msg=error_msg: self._show_error("Deployment Failed", msg))
                 self.root.after(0, lambda: self._update_status("Deployment failed", 0.0))
 
         thread = threading.Thread(target=deploy_thread, daemon=True)

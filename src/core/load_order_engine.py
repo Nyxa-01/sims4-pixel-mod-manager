@@ -23,8 +23,8 @@ LOAD_ORDER_SLOTS = [
     ("ZZZ_Overrides", "Override Mods (Load Last)", ["override", "override_"]),
 ]
 
-# Prefix validation regex
-PREFIX_PATTERN = re.compile(r"^\d{3}_\w+$")
+# Prefix validation regex (matches 000_Name or ZZZ_Name formats)
+PREFIX_PATTERN = re.compile(r"^(\d{3}|[A-Z]{3})_\w+$")
 
 # Windows MAX_PATH limit
 MAX_PATH_LENGTH = 260

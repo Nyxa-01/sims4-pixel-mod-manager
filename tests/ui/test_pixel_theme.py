@@ -45,14 +45,14 @@ class TestPixelTheme:
 
     def test_direct_initialization_raises_error(self) -> None:
         """Test that direct initialization raises error."""
-        # Reset singleton for test
-        PixelTheme._instance = PixelTheme()
+        # First call to get_instance() sets the singleton
+        theme1 = PixelTheme.get_instance()
 
+        # Attempting direct instantiation should raise error
         with pytest.raises(RuntimeError, match="Use PixelTheme.get_instance"):
             PixelTheme()
 
-        # Cleanup
-        PixelTheme._instance = None
+        # No cleanup needed - singleton persists across tests
 
     def test_colors_loaded(self) -> None:
         """Test that color palette is loaded."""
@@ -187,7 +187,8 @@ class TestPixelTheme:
         assert isinstance(label, tk.Label)
         assert label["text"] == "Test Label"
         assert label["bg"] == COLORS["bg_dark"]
-        assert label["font"] == theme.font_normal
+        # Font comparison: label["font"] returns string name, theme.font_normal is Font object
+        assert label["font"] == str(theme.font_normal)
 
     def test_create_pixel_label_sizes(self, root: tk.Tk) -> None:
         """Test pixel label with different sizes."""
@@ -198,9 +199,10 @@ class TestPixelTheme:
         normal = theme.create_pixel_label(root, "Normal", size="normal")
         large = theme.create_pixel_label(root, "Large", size="large")
 
-        assert small["font"] == theme.font_small
-        assert normal["font"] == theme.font_normal
-        assert large["font"] == theme.font_large
+        # Font comparison: widget["font"] returns string name, theme.font_X is Font object
+        assert small["font"] == str(theme.font_small)
+        assert normal["font"] == str(theme.font_normal)
+        assert large["font"] == str(theme.font_large)
 
     def test_create_pixel_entry(self, root: tk.Tk) -> None:
         """Test pixel entry creation."""
