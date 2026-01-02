@@ -170,7 +170,7 @@ class TestLoggingSetup:
     def test_setup_removes_existing_handlers(self, tmp_path):
         """Test existing handlers are removed."""
         logger = logging.getLogger()
-        initial_handlers = len(logger.handlers)
+        _initial_handlers = len(logger.handlers)
 
         setup_logging(log_dir=tmp_path / "logs")
 
@@ -350,7 +350,7 @@ class TestExceptionLogging:
         logger = get_logger("test")
 
         try:
-            1 / 0
+            _ = 1 / 0  # noqa: B018 - intentionally trigger exception
         except ZeroDivisionError:
             logger.exception("Division error")
 

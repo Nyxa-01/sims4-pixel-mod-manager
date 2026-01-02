@@ -46,7 +46,7 @@ class TestPixelTheme:
     def test_direct_initialization_raises_error(self) -> None:
         """Test that direct initialization raises error."""
         # First call to get_instance() sets the singleton
-        theme1 = PixelTheme.get_instance()
+        _theme1 = PixelTheme.get_instance()
 
         # Attempting direct instantiation should raise error
         with pytest.raises(RuntimeError, match="Use PixelTheme.get_instance"):
@@ -335,7 +335,7 @@ class TestColorPalette:
 
     def test_color_format(self) -> None:
         """Test that colors are valid hex codes."""
-        for color_name, color_value in COLORS.items():
+        for _color_name, color_value in COLORS.items():
             assert color_value.startswith("#")
             assert len(color_value) == 7  # #RRGGBB format
             # Verify hex characters
@@ -362,7 +362,7 @@ class TestScaling:
         theme.load_fonts(root)
 
         # Base size should be scaled
-        expected_base = int(BASE_FONT_SIZE * 2.0)
+        _expected_base = int(BASE_FONT_SIZE * 2.0)
         # Fonts should exist
         assert theme.font_small is not None
         assert theme.font_normal is not None

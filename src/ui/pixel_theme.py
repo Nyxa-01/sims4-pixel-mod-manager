@@ -577,3 +577,54 @@ def get_theme() -> PixelTheme:
         PixelTheme instance
     """
     return PixelTheme.get_instance()
+
+
+class PixelAssetManager:
+    """Generate 8-bit pixel art assets programmatically."""
+
+    @staticmethod
+    def create_button_surface(
+        width: int, height: int, color: str, state: str = "normal"
+    ) -> tk.PhotoImage:
+        """Render button with pixel-perfect borders + shadows.
+
+        Args:
+            width: Button width in pixels
+            height: Button height in pixels
+            color: Base fill color (hex)
+            state: "normal"|"hover"|"pressed"
+
+        Returns:
+            PhotoImage for use in Canvas
+        """
+        try:
+            from PIL import Image, ImageDraw, ImageTk
+
+            img = Image.new("RGB", (width, height), "#000000")
+            draw = ImageDraw.Draw(img)
+
+            # Base fill
+            draw.rectangle([4, 4, width - 5, height - 5], fill=color)
+
+            # Chunky 4px border
+            border_color = "#1D4ED8"
+            draw.rectangle(
+                [0, 0, width - 1, height - 1], outline=border_color, width=4
+            )
+
+            if state == "hover":
+                draw.rectangle(
+                    [0, 0, width - 1, height - 1], outline="#06B6D4", width=2
+                )
+            elif state == "pressed":
+                # Shift down 2px (simulate press)
+                img = img.crop((0, 0, width, height - 2))
+                img_new = Image.new("RGB", (width, height), "#000000")
+                img_new.paste(img, (0, 2))
+                img = img_new
+
+            return ImageTk.PhotoImage(img)
+        except ImportError:
+            # Fallback if PIL not available - return empty PhotoImage
+            logger.warning("PIL not available for PixelAssetManager")
+            return tk.PhotoImage(width=width, height=height)

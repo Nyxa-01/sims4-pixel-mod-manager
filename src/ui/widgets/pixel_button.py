@@ -4,7 +4,7 @@ import logging
 import tkinter as tk
 from collections.abc import Callable
 
-from ..pixel_theme import PixelTheme
+from ..pixel_theme import PixelAssetManager, PixelTheme
 
 logger = logging.getLogger(__name__)
 

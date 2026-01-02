@@ -55,7 +55,7 @@ class TestFullWorkflow:
 
         # Assign mods to slots
         mods_by_slot = {}
-        for category, mods in mods_by_category.items():
+        for _category, mods in mods_by_category.items():
             for mod in mods:
                 slot = load_order.assign_mod_to_slot(mod)
                 if slot not in mods_by_slot:

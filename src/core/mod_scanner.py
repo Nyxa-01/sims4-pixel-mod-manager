@@ -236,7 +236,7 @@ class ModScanner:
         try:
             size = path.stat().st_size
         except (OSError, PermissionError) as e:
-            raise ModScanError(path, f"Cannot access file: {e}")
+            raise ModScanError(path, f"Cannot access file: {e}") from e
 
         # Validate size
         if size > self.max_file_size_bytes:
@@ -375,21 +375,21 @@ class ModScanner:
                     file_path=path,
                     reason=f"Syntax error at line {e.lineno}: {e.msg}",
                     recovery_hint="Fix syntax errors or remove file",
-                )
-            except UnicodeDecodeError:
+                ) from e
+            except UnicodeDecodeError as e:
                 raise SecurityError(
                     message="File is not valid UTF-8 text",
                     file_path=path,
                     reason="File encoding not UTF-8",
                     recovery_hint="Convert file to UTF-8 encoding",
-                )
+                ) from e
             except Exception as e:
                 raise SecurityError(
                     message=f"Python validation failed: {e}",
                     file_path=path,
                     reason=str(e),
                     recovery_hint="Check file integrity",
-                )
+                ) from e
 
         # Only validate types with known magic byte signatures
         if extension not in MAGIC_BYTES:
@@ -424,33 +424,33 @@ class ModScanner:
                                 reason="No .py files found in ZIP archive",
                                 recovery_hint="Script mods require Python files inside .ts4script ZIP",
                             )
-                except zipfile.BadZipFile:
+                except zipfile.BadZipFile as e:
                     raise SecurityError(
                         message=".ts4script is not a valid ZIP file",
                         file_path=path,
                         reason="ZIP header corrupted or invalid",
                         recovery_hint="Re-download the mod from trusted source",
-                    )
+                    ) from e
 
             return True, None
 
         except SecurityError:
             # Re-raise security errors (already have full context)
             raise
-        except PermissionError:
+        except PermissionError as e:
             raise SecurityError(
                 message="Permission denied",
                 file_path=path,
                 reason="Cannot read file (insufficient permissions)",
                 recovery_hint="Run as administrator or change file permissions",
-            )
+            ) from e
         except Exception as e:
             raise SecurityError(
                 message=f"Signature verification failed: {e}",
                 file_path=path,
                 reason=str(e),
                 recovery_hint="File may be corrupted. Verify integrity.",
-            )
+            ) from e
 
     def _determine_mod_type(self, path: Path) -> str:
         """Determine mod type from extension.

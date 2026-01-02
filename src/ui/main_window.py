@@ -369,7 +369,7 @@ class MainWindow:
 
                     # Flatten to list
                     self.incoming_mods = []
-                    for category, mods in mods_by_category.items():
+                    for _category, mods in mods_by_category.items():
                         self.incoming_mods.extend(mods)
 
                     # Update UI (must be on main thread)
@@ -839,7 +839,7 @@ For more information, visit the GitHub repository.
 def run_application() -> None:
     """Run the application."""
     root = tk.Tk()
-    app = MainWindow(root)
+    _app = MainWindow(root)
     root.mainloop()
 
 

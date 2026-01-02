@@ -1,10 +1,7 @@
 """Extended coverage tests for the Updater module targeting uncovered lines."""
 
 import io
-import json
-import tempfile
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from urllib.error import HTTPError, URLError
 
 import pytest

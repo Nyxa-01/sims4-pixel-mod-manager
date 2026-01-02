@@ -380,7 +380,7 @@ class DeployEngine:
                 logger.warning("Junction creation may require admin privileges")
 
             # Use mklink /J command
-            result = subprocess.run(
+            subprocess.run(
                 ["mklink", "/J", str(target), str(source)],
                 check=True,
                 capture_output=True,

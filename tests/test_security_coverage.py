@@ -1,13 +1,11 @@
 """Extended security coverage tests targeting uncovered lines."""
 
-import os
-import platform
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
-from src.core.security import PathEncryption, validate_path_security, sanitize_filename
+from src.core.security import PathEncryption, sanitize_filename, validate_path_security
 
 
 class TestPathEncryptionCoverage:
@@ -103,7 +101,7 @@ class TestPathEncryptionCoverage:
 
         encryption = PathEncryption(key_path=key_path)
 
-        with pytest.raises(Exception):  # Could be InvalidToken or ValueError
+        with pytest.raises((ValueError, TypeError, Exception)):  # Could be InvalidToken or ValueError
             encryption.decrypt_path("not_a_valid_token")
 
     def test_fernet_property_caching(self, tmp_path):

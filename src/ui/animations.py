@@ -83,7 +83,7 @@ def animate_fade(
 
     # Parse current color
     try:
-        current_color = widget.cget("fg")
+        _current_color = widget.cget("fg")
     except tk.TclError:
         return
 
@@ -98,7 +98,7 @@ def animate_fade(
             return
 
         # Interpolate alpha by mixing with background
-        alpha = target_alpha * (current_step / steps)
+        _alpha = target_alpha * (current_step / steps)
         # Simplified: just adjust brightness
         # TODO: Implement proper color interpolation
 

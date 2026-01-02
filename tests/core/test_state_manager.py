@@ -279,7 +279,7 @@ class TestStateManager:
 
         def worker():
             try:
-                for i in range(50):
+                for _i in range(50):
                     sm.set_state(AppState.SCANNING)
                     sm.get_state()
                     sm.set_state(AppState.DEPLOYING)
@@ -302,7 +302,7 @@ class TestStateManager:
 
         def worker():
             try:
-                for i in range(100):
+                for _i in range(100):
                     sm.increment_deploy_count()
             except Exception as e:
                 errors.append(e)
@@ -332,7 +332,7 @@ class TestStateManager:
 
         def worker():
             try:
-                for i in range(20):
+                for _i in range(20):
                     sm.set_state(AppState.SCANNING)
                     time.sleep(0.001)
             except Exception as e:

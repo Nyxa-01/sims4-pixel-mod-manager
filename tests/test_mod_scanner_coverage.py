@@ -1,11 +1,9 @@
 """Extended coverage tests for ModScanner targeting uncovered lines."""
 
-import zipfile
-import math
-from pathlib import Path
-from unittest.mock import patch, Mock, MagicMock
 import threading
-import time
+import zipfile
+from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -13,9 +11,6 @@ from src.core.exceptions import ModScanError, SecurityError
 from src.core.mod_scanner import (
     ModFile,
     ModScanner,
-    SUPPORTED_EXTENSIONS,
-    MAGIC_BYTES,
-    CORE_MOD_KEYWORDS,
 )
 
 
@@ -64,7 +59,7 @@ class TestModScannerCoverageExtended:
         test_file = tmp_path / "test.package"
         test_file.write_bytes(b"content")
 
-        with patch("builtins.open", side_effect=IOError("Read error")):
+        with patch("builtins.open", side_effect=OSError("Read error")):
             hash_value = scanner._calculate_hash(test_file)
 
         assert hash_value == "00000000"
@@ -113,7 +108,7 @@ class TestModScannerCoverageExtended:
         test_file = tmp_path / "test.package"
         test_file.write_bytes(b"DBPF" + b"content")
 
-        with patch("builtins.open", side_effect=IOError("Read error")):
+        with patch("builtins.open", side_effect=OSError("Read error")):
             entropy = scanner.calculate_entropy(test_file)
 
         assert entropy == 0.0

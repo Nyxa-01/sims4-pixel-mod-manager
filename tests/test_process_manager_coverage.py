@@ -1,9 +1,7 @@
 """Extended coverage tests for GameProcessManager targeting uncovered lines."""
 
 import platform
-import subprocess
-import time
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import psutil
 import pytest
@@ -14,10 +12,6 @@ from src.utils.process_manager import (
     check_game_status,
     is_admin,
     request_admin_elevation,
-    GAME_PROCESS_NAMES,
-    LAUNCHER_PROCESS_NAMES,
-    GRACEFUL_TIMEOUT,
-    FORCE_KILL_DELAY,
 )
 
 
@@ -315,7 +309,7 @@ class TestGameProcessManagerCoverage:
         mock_time.side_effect = [0, 0.5]
 
         # Access the method directly via class to avoid attribute shadowing
-        result = type(gpm).close_launchers(gpm)
+        _result = type(gpm).close_launchers(gpm)
 
         launcher.terminate.assert_called()
 
@@ -378,7 +372,7 @@ class TestGameProcessManagerCoverage:
         mock_time.side_effect = [0, 0.5]
 
         # Should not raise, just log warning
-        result = type(gpm).close_launchers(gpm)
+        _result = type(gpm).close_launchers(gpm)
 
     def test_wait_for_game_exit_immediate(self, manager):
         """Test wait when game exits immediately."""

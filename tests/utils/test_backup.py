@@ -165,7 +165,7 @@ class TestBackupManager:
         assert len(manifest["files"]) == 3
 
         # Check hash format
-        for filename, hash_str in manifest["files"].items():
+        for _filename, hash_str in manifest["files"].items():
             assert len(hash_str) == 8  # CRC32 hex format
             int(hash_str, 16)  # Should be valid hex
 
@@ -278,9 +278,9 @@ class TestBackupManager:
         # Create multiple backups
         import time
 
-        backup1 = manager.create_backup(sample_files, backup_dir)
+        _backup1 = manager.create_backup(sample_files, backup_dir)
         time.sleep(1.1)  # Ensure different timestamps (filename has 1-second resolution)
-        backup2 = manager.create_backup(sample_files, backup_dir)
+        _backup2 = manager.create_backup(sample_files, backup_dir)
 
         backups = manager.list_backups(backup_dir)
 
@@ -597,7 +597,7 @@ class TestBackupExceptionPaths:
         backup_dir = tmp_path / "backups"
 
         # Mock zipfile write to raise OSError
-        original_write = zipfile.ZipFile.write
+        _original_write = zipfile.ZipFile.write
 
         def mock_write(self, *args, **kwargs):
             raise OSError(28, "No space left on device")
@@ -786,7 +786,7 @@ class TestBackupExceptionPaths:
 
         # Should list both but mark corrupted as invalid
         valid_entries = [b for b in backups if b.is_valid]
-        invalid_entries = [b for b in backups if not b.is_valid]
+        _invalid_entries = [b for b in backups if not b.is_valid]
 
         assert len(valid_entries) >= 1
         assert any(b.path == valid_backup for b in valid_entries)
@@ -804,7 +804,7 @@ class TestBackupExceptionPaths:
         import time
 
         backups_created = []
-        for i in range(4):
+        for _i in range(4):
             bp = manager.create_backup(sample_files, backup_dir)
             backups_created.append(bp)
             time.sleep(1.5)  # Ensure unique timestamps (backup uses second precision)

@@ -3,11 +3,11 @@
 import platform
 import threading
 import time
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 import pytest
 
-from src.utils.timeout import timeout, TimeoutContext
+from src.utils.timeout import TimeoutContext, timeout
 
 
 class TestTimeoutDecorator:

@@ -288,7 +288,7 @@ class TestConfigManagerExceptionPaths:
         ConfigManager._instance = None
         ConfigManager._initialized = False
 
-        manager = ConfigManager.get_instance(config_dir=config_dir)
+        _manager = ConfigManager.get_instance(config_dir=config_dir)
 
         # Directory should be created (including logs subdirectory)
         assert config_dir.exists()
@@ -432,9 +432,9 @@ class TestConfigManagerExceptionPaths:
                 config_manager.set("max_mod_size_mb", 900)
                 try:
                     raise ValueError("Inner exception")
-                except ValueError:
+                except ValueError as e:
                     # Re-raise different exception
-                    raise RuntimeError("Outer exception")
+                    raise RuntimeError("Outer exception") from e
         except RuntimeError:
             pass
 

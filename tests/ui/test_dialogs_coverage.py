@@ -5,10 +5,8 @@ settings_dialog.py, update_dialog.py, wizard_dialog.py.
 These tests import and validate dialog class structures without instantiating them.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch
 import sys
-import importlib
+from unittest.mock import MagicMock, patch
 
 
 class TestConfirmDialogStructure:

@@ -4,9 +4,10 @@ Tests for pixel_button.py, pixel_listbox.py, chunky_frame.py, progress_bar.py.
 Uses mocking to avoid tkinter display requirements.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, PropertyMock
 import sys
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 
 # Mock tkinter before importing widgets

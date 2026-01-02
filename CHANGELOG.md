@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed - 2026-01-02
+
+#### CI/CD Pipeline Fixes
+- **Fixed Black code formatting compliance** - All 69 Python files now properly formatted
+- **Fixed 48 Ruff linting violations** across source and test files:
+  - Added exception chaining (`from e`) to all re-raised exceptions (B904)
+  - Fixed unused loop variables by prefixing with underscore
+  - Removed unused variable assignments in source files
+  - Updated `pyproject.toml` Ruff config to use new `[tool.ruff.lint]` format
+- **Improved code quality** through systematic linting fixes:
+  - `deploy_engine.py`: Removed unused result variable
+  - `load_order_engine.py`: Fixed unused loop variables
+  - `mod_scanner.py`: Added proper exception chaining
+  - `animations.py`: Prefixed unused variables
+  - `main_window.py`: Fixed unused loop and app variables
+  - `config_manager.py`: Added exception chaining
+  - `process_manager.py`: Added exception chaining  
+  - `pixel_button.py`: Added missing PixelAssetManager import
+  - `pixel_theme.py`: Added PixelAssetManager class implementation
+- **Test coverage**: Maintained 85.78% coverage (682 tests passing, 12 skipped)
+
+#### Technical Details
+- All changes follow PEP 8 and best practices
+- No breaking changes to public APIs
+- Exception handling improved with proper causality chains
+- Code readability enhanced through consistent formatting
+
 ### Fixed - 2026-01-01
 - Fixed missing dependencies preventing application startup
 - Fixed log directory creation with `parents=True` parameter

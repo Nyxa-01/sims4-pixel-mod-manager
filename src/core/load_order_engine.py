@@ -92,7 +92,7 @@ class LoadOrderEngine:
                 raise LoadOrderError(f"Failed to create slot folder: {prefix}") from e
 
         # Place mods in appropriate slots
-        for category, mod_list in mods.items():
+        for _category, mod_list in mods.items():
             for mod in mod_list:
                 try:
                     self._place_mod_file(mod, output)
@@ -121,7 +121,7 @@ class LoadOrderEngine:
         mod_category = mod.category.lower() if mod.category else ""
 
         # Check each slot's keywords
-        for prefix, description, keywords in self.slots:
+        for prefix, _description, keywords in self.slots:
             # Skip ZZZ_Overrides (only for explicit overrides)
             if prefix == "ZZZ_Overrides":
                 continue

@@ -161,7 +161,7 @@ class ConfigManager:
                 logger.debug("Loaded existing encryption key")
             except Exception as e:
                 logger.error(f"Failed to load encryption key: {e}")
-                raise EncryptionError("decrypt", self.key_path, str(e))
+                raise EncryptionError("decrypt", self.key_path, str(e)) from e
         else:
             # Generate new key
             key = Fernet.generate_key()
@@ -180,7 +180,7 @@ class ConfigManager:
                 )
             except Exception as e:
                 logger.error(f"Failed to create encryption key: {e}")
-                raise EncryptionError("encrypt", self.key_path, str(e))
+                raise EncryptionError("encrypt", self.key_path, str(e)) from e
 
     def _encrypt_path(self, path: str) -> str:
         """Encrypt a path string.
@@ -199,7 +199,7 @@ class ConfigManager:
             return encrypted.decode()
         except Exception as e:
             logger.error(f"Path encryption failed: {e}")
-            raise EncryptionError("encrypt", reason=str(e))
+            raise EncryptionError("encrypt", reason=str(e)) from e
 
     def _decrypt_path(self, encrypted: str) -> str:
         """Decrypt an encrypted path string.
@@ -216,12 +216,12 @@ class ConfigManager:
         try:
             decrypted = self._fernet.decrypt(encrypted.encode())
             return decrypted.decode()
-        except InvalidToken:
+        except InvalidToken as e:
             logger.error("Invalid encryption token (corrupted or wrong key)")
-            raise EncryptionError("decrypt", reason="Invalid token")
+            raise EncryptionError("decrypt", reason="Invalid token") from e
         except Exception as e:
             logger.error(f"Path decryption failed: {e}")
-            raise EncryptionError("decrypt", reason=str(e))
+            raise EncryptionError("decrypt", reason=str(e)) from e
 
     def _load_or_create_config(self) -> None:
         """Load existing config or create default."""
