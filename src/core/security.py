@@ -153,10 +153,10 @@ def sanitize_filename(filename: str) -> str:
         Sanitized filename (max 255 chars)
     """
     # Remove path separators and dangerous characters
-    dangerous = ['/', '\\', '..', '\x00', ':', '*', '?', '"', '<', '>', '|']
+    dangerous = ["/", "\\", "..", "\x00", ":", "*", "?", '"', "<", ">", "|"]
     sanitized = filename
     for char in dangerous:
-        sanitized = sanitized.replace(char, '_')
+        sanitized = sanitized.replace(char, "_")
 
     # Limit length to 255 chars total
     if len(sanitized) > 255:

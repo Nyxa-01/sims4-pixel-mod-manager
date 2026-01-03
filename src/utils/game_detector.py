@@ -172,19 +172,21 @@ class GameDetector:
 
         if self.system == "Windows":
             # Common Steam paths on Windows
-            steam_paths.extend([
-                Path("C:/Program Files (x86)/Steam"),
-                Path("C:/Program Files/Steam"),
-            ])
-        elif self.system == "Darwin":
-            steam_paths.append(
-                Path.home() / "Library" / "Application Support" / "Steam"
+            steam_paths.extend(
+                [
+                    Path("C:/Program Files (x86)/Steam"),
+                    Path("C:/Program Files/Steam"),
+                ]
             )
+        elif self.system == "Darwin":
+            steam_paths.append(Path.home() / "Library" / "Application Support" / "Steam")
         else:  # Linux
-            steam_paths.extend([
-                Path.home() / ".steam" / "steam",
-                Path.home() / ".local" / "share" / "Steam",
-            ])
+            steam_paths.extend(
+                [
+                    Path.home() / ".steam" / "steam",
+                    Path.home() / ".local" / "share" / "Steam",
+                ]
+            )
 
         for steam_root in steam_paths:
             if not steam_root.exists():
@@ -292,17 +294,11 @@ class GameDetector:
 
         # Mods folder is typically in Documents
         if self.system == "Windows":
-            mods_path = (
-                Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
-            )
+            mods_path = Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
         elif self.system == "Darwin":
-            mods_path = (
-                Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
-            )
+            mods_path = Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
         else:  # Linux
-            mods_path = (
-                Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
-            )
+            mods_path = Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
 
         if mods_path.exists():
             logger.info(f"Found Mods folder: {mods_path}")

@@ -33,8 +33,13 @@ MAGIC_BYTES = {
 
 # Keywords for categorization
 CORE_MOD_KEYWORDS = {
-    "mccc", "ui_cheats", "mc_command", "xml_injector",
-    "better_exceptions", "tmex", "pose_player"
+    "mccc",
+    "ui_cheats",
+    "mc_command",
+    "xml_injector",
+    "better_exceptions",
+    "tmex",
+    "pose_player",
 }
 
 SCRIPT_KEYWORDS = {"script", "tuning", "injector"}
@@ -170,9 +175,7 @@ class ModScanner:
                     )
                 )
 
-        logger.info(
-            f"Scan complete: {scanned_count} valid, {skipped_count} invalid/skipped"
-        )
+        logger.info(f"Scan complete: {scanned_count} valid, {skipped_count} invalid/skipped")
 
         return results
 
@@ -337,7 +340,7 @@ class ModScanner:
                     message=f"File entropy too high ({entropy:.2f} > 7.5)",
                     file_path=path,
                     reason=f"Entropy {entropy:.2f} suggests encryption/packing (malware indicator)",
-                    recovery_hint="File may be packed or malicious. Manual review required."
+                    recovery_hint="File may be packed or malicious. Manual review required.",
                 )
 
             return entropy
@@ -372,21 +375,21 @@ class ModScanner:
                     message=f"Invalid Python syntax: {e}",
                     file_path=path,
                     reason=f"Syntax error at line {e.lineno}: {e.msg}",
-                    recovery_hint="Fix syntax errors or remove file"
+                    recovery_hint="Fix syntax errors or remove file",
                 )
             except UnicodeDecodeError:
                 raise SecurityError(
                     message="File is not valid UTF-8 text",
                     file_path=path,
                     reason="File encoding not UTF-8",
-                    recovery_hint="Convert file to UTF-8 encoding"
+                    recovery_hint="Convert file to UTF-8 encoding",
                 )
             except Exception as e:
                 raise SecurityError(
                     message=f"Python validation failed: {e}",
                     file_path=path,
                     reason=str(e),
-                    recovery_hint="Check file integrity"
+                    recovery_hint="Check file integrity",
                 )
 
         # Only validate types with known magic byte signatures
@@ -405,7 +408,7 @@ class ModScanner:
                     message=f"Invalid {extension} signature",
                     file_path=path,
                     reason=f"Expected {expected.hex()}, got {header.hex()}",
-                    recovery_hint="File may be corrupted or renamed. Verify source."
+                    recovery_hint="File may be corrupted or renamed. Verify source.",
                 )
 
             # Additional validation for specific types
@@ -420,14 +423,14 @@ class ModScanner:
                                 message=".ts4script must contain Python files",
                                 file_path=path,
                                 reason="No .py files found in ZIP archive",
-                                recovery_hint="Script mods require Python files inside .ts4script ZIP"
+                                recovery_hint="Script mods require Python files inside .ts4script ZIP",
                             )
                 except zipfile.BadZipFile:
                     raise SecurityError(
                         message=".ts4script is not a valid ZIP file",
                         file_path=path,
                         reason="ZIP header corrupted or invalid",
-                        recovery_hint="Re-download the mod from trusted source"
+                        recovery_hint="Re-download the mod from trusted source",
                     )
 
             return True, None
@@ -440,14 +443,14 @@ class ModScanner:
                 message="Permission denied",
                 file_path=path,
                 reason="Cannot read file (insufficient permissions)",
-                recovery_hint="Run as administrator or change file permissions"
+                recovery_hint="Run as administrator or change file permissions",
             )
         except Exception as e:
             raise SecurityError(
                 message=f"Signature verification failed: {e}",
                 file_path=path,
                 reason=str(e),
-                recovery_hint="File may be corrupted. Verify integrity."
+                recovery_hint="File may be corrupted. Verify integrity.",
             )
 
     def _determine_mod_type(self, path: Path) -> str:

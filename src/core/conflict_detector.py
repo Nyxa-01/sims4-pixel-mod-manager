@@ -159,8 +159,6 @@ class ConflictDetector:
                     conflicts.append(conflicting_mod)
 
         if conflicts:
-            logger.warning(
-                f"{mod_path.name} conflicts with: {', '.join(conflicts)}"
-            )
+            logger.warning(f"{mod_path.name} conflicts with: {', '.join(conflicts)}")
 
         return conflicts

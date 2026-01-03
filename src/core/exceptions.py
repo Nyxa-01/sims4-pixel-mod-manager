@@ -25,7 +25,7 @@ class ModManagerException(Exception):
         message: str,
         error_code: str = "UNKNOWN",
         recovery_hint: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Initialize base exception.
 
@@ -145,7 +145,7 @@ class BackupError(ModManagerException):
         reason: str = "Unknown error",
         error_code: str = "BACKUP001",
         recovery_hint: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Initialize backup error.
 
@@ -166,7 +166,7 @@ class BackupError(ModManagerException):
                 message = f"Backup {operation_type} failed for '{backup_path}': {reason}"
             else:
                 message = reason
-        
+
         if recovery_hint is None:
             recovery_hint = "Ensure sufficient disk space and write permissions"
 
@@ -196,7 +196,7 @@ class SecurityError(ModManagerException):
         details: Optional[str] = None,
         error_code: str = "SECURITY001",
         message: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Initialize security error.
 
@@ -225,7 +225,9 @@ class SecurityError(ModManagerException):
                 message = "Security validation failed"
 
         # Extract recovery_hint from kwargs or use default
-        recovery_hint = kwargs.pop("recovery_hint", "Do not proceed. Review file source and scan for malware.")
+        recovery_hint = kwargs.pop(
+            "recovery_hint", "Do not proceed. Review file source and scan for malware."
+        )
 
         super().__init__(message, error_code, recovery_hint, **kwargs)
 
@@ -252,7 +254,7 @@ class GameProcessError(ModManagerException):
         reason: str = "Unknown error",
         error_code: str = "GAME001",
         recovery_hint: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Initialize game process error.
 
@@ -270,7 +272,7 @@ class GameProcessError(ModManagerException):
         # If message not provided, build it from parameters
         if message is None:
             message = f"Game process '{process_name}' {action} failed: {reason}"
-        
+
         if recovery_hint is None:
             recovery_hint = "Close The Sims 4 manually and try again"
 
@@ -300,7 +302,7 @@ class PathError(ModManagerException):
         reason: str = "Unknown error",
         error_code: str = "PATH001",
         recovery_hint: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ) -> None:
         """Initialize path error.
 
@@ -321,7 +323,7 @@ class PathError(ModManagerException):
                 message = f"Invalid {path_type} path '{path}': {reason}"
             else:
                 message = reason
-        
+
         if recovery_hint is None:
             recovery_hint = f"Configure valid {path_type} path in Settings"
 
@@ -415,8 +417,7 @@ class ConflictError(ModManagerException):
 
         if recovery_hint is None:
             recovery_hint = (
-                "Choose which mod to prioritize using load order, "
-                "or remove conflicting mods"
+                "Choose which mod to prioritize using load order, " "or remove conflicting mods"
             )
 
         super().__init__(message, error_code, recovery_hint)

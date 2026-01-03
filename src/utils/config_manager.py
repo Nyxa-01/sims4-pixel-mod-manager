@@ -55,14 +55,14 @@ class ConfigManager:
 
     def __init__(self, config_dir: Optional[Path] = None) -> None:
         """Initialize configuration manager (private - use get_instance() instead).
-        
+
         Args:
             config_dir: Optional custom config directory (for testing)
         """
         # Allow re-initialization only during get_instance() call
         # Check if this is being called directly (not from get_instance)
         # by checking if _instance is None
-        
+
         self.config_dir = config_dir if config_dir is not None else self._get_config_dir()
         self.config_path = self.config_dir / "config.json"
         self.key_path = self.config_dir / ".encryption.key"
@@ -88,7 +88,7 @@ class ConfigManager:
     @classmethod
     def get_instance(cls, config_dir: Optional[Path] = None) -> "ConfigManager":
         """Get singleton instance (thread-safe).
-        
+
         Args:
             config_dir: Config directory (only used on first call)
 
@@ -97,22 +97,24 @@ class ConfigManager:
         """
         if cls._lock is None:
             import threading
+
             cls._lock = threading.Lock()
-        
+
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:  # Double-checked locking
                     cls._instance = cls.__new__(cls)
                     cls._instance.__init__(config_dir)
         return cls._instance
-    
+
     @classmethod
     def reset_instance(cls) -> None:
         """Reset singleton (for testing only)."""
         if cls._lock is None:
             import threading
+
             cls._lock = threading.Lock()
-        
+
         with cls._lock:
             cls._instance = None
             cls._initialized = False
@@ -143,9 +145,7 @@ class ConfigManager:
 
         file_handler = logging.FileHandler(self.log_path)
         file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        )
+        file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
         config_logger = logging.getLogger("config")
         config_logger.addHandler(file_handler)

@@ -576,4 +576,3 @@ def get_theme() -> PixelTheme:
         PixelTheme instance
     """
     return PixelTheme.get_instance()
-

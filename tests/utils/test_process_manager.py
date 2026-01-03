@@ -60,13 +60,13 @@ class TestGameProcessManager:
 
     def test_initialization(self, manager: GameProcessManager) -> None:
         """Test manager initialization."""
-        assert manager.close_launchers is False
+        assert manager._should_close_launchers is False
         assert manager._terminated_processes == []
 
     def test_initialization_with_launcher_close(self) -> None:
         """Test manager with launcher close enabled."""
         manager = GameProcessManager(close_launchers=True)
-        assert manager.close_launchers is True
+        assert manager._should_close_launchers is True
 
     def test_context_manager(self, manager: GameProcessManager) -> None:
         """Test context manager protocol."""
@@ -240,16 +240,27 @@ class TestGameProcessManager:
         mock_game_process: Mock,
     ) -> None:
         """Test force kill after graceful timeout."""
-        # Process doesn't exit gracefully, requires force kill
-        mock_process_iter.side_effect = [
-            [mock_game_process],  # Initial detection
-            [mock_game_process],  # Still running after terminate
-            [mock_game_process] * 20,  # Multiple checks during wait
-            [mock_game_process],  # Before force kill
-            [],  # After force kill
-        ]
+        # Track state to control process_iter behavior
+        force_kill_happened = [False]
 
-        result = manager.close_game_safely(timeout=1)
+        def process_iter_side_effect(*args, **kwargs):
+            # After kill() is called, return empty list
+            if force_kill_happened[0]:
+                return []
+            # Otherwise return the process
+            return [mock_game_process]
+
+        mock_process_iter.side_effect = process_iter_side_effect
+
+        # Track kill call to signal process termination
+        def kill_side_effect():
+            force_kill_happened[0] = True
+
+        mock_game_process.kill.side_effect = kill_side_effect
+
+        # Use a very short timeout so the real time check exits quickly
+        # The loop will iterate a few times with real time but exit due to timeout
+        result = manager.close_game_safely(timeout=0)  # 0 second timeout exits immediately
 
         assert result is True
         mock_game_process.terminate.assert_called_once()
@@ -276,7 +287,7 @@ class TestGameProcessManager:
 
     @patch("psutil.process_iter")
     @patch("time.sleep")
-    @patch("time.time")
+    @patch("src.utils.process_manager.time.time")
     def test_wait_for_game_exit_timeout(
         self,
         mock_time: Mock,
@@ -289,8 +300,17 @@ class TestGameProcessManager:
         # Game never exits
         mock_process_iter.return_value = [mock_game_process]
 
-        # Simulate time passing
-        mock_time.side_effect = [0, 11]  # Start, then past timeout
+        # Simulate time passing - use lambda to return incrementing values
+        # First call returns 0 (start_time), subsequent calls return values > timeout
+        call_count = [0]
+
+        def time_side_effect():
+            call_count[0] += 1
+            if call_count[0] == 1:
+                return 0  # start_time
+            return 15  # Always past timeout after first call
+
+        mock_time.side_effect = time_side_effect
 
         result = manager.wait_for_game_exit(timeout=10)
 
@@ -345,11 +365,13 @@ class TestGameProcessManager:
     ) -> None:
         """Test restoring terminated processes."""
         # Manually add terminated process
-        manager._terminated_processes.append({
-            "pid": 12345,
-            "name": "TS4_x64.exe",
-            "exe": "C:/path/to/game.exe",
-        })
+        manager._terminated_processes.append(
+            {
+                "pid": 12345,
+                "name": "TS4_x64.exe",
+                "exe": "C:/path/to/game.exe",
+            }
+        )
 
         result = manager.restore_processes()
 
@@ -386,12 +408,8 @@ class TestGameProcessManager:
     ) -> None:
         """Test all defined process names are detected."""
         # Create mock process for each name
-        game_procs = [
-            MagicMock(info={"name": name}) for name in GAME_PROCESS_NAMES
-        ]
-        launcher_procs = [
-            MagicMock(info={"name": name}) for name in LAUNCHER_PROCESS_NAMES
-        ]
+        game_procs = [MagicMock(info={"name": name}) for name in GAME_PROCESS_NAMES]
+        launcher_procs = [MagicMock(info={"name": name}) for name in LAUNCHER_PROCESS_NAMES]
 
         mock_process_iter.return_value = game_procs + launcher_procs
 
