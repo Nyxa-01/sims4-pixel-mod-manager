@@ -608,14 +608,10 @@ class PixelAssetManager:
 
             # Chunky 4px border
             border_color = "#1D4ED8"
-            draw.rectangle(
-                [0, 0, width - 1, height - 1], outline=border_color, width=4
-            )
+            draw.rectangle([0, 0, width - 1, height - 1], outline=border_color, width=4)
 
             if state == "hover":
-                draw.rectangle(
-                    [0, 0, width - 1, height - 1], outline="#06B6D4", width=2
-                )
+                draw.rectangle([0, 0, width - 1, height - 1], outline="#06B6D4", width=2)
             elif state == "pressed":
                 # Shift down 2px (simulate press)
                 img = img.crop((0, 0, width, height - 2))

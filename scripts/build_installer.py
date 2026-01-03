@@ -37,9 +37,7 @@ class InstallerBuilder:
         # Check for Inno Setup compiler
         iscc = self._find_inno_setup()
         if not iscc:
-            raise EnvironmentError(
-                "Inno Setup not found. Download from: https://jrsoftware.org/isinfo.php"
-            )
+            raise OSError("Inno Setup not found. Download from: https://jrsoftware.org/isinfo.php")
 
         # Locate executable
         exe_path = self.dist_dir / "Sims4ModManager.exe"
@@ -203,7 +201,7 @@ Description: Sims 4 Pixel Mod Manager
         (pkg_dir / "DEBIAN" / "control").write_text(control_content)
 
         # Create .desktop file
-        desktop_content = f"""[Desktop Entry]
+        desktop_content = """[Desktop Entry]
 Version=1.0
 Type=Application
 Name=Sims 4 Mod Manager

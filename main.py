@@ -10,12 +10,12 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+from src.core.state_manager import StateManager
 from src.ui.main_window import MainWindow
 from src.ui.splash_screen import SplashScreen
-from src.utils.updater import Updater
-from src.utils.logger import setup_logging, setup_exception_logging
 from src.utils.config_manager import ConfigManager
-from src.core.state_manager import StateManager
+from src.utils.logger import setup_exception_logging, setup_logging
+from src.utils.updater import Updater
 
 
 def enable_dpi_awareness() -> None:
@@ -121,7 +121,7 @@ def main() -> None:
         try:
             if "splash" in locals():
                 splash.close()
-        except:
+        except Exception:
             pass
 
         # Show error dialog
@@ -132,7 +132,7 @@ def main() -> None:
                 "Startup Error",
                 f"Failed to start application:\n\n{str(e)}\n\nCheck logs for details.",
             )
-        except:
+        except Exception:
             pass
 
         sys.exit(1)

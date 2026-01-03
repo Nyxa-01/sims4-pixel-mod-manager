@@ -18,7 +18,6 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 class BuildConfig:
@@ -107,9 +106,7 @@ class Builder:
         # Check Python version
         py_version = sys.version_info
         if py_version < (3, 10):
-            raise EnvironmentError(
-                f"Python 3.10+ required, found {py_version.major}.{py_version.minor}"
-            )
+            raise OSError(f"Python 3.10+ required, found {py_version.major}.{py_version.minor}")
         print(f"  ✓ Python {py_version.major}.{py_version.minor}.{py_version.micro}")
 
         # Check PyInstaller
@@ -122,7 +119,7 @@ class Builder:
             )
             print(f"  ✓ PyInstaller {result.stdout.strip()}")
         except (FileNotFoundError, subprocess.CalledProcessError):
-            raise EnvironmentError("PyInstaller not found. Install: pip install pyinstaller")
+            raise OSError("PyInstaller not found. Install: pip install pyinstaller") from None
 
         # Check spec file exists
         if not self.config.spec_file.exists():
@@ -152,7 +149,7 @@ class Builder:
             # Run PyInstaller
             cmd = ["pyinstaller", str(temp_spec), "--clean", "--noconfirm"]
 
-            result = subprocess.run(cmd, check=True)
+            subprocess.run(cmd, check=True)
 
             # Locate built executable
             exe_name = self.config.get_executable_name(target_platform)
@@ -169,7 +166,7 @@ class Builder:
             if temp_spec.exists():
                 temp_spec.unlink()
 
-    def sign_windows(self, exe_path: Path, cert_path: Optional[str] = None):
+    def sign_windows(self, exe_path: Path, cert_path: str | None = None):
         """Sign Windows executable with SignTool."""
         print("\n🔐 Signing Windows executable...")
 
@@ -202,7 +199,7 @@ class Builder:
         except subprocess.CalledProcessError as e:
             print(f"✗ Signing failed: {e}")
 
-    def sign_macos(self, app_path: Path, identity: Optional[str] = None, notarize: bool = False):
+    def sign_macos(self, app_path: Path, identity: str | None = None, notarize: bool = False):
         """Sign macOS app bundle with codesign."""
         print("\n🔐 Signing macOS app bundle...")
 
@@ -255,7 +252,7 @@ class Builder:
         print("    3. Wait for approval email (5-15 minutes)")
         print("    4. Staple: xcrun stapler staple {app_path}")
 
-    def _find_signtool(self) -> Optional[Path]:
+    def _find_signtool(self) -> Path | None:
         """Locate SignTool.exe on Windows."""
         if platform.system() != "Windows":
             return None

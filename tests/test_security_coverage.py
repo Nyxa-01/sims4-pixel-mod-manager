@@ -101,7 +101,9 @@ class TestPathEncryptionCoverage:
 
         encryption = PathEncryption(key_path=key_path)
 
-        with pytest.raises((ValueError, TypeError, Exception)):  # Could be InvalidToken or ValueError
+        with pytest.raises(
+            (ValueError, TypeError, Exception)
+        ):  # Could be InvalidToken or ValueError
             encryption.decrypt_path("not_a_valid_token")
 
     def test_fernet_property_caching(self, tmp_path):

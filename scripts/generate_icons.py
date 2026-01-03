@@ -5,8 +5,9 @@ Creates icon.png (256x256) and icon.ico (multi-resolution) with 8-bit pixel aest
 Requires Pillow: pip install pillow
 """
 
-from PIL import Image, ImageDraw
 from pathlib import Path
+
+from PIL import Image, ImageDraw
 
 
 def create_pixel_icon(size: int = 256) -> Image.Image:
@@ -120,7 +121,7 @@ def generate_all_icons(output_dir: Path):
     print("Generating icon.icns (macOS)...")
     try:
         # Requires: pip install pillow-icns
-        from PIL import IcnsImagePlugin
+        from PIL import IcnsImagePlugin  # noqa: F401 - import enables ICNS format support
 
         icon_256.save(output_dir / "icon.icns", format="ICNS")
     except ImportError:
