@@ -271,9 +271,7 @@ class TestGameDetector:
     ) -> None:
         """Test validation of valid resource.cfg."""
         resource_cfg = mock_mods_folder / "resource.cfg"
-        resource_cfg.write_text(
-            "Priority 500\nPackedFile Base/*.package\nPackedFile */*.package"
-        )
+        resource_cfg.write_text("Priority 500\nPackedFile Base/*.package\nPackedFile */*.package")
 
         assert detector.validate_resource_cfg(mock_mods_folder) is True
 
@@ -317,7 +315,7 @@ class TestGameDetector:
         tmp_path: Path,
     ) -> None:
         """Test parsing Steam library folders VDF."""
-        vdf_content = '''
+        vdf_content = """
         "libraryfolders"
         {
             "0"
@@ -329,7 +327,7 @@ class TestGameDetector:
                 "path"		"D:\\\\SteamLibrary"
             }
         }
-        '''
+        """
 
         vdf_file = tmp_path / "libraryfolders.vdf"
         vdf_file.write_text(vdf_content)

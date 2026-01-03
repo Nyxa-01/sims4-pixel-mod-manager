@@ -77,7 +77,7 @@ class TestSanitizeFilename:
         dangerous = 'mod<name>:with*bad?chars|"test".package'
         sanitized = sanitize_filename(dangerous)
 
-        for char in ['<', '>', ':', '*', '?', '|', '"']:
+        for char in ["<", ">", ":", "*", "?", "|", '"']:
             assert char not in sanitized
 
     def test_sanitize_long_filename(self) -> None:

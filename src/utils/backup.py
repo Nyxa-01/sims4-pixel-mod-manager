@@ -133,9 +133,7 @@ class BackupManager:
             total_size = 0
 
             # Create backup zip (atomic write to temp file)
-            with zipfile.ZipFile(
-                temp_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6
-            ) as zf:
+            with zipfile.ZipFile(temp_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
                 for idx, file_path in enumerate(files_to_backup):
                     try:
                         # Calculate hash
@@ -378,10 +376,10 @@ class BackupManager:
 
     def verify_backup(self, backup_path: Path) -> tuple[bool, str]:
         """Verify backup integrity using CRC32 manifest.
-        
+
         Args:
             backup_path: Path to backup ZIP file
-            
+
         Returns:
             Tuple of (is_valid, error_message)
             - (True, "") if backup is valid
@@ -389,10 +387,10 @@ class BackupManager:
         """
         if not backup_path.exists():
             return (False, f"Backup not found: {backup_path}")
-        
+
         if not zipfile.is_zipfile(backup_path):
             return (False, "Not a valid ZIP file")
-        
+
         try:
             # Test zip integrity
             if not self._test_zip_integrity(backup_path):
@@ -410,19 +408,19 @@ class BackupManager:
                 required_keys = ["timestamp", "total_files", "files"]
                 if not all(key in manifest for key in required_keys):
                     return (False, "Manifest has invalid structure")
-                
+
                 # Verify each file's CRC32 hash
                 for file_info in manifest.get("files", []):
                     filepath = file_info["path"]
                     expected_crc = file_info["crc32"]
-                    
+
                     if filepath not in zf.namelist():
                         return (False, f"Missing file in backup: {filepath}")
-                    
+
                     # Calculate actual CRC32
                     file_data = zf.read(filepath)
-                    actual_crc = zlib.crc32(file_data) & 0xffffffff
-                    
+                    actual_crc = zlib.crc32(file_data) & 0xFFFFFFFF
+
                     if actual_crc != expected_crc:
                         return (False, f"CRC mismatch for {filepath}")
 
@@ -489,15 +487,11 @@ class BackupManager:
         Args:
             backup_dir: Backup storage directory
         """
-        total_size = sum(
-            f.stat().st_size for f in backup_dir.glob("backup_*.zip") if f.is_file()
-        )
+        total_size = sum(f.stat().st_size for f in backup_dir.glob("backup_*.zip") if f.is_file())
 
         if total_size > MAX_BACKUP_SIZE_WARNING:
             size_gb = round(total_size / (1024 * 1024 * 1024), 2)
-            logger.warning(
-                f"Total backup size ({size_gb} GB) exceeds recommended limit (5 GB)"
-            )
+            logger.warning(f"Total backup size ({size_gb} GB) exceeds recommended limit (5 GB)")
 
 
 def get_default_backup_manager() -> BackupManager:

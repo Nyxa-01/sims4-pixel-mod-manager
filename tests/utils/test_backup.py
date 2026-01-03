@@ -204,9 +204,7 @@ class TestBackupManager:
         backup_path = manager.create_backup(sample_files, backup_dir)
 
         # Restore with verification
-        result = manager.restore_backup(
-            backup_path, restore_dir, verify_hashes=True
-        )
+        result = manager.restore_backup(backup_path, restore_dir, verify_hashes=True)
 
         assert result is True
 

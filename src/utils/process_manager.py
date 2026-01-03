@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 def is_admin() -> bool:
     """Check if running with administrator privileges.
-    
+
     Returns:
         True if admin/root, False otherwise
     """
@@ -30,6 +30,7 @@ def is_admin() -> bool:
         else:
             # Unix: Check if running as root
             import os
+
             return os.geteuid() == 0
     except Exception:
         return False
@@ -37,10 +38,10 @@ def is_admin() -> bool:
 
 def request_admin_elevation() -> bool:
     """Request admin elevation (Windows only).
-    
+
     Returns:
         True if elevation granted, False otherwise
-        
+
     Note:
         On Windows, this will restart the app with UAC prompt.
         User must handle restart logic.
@@ -48,26 +49,27 @@ def request_admin_elevation() -> bool:
     if platform.system() != "Windows":
         logger.warning("Admin elevation only supported on Windows")
         return False
-    
+
     if is_admin():
         return True  # Already admin
-    
+
     try:
         script = sys.argv[0]
-        params = ' '.join(sys.argv[1:])
-        
+        params = " ".join(sys.argv[1:])
+
         # Request elevation via ShellExecute
         ret = ctypes.windll.shell32.ShellExecuteW(
             None, "runas", sys.executable, f'"{script}" {params}', None, 1
         )
-        
+
         # If ret > 32, elevation succeeded (app will restart)
         # If ret <= 32, user cancelled or error
         return ret > 32
-    
+
     except Exception as e:
         logger.error(f"Admin elevation failed: {e}")
         return False
+
 
 # Process names to monitor
 GAME_PROCESS_NAMES = [
@@ -103,7 +105,7 @@ class GameProcessManager:
         Args:
             close_launchers: Whether to also close Origin/EA App
         """
-        self.close_launchers = close_launchers
+        self._should_close_launchers = close_launchers
         self._terminated_processes: list[dict] = []
 
     def __enter__(self) -> "GameProcessManager":
@@ -128,10 +130,7 @@ class GameProcessManager:
             for proc in psutil.process_iter(["pid", "name"]):
                 try:
                     proc_name = proc.info.get("name", "")
-                    if any(
-                        game.lower() in proc_name.lower()
-                        for game in GAME_PROCESS_NAMES
-                    ):
+                    if any(game.lower() in proc_name.lower() for game in GAME_PROCESS_NAMES):
                         processes.append(proc)
                         logger.debug(f"Found game process: {proc_name} (PID: {proc.pid})")
 
@@ -160,13 +159,10 @@ class GameProcessManager:
                 try:
                     proc_name = proc.info.get("name", "")
                     if any(
-                        launcher.lower() in proc_name.lower()
-                        for launcher in LAUNCHER_PROCESS_NAMES
+                        launcher.lower() in proc_name.lower() for launcher in LAUNCHER_PROCESS_NAMES
                     ):
                         processes.append(proc)
-                        logger.debug(
-                            f"Found launcher process: {proc_name} (PID: {proc.pid})"
-                        )
+                        logger.debug(f"Found launcher process: {proc_name} (PID: {proc.pid})")
 
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
@@ -207,11 +203,13 @@ class GameProcessManager:
         # Store process info for potential restoration
         for proc in processes:
             try:
-                self._terminated_processes.append({
-                    "pid": proc.pid,
-                    "name": proc.name(),
-                    "exe": proc.exe(),
-                })
+                self._terminated_processes.append(
+                    {
+                        "pid": proc.pid,
+                        "name": proc.name(),
+                        "exe": proc.exe(),
+                    }
+                )
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
 
