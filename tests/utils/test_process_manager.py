@@ -241,27 +241,31 @@ class TestGameProcessManager:
         mock_game_process: Mock,
     ) -> None:
         """Test force kill after graceful timeout."""
-        # Mock time progression to force timeout:
-        # - start_time = 0 (first call in wait_for_game_exit)
-        # - Loop iterations check time.time() twice per iteration (while condition + next iteration)
-        # - Need to exceed timeout=1 to exit wait loop and trigger force kill
-        mock_time.side_effect = [
-            0,  # start_time
-            0.3,  # First while check
-            0.6,  # Second while check
-            0.9,  # Third while check
-            1.2,  # Fourth while check - exceeds timeout, exits loop
-        ]
 
-        # Process persists through wait period, only dies after force kill
-        mock_process_iter.side_effect = [
-            [mock_game_process],  # get_game_processes() in close_game_safely
-            [mock_game_process],  # is_game_running() check #1 in wait loop
-            [mock_game_process],  # is_game_running() check #2 in wait loop
-            [mock_game_process],  # is_game_running() check #3 in wait loop
-            [mock_game_process],  # get_game_processes() after wait timeout (for force kill)
-            [],  # Final is_game_running() check after kill
-        ]
+        # Infinite time generator - starts at 0, increments by 0.3, crosses 1s timeout
+        def infinite_time():
+            current = 0.0
+            while True:
+                yield current
+                current += 0.3
+
+        mock_time.side_effect = infinite_time()
+
+        # Track whether kill was called to simulate process death
+        kill_called = [False]
+
+        def kill_side_effect():
+            kill_called[0] = True
+
+        mock_game_process.kill.side_effect = kill_side_effect
+
+        # Process persists until killed
+        def process_iter_side_effect(*args, **kwargs):
+            if kill_called[0]:
+                return []
+            return [mock_game_process]
+
+        mock_process_iter.side_effect = process_iter_side_effect
 
         result = manager.close_game_safely(timeout=1)
 
@@ -300,11 +304,19 @@ class TestGameProcessManager:
         mock_game_process: Mock,
     ) -> None:
         """Test timeout when waiting for game exit."""
+
+        # Infinite time generator that eventually exceeds 10s timeout
+        def infinite_time():
+            times = [0, 3, 6, 9, 15]  # Last value exceeds 10s timeout
+            yield from times
+            # Keep yielding the final value forever
+            while True:
+                yield 15
+
+        mock_time.side_effect = infinite_time()
+
         # Game never exits
         mock_process_iter.return_value = [mock_game_process]
-
-        # Simulate time passing
-        mock_time.side_effect = [0, 11]  # Start, then past timeout
 
         result = manager.wait_for_game_exit(timeout=10)
 

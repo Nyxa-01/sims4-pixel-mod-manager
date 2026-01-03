@@ -1,6 +1,7 @@
 """Extended coverage tests for GameProcessManager targeting uncovered lines."""
 
 import platform
+import sys
 from unittest.mock import MagicMock, Mock, patch
 
 import psutil
@@ -97,6 +98,7 @@ class TestRequestAdminElevation:
 
         assert result is True
 
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-only test")
     @patch("platform.system")
     @patch("src.utils.process_manager.is_admin")
     @patch("ctypes.windll.shell32.ShellExecuteW")
@@ -111,6 +113,7 @@ class TestRequestAdminElevation:
         assert result is True
         mock_shell.assert_called_once()
 
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-only test")
     @patch("platform.system")
     @patch("src.utils.process_manager.is_admin")
     @patch("ctypes.windll.shell32.ShellExecuteW")
@@ -124,6 +127,7 @@ class TestRequestAdminElevation:
 
         assert result is False
 
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-only test")
     @patch("platform.system")
     @patch("src.utils.process_manager.is_admin")
     @patch("ctypes.windll.shell32.ShellExecuteW")
@@ -296,17 +300,30 @@ class TestGameProcessManagerCoverage:
         launcher.name.return_value = "Origin.exe"
         launcher.info = {"pid": 9999, "name": "Origin.exe"}
 
-        # First call returns launcher, then empty for subsequent calls
-        call_count = [0]
+        # Track if terminate was called to simulate process exit
+        terminate_called = [False]
 
+        def terminate_side_effect():
+            terminate_called[0] = True
+
+        launcher.terminate.side_effect = terminate_side_effect
+
+        # First call returns launcher, then empty after terminate
         def iter_side_effect(*args, **kwargs):
-            call_count[0] += 1
-            if call_count[0] <= 1:  # First call for get_launcher_processes
-                return [launcher]
-            return []  # Subsequent calls show no processes
+            if terminate_called[0]:
+                return []
+            return [launcher]
 
         mock_iter.side_effect = iter_side_effect
-        mock_time.side_effect = [0, 0.5]
+
+        # Infinite time generator
+        def infinite_time():
+            current = 0.0
+            while True:
+                yield current
+                current += 0.5
+
+        mock_time.side_effect = infinite_time()
 
         # Access the method directly via class to avoid attribute shadowing
         _result = type(gpm).close_launchers(gpm)
@@ -315,7 +332,8 @@ class TestGameProcessManagerCoverage:
 
     @patch("psutil.process_iter")
     @patch("time.sleep")
-    def test_close_launchers_method_timeout(self, mock_sleep, mock_iter):
+    @patch("time.time")
+    def test_close_launchers_method_timeout(self, mock_time, mock_sleep, mock_iter):
         """Test launcher close method timeout."""
         gpm = GameProcessManager(close_launchers=False)
 
@@ -327,10 +345,15 @@ class TestGameProcessManagerCoverage:
         # Launcher never exits
         mock_iter.return_value = [launcher]
 
-        with patch("time.time") as mock_time:
-            # Simulate timeout - need enough values for the loop
-            mock_time.side_effect = [0, 2, 4, 6, 8, 10, 12]
-            result = type(gpm).close_launchers(gpm, timeout=10)
+        # Infinite time generator that exceeds timeout
+        def infinite_time():
+            times = [0, 2, 4, 6, 8, 10, 12]
+            yield from times
+            while True:
+                yield 15
+
+        mock_time.side_effect = infinite_time()
+        result = type(gpm).close_launchers(gpm, timeout=10)
 
         # Returns False when timeout occurs
         assert result is False
@@ -359,17 +382,31 @@ class TestGameProcessManagerCoverage:
         launcher.info = {"pid": 9999, "name": "Origin.exe"}
         launcher.terminate.side_effect = psutil.AccessDenied("No access")
 
-        # First call returns launcher, subsequent calls show it's gone
-        call_count = [0]
+        # Track if terminate was attempted to simulate eventual process exit
+        terminate_attempted = [False]
 
+        def terminate_side_effect():
+            terminate_attempted[0] = True
+            raise psutil.AccessDenied("No access")
+
+        launcher.terminate.side_effect = terminate_side_effect
+
+        # After terminate attempt, process is gone (handled externally)
         def iter_side_effect(*args, **kwargs):
-            call_count[0] += 1
-            if call_count[0] <= 1:
-                return [launcher]
-            return []
+            if terminate_attempted[0]:
+                return []
+            return [launcher]
 
         mock_iter.side_effect = iter_side_effect
-        mock_time.side_effect = [0, 0.5]
+
+        # Infinite time generator
+        def infinite_time():
+            current = 0.0
+            while True:
+                yield current
+                current += 0.5
+
+        mock_time.side_effect = infinite_time()
 
         # Should not raise, just log warning
         _result = type(gpm).close_launchers(gpm)
@@ -385,7 +422,15 @@ class TestGameProcessManagerCoverage:
     @patch("time.time")
     def test_wait_for_game_exit_timeout(self, mock_time, mock_sleep, manager):
         """Test wait timeout when game doesn't exit."""
-        mock_time.side_effect = [0, 1, 2, 3, 6]  # Exceed timeout
+
+        # Infinite time generator that exceeds timeout
+        def infinite_time():
+            times = [0, 1, 2, 3, 6]  # Exceed timeout
+            yield from times
+            while True:
+                yield 10
+
+        mock_time.side_effect = infinite_time()
 
         with patch.object(manager, "is_game_running", return_value=True):
             result = manager.wait_for_game_exit(timeout=5)

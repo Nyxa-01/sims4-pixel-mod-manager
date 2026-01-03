@@ -1,5 +1,6 @@
 """Extended security coverage tests targeting uncovered lines."""
 
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
@@ -11,6 +12,7 @@ from src.core.security import PathEncryption, sanitize_filename, validate_path_s
 class TestPathEncryptionCoverage:
     """Additional tests targeting uncovered lines in PathEncryption."""
 
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows path test")
     def test_get_default_key_path_windows(self, tmp_path, monkeypatch):
         """Test Windows key path resolution (covers line 33-47)."""
         # Mock LOCALAPPDATA environment variable
@@ -77,11 +79,17 @@ class TestPathEncryptionCoverage:
 
         encryption = PathEncryption(key_path=key_path)
 
-        original = Path("C:/Users/Test/Documents/Mods")
+        # Use platform-appropriate path
+        if sys.platform == "win32":
+            original = Path("C:/Users/Test/Documents/Mods")
+        else:
+            original = Path("/home/test/Documents/Mods")
+
         encrypted = encryption.encrypt_path(original)
         decrypted = encryption.decrypt_path(encrypted)
 
-        assert decrypted == original
+        # Compare string representations for cross-platform compatibility
+        assert str(decrypted) == str(original)
 
     def test_encrypt_path_with_unicode(self, tmp_path):
         """Encryption handles Unicode paths correctly."""
@@ -89,11 +97,17 @@ class TestPathEncryptionCoverage:
 
         encryption = PathEncryption(key_path=key_path)
 
-        original = Path("C:/用户/文档/模组")
+        # Use platform-appropriate path with unicode
+        if sys.platform == "win32":
+            original = Path("C:/用户/文档/模组")
+        else:
+            original = Path("/home/用户/文档/模组")
+
         encrypted = encryption.encrypt_path(original)
         decrypted = encryption.decrypt_path(encrypted)
 
-        assert decrypted == original
+        # Compare string representations for cross-platform compatibility
+        assert str(decrypted) == str(original)
 
     def test_decrypt_invalid_token_raises(self, tmp_path):
         """Decryption raises error for invalid token (covers line 65)."""
@@ -315,8 +329,11 @@ class TestSecurityIntegration:
 
         encryption = PathEncryption(key_path=key_path)
 
-        # Original path
-        original = Path("C:/Users/Test/Documents/The Sims 4/Mods")
+        # Use platform-appropriate path
+        if sys.platform == "win32":
+            original = Path("C:/Users/Test/Documents/The Sims 4/Mods")
+        else:
+            original = Path("/home/test/Documents/The Sims 4/Mods")
 
         # Encrypt
         encrypted = encryption.encrypt_path(original)
@@ -326,9 +343,9 @@ class TestSecurityIntegration:
         is_valid = validate_path_security(original)
         assert is_valid is True
 
-        # Decrypt
+        # Decrypt and compare as strings for cross-platform compatibility
         decrypted = encryption.decrypt_path(encrypted)
-        assert decrypted == original
+        assert str(decrypted) == str(original)
 
     def test_sanitize_then_validate(self, tmp_path):
         """Sanitized filenames should pass validation."""
