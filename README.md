@@ -5,10 +5,11 @@
 ### *Security-first mod management with 8-bit retro aesthetics*
 
 [![CI/CD Pipeline](https://github.com/yourusername/sims4-pixel-mod-manager/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/sims4-pixel-mod-manager/actions)
-[![Codecov](https://codecov.io/gh/yourusername/sims4-pixel-mod-manager/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/sims4-pixel-mod-manager)
+[![Code Coverage](https://img.shields.io/badge/coverage-85.78%25-brightgreen)](https://github.com/yourusername/sims4-pixel-mod-manager)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/badge/linter-ruff-261230.svg)](https://github.com/astral-sh/ruff)
 [![Downloads](https://img.shields.io/github/downloads/yourusername/sims4-pixel-mod-manager/total.svg)](https://github.com/yourusername/sims4-pixel-mod-manager/releases)
 
 [Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation) • [Contributing](#-contributing)

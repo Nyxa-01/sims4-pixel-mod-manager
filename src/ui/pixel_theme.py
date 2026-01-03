@@ -8,9 +8,10 @@ import ctypes
 import logging
 import platform
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
 from tkinter import font as tkfont
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +60,9 @@ class PixelTheme:
 
         self.colors = COLORS
         self.scale_factor = 1.0
-        self.font_small: Optional[tkfont.Font] = None
-        self.font_normal: Optional[tkfont.Font] = None
-        self.font_large: Optional[tkfont.Font] = None
+        self.font_small: tkfont.Font | None = None
+        self.font_normal: tkfont.Font | None = None
+        self.font_large: tkfont.Font | None = None
         self._font_family = FONT_FALLBACK
 
     @classmethod
@@ -193,7 +194,7 @@ class PixelTheme:
         self,
         parent: tk.Widget,
         text: str,
-        command: Optional[Callable] = None,
+        command: Callable | None = None,
         **kwargs: Any,
     ) -> tk.Button:
         """Create pixel-styled button with hover effects.
@@ -274,7 +275,7 @@ class PixelTheme:
     def create_chunky_frame(
         self,
         parent: tk.Widget,
-        color: Optional[str] = None,
+        color: str | None = None,
         **kwargs: Any,
     ) -> tk.Frame:
         """Create pixel-styled frame with thick border.
@@ -495,7 +496,7 @@ class PixelTheme:
         start_value: Any,
         end_value: Any,
         duration: int = ANIM_HOVER_DURATION,
-        callback: Optional[Callable] = None,
+        callback: Callable | None = None,
     ) -> None:
         """Animate widget property over time.
 
@@ -532,7 +533,7 @@ class PixelTheme:
             widget: Widget to add tooltip to
             text: Tooltip text
         """
-        tooltip: Optional[tk.Toplevel] = None
+        tooltip: tk.Toplevel | None = None
 
         def show_tooltip(event: tk.Event) -> None:
             nonlocal tooltip
@@ -577,3 +578,49 @@ def get_theme() -> PixelTheme:
     """
     return PixelTheme.get_instance()
 
+
+class PixelAssetManager:
+    """Generate 8-bit pixel art assets programmatically."""
+
+    @staticmethod
+    def create_button_surface(
+        width: int, height: int, color: str, state: str = "normal"
+    ) -> tk.PhotoImage:
+        """Render button with pixel-perfect borders + shadows.
+
+        Args:
+            width: Button width in pixels
+            height: Button height in pixels
+            color: Base fill color (hex)
+            state: "normal"|"hover"|"pressed"
+
+        Returns:
+            PhotoImage for use in Canvas
+        """
+        try:
+            from PIL import Image, ImageDraw, ImageTk
+
+            img = Image.new("RGB", (width, height), "#000000")
+            draw = ImageDraw.Draw(img)
+
+            # Base fill
+            draw.rectangle([4, 4, width - 5, height - 5], fill=color)
+
+            # Chunky 4px border
+            border_color = "#1D4ED8"
+            draw.rectangle([0, 0, width - 1, height - 1], outline=border_color, width=4)
+
+            if state == "hover":
+                draw.rectangle([0, 0, width - 1, height - 1], outline="#06B6D4", width=2)
+            elif state == "pressed":
+                # Shift down 2px (simulate press)
+                img = img.crop((0, 0, width, height - 2))
+                img_new = Image.new("RGB", (width, height), "#000000")
+                img_new.paste(img, (0, 2))
+                img = img_new
+
+            return ImageTk.PhotoImage(img)
+        except ImportError:
+            # Fallback if PIL not available - return empty PhotoImage
+            logger.warning("PIL not available for PixelAssetManager")
+            return tk.PhotoImage(width=width, height=height)

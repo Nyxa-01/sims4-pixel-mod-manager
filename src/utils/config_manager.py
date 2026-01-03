@@ -53,16 +53,16 @@ class ConfigManager:
         "log_level": "INFO",
     }
 
-    def __init__(self, config_dir: Optional[Path] = None) -> None:
+    def __init__(self, config_dir: Path | None = None) -> None:
         """Initialize configuration manager (private - use get_instance() instead).
-        
+
         Args:
             config_dir: Optional custom config directory (for testing)
         """
         # Allow re-initialization only during get_instance() call
         # Check if this is being called directly (not from get_instance)
         # by checking if _instance is None
-        
+
         self.config_dir = config_dir if config_dir is not None else self._get_config_dir()
         self.config_path = self.config_dir / "config.json"
         self.key_path = self.config_dir / ".encryption.key"
@@ -72,13 +72,13 @@ class ConfigManager:
         self._setup_logging()
 
         # Load or generate encryption key
-        self._fernet: Optional[Fernet] = None
+        self._fernet: Fernet | None = None
         self._load_encryption_key()
 
         # Current config state
         self._config: dict[str, Any] = {}
         self._in_transaction = False
-        self._transaction_backup: Optional[dict[str, Any]] = None
+        self._transaction_backup: dict[str, Any] | None = None
 
         # Load configuration
         self._load_or_create_config()
@@ -86,9 +86,9 @@ class ConfigManager:
         ConfigManager._initialized = True
 
     @classmethod
-    def get_instance(cls, config_dir: Optional[Path] = None) -> "ConfigManager":
+    def get_instance(cls, config_dir: Path | None = None) -> "ConfigManager":
         """Get singleton instance (thread-safe).
-        
+
         Args:
             config_dir: Config directory (only used on first call)
 
@@ -97,22 +97,24 @@ class ConfigManager:
         """
         if cls._lock is None:
             import threading
+
             cls._lock = threading.Lock()
-        
+
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:  # Double-checked locking
                     cls._instance = cls.__new__(cls)
                     cls._instance.__init__(config_dir)
         return cls._instance
-    
+
     @classmethod
     def reset_instance(cls) -> None:
         """Reset singleton (for testing only)."""
         if cls._lock is None:
             import threading
+
             cls._lock = threading.Lock()
-        
+
         with cls._lock:
             cls._instance = None
             cls._initialized = False
@@ -143,9 +145,7 @@ class ConfigManager:
 
         file_handler = logging.FileHandler(self.log_path)
         file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        )
+        file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
         config_logger = logging.getLogger("config")
         config_logger.addHandler(file_handler)
@@ -161,7 +161,7 @@ class ConfigManager:
                 logger.debug("Loaded existing encryption key")
             except Exception as e:
                 logger.error(f"Failed to load encryption key: {e}")
-                raise EncryptionError("decrypt", self.key_path, str(e))
+                raise EncryptionError("decrypt", self.key_path, str(e)) from e
         else:
             # Generate new key
             key = Fernet.generate_key()
@@ -180,7 +180,7 @@ class ConfigManager:
                 )
             except Exception as e:
                 logger.error(f"Failed to create encryption key: {e}")
-                raise EncryptionError("encrypt", self.key_path, str(e))
+                raise EncryptionError("encrypt", self.key_path, str(e)) from e
 
     def _encrypt_path(self, path: str) -> str:
         """Encrypt a path string.
@@ -199,7 +199,7 @@ class ConfigManager:
             return encrypted.decode()
         except Exception as e:
             logger.error(f"Path encryption failed: {e}")
-            raise EncryptionError("encrypt", reason=str(e))
+            raise EncryptionError("encrypt", reason=str(e)) from e
 
     def _decrypt_path(self, encrypted: str) -> str:
         """Decrypt an encrypted path string.
@@ -216,18 +216,18 @@ class ConfigManager:
         try:
             decrypted = self._fernet.decrypt(encrypted.encode())
             return decrypted.decode()
-        except InvalidToken:
+        except InvalidToken as e:
             logger.error("Invalid encryption token (corrupted or wrong key)")
-            raise EncryptionError("decrypt", reason="Invalid token")
+            raise EncryptionError("decrypt", reason="Invalid token") from e
         except Exception as e:
             logger.error(f"Path decryption failed: {e}")
-            raise EncryptionError("decrypt", reason=str(e))
+            raise EncryptionError("decrypt", reason=str(e)) from e
 
     def _load_or_create_config(self) -> None:
         """Load existing config or create default."""
         if self.config_path.exists():
             try:
-                with open(self.config_path, "r") as f:
+                with open(self.config_path) as f:
                     raw_config = json.load(f)
 
                 # Decrypt paths

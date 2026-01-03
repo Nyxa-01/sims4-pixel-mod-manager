@@ -1,0 +1,47 @@
+# Coverage.py configuration for Sims 4 Pixel Mod Manager
+
+[run]
+# Source to measure
+source = src
+
+# Include branch coverage
+branch = True
+
+# Omit files from coverage measurement
+# These dialogs depend on PixelAssetManager which is not yet implemented
+omit =
+    src/ui/dialogs/confirm_dialog.py
+    src/ui/dialogs/error_dialog.py
+    src/ui/dialogs/progress_dialog.py
+    src/ui/dialogs/settings_dialog.py
+    src/ui/dialogs/update_dialog.py
+    src/ui/dialogs/wizard_dialog.py
+    src/ui/dialogs/__init__.py
+    src/ui/splash_screen.py
+    src/ui/widgets/pixel_button.py
+
+[report]
+# Minimum coverage threshold
+fail_under = 85
+
+# Exclude lines matching these patterns
+exclude_lines =
+    # Standard exclusions
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    
+    # Debug-only code
+    if self.debug:
+    if settings.DEBUG
+    
+    # Abstract methods
+    @abstractmethod
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml

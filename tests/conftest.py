@@ -7,13 +7,11 @@ import logging
 import os
 import platform
 import zipfile
-from datetime import datetime
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from unittest.mock import Mock
 
 import pytest
-
 
 # =============================================================================
 # LOGGING
@@ -212,6 +210,7 @@ def malicious_mod(tmp_path: Path) -> Path:
     mal_file = tmp_path / "malicious.package"
     # High entropy data (appears encrypted/packed)
     import random
+
     random.seed(42)  # Reproducible
     mal_file.write_bytes(bytes([random.randint(0, 255) for _ in range(1000)]))
     return mal_file
@@ -316,6 +315,7 @@ def mock_encryption_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
 
     # Generate test key
     from cryptography.fernet import Fernet
+
     key = Fernet.generate_key()
     key_file.write_bytes(key)
 
@@ -351,6 +351,7 @@ def sample_backup_zip(tmp_path: Path) -> Path:
             },
         }
         import json
+
         zf.writestr("manifest.json", json.dumps(manifest, indent=2))
 
         # Add mock mod files
