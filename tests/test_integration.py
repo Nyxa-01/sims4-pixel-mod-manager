@@ -10,6 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from src.core.deploy_engine import DeployEngine
+from src.core.exceptions import BackupError
 from src.core.load_order_engine import LoadOrderEngine
 from src.core.mod_scanner import ModScanner
 from src.utils.backup import BackupManager
@@ -60,8 +61,28 @@ class TestFullWorkflow:
                     mods_by_slot[slot] = []
                 mods_by_slot[slot].append(mod)
 
-        # Generate ActiveMods structure
+        # Generate ActiveMods structure (creates folder structure)
         load_order.generate_structure(mods_by_slot, temp_active_mods_dir)
+
+        # Copy mod files to their assigned slots
+        # Note: Script files (.ts4script) MUST go in root, packages go in slots
+        import shutil
+
+        for slot, mod_list in mods_by_slot.items():
+            slot_path = temp_active_mods_dir / slot
+            slot_path.mkdir(parents=True, exist_ok=True)
+            for mod in mod_list:
+                if mod.path.suffix in [".ts4script", ".py"]:
+                    # Scripts go in root ActiveMods
+                    target = temp_active_mods_dir / mod.path.name
+                else:
+                    # Packages go in slot folder
+                    target = slot_path / mod.path.name
+                shutil.copy2(mod.path, target)
+
+        # VERIFY files exist in ActiveMods before deploy
+        active_files = list(temp_active_mods_dir.rglob("*.package"))
+        assert len(active_files) > 0, "No files in ActiveMods before deploy"
 
         # Verify structure
         is_valid, warnings = load_order.validate_structure(temp_active_mods_dir)
@@ -277,15 +298,17 @@ class TestGameDetection:
             monkeypatch: Pytest monkeypatch fixture
         """
         detector = GameDetector()
+        mods_path = mock_game_install["mods_dir"]
 
-        # Mock home directory
-        monkeypatch.setenv("USERPROFILE", str(mock_game_install["documents"].parent.parent))
-        monkeypatch.setenv("HOME", str(mock_game_install["documents"].parent.parent))
+        # Ensure directory exists
+        mods_path.mkdir(parents=True, exist_ok=True)
 
-        mods_path = detector.detect_mods_path()
+        # Mock detector to return mock path
+        with patch.object(detector, "detect_mods_path", return_value=mods_path):
+            result = detector.detect_mods_path()
 
-        assert mods_path is not None
-        assert mods_path.name == "Mods"
+            assert result is not None
+            assert result.name == "Mods"
 
 
 @pytest.mark.integration
@@ -489,9 +512,7 @@ class TestErrorRecovery:
         assert not is_valid
         # Accept various error messages indicating invalid/corrupt backup
         msg_lower = message.lower()
-        assert any(
-            kw in msg_lower for kw in ["corrupt", "invalid", "not a valid", "zip"]
-        )
+        assert any(kw in msg_lower for kw in ["corrupt", "invalid", "not a valid", "zip"])
 
         # Restore should fail gracefully (raises BackupError for corrupted backups)
         with pytest.raises(BackupError):

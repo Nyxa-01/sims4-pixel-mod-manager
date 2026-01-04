@@ -140,10 +140,12 @@ class BackupManager:
                         relative_path = file_path.relative_to(source)
 
                         # Add to manifest (as list of dicts for verify_backup compatibility)
-                        manifest["files"].append({
-                            "path": str(relative_path),
-                            "crc32": file_hash,
-                        })
+                        manifest["files"].append(
+                            {
+                                "path": str(relative_path),
+                                "crc32": file_hash,
+                            }
+                        )
 
                         # Add to zip
                         zf.write(file_path, relative_path)

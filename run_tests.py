@@ -43,11 +43,13 @@ def run_tests(args: argparse.Namespace) -> int:
 
     # Coverage options
     if not args.no_cov:
-        cmd.extend([
-            "--cov=src",
-            "--cov-report=html",
-            "--cov-report=term-missing",
-        ])
+        cmd.extend(
+            [
+                "--cov=src",
+                "--cov-report=html",
+                "--cov-report=term-missing",
+            ]
+        )
 
     # Verbosity
     if args.verbose:
@@ -68,9 +70,7 @@ def run_tests(args: argparse.Namespace) -> int:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Run tests with coverage reporting"
-    )
+    parser = argparse.ArgumentParser(description="Run tests with coverage reporting")
 
     # Test selection
     parser.add_argument(
@@ -103,7 +103,8 @@ def main() -> int:
 
     # Output
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Verbose output",
     )

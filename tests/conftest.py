@@ -477,9 +477,14 @@ def reset_loggers() -> Generator[None, None, None]:
     logging handlers that may have been added during test execution.
     """
     yield
-    # Clear handlers from all loggers to prevent handler accumulation
+    # Close handlers BEFORE clearing to prevent resource warnings
     for name in list(logging.root.manager.loggerDict):
         logger = logging.getLogger(name)
-        logger.handlers.clear()
-    # Also clear root logger handlers
-    logging.root.handlers.clear()
+        for handler in logger.handlers[:]:
+            handler.close()
+            logger.removeHandler(handler)
+
+    # Also close root logger handlers
+    for handler in logging.root.handlers[:]:
+        handler.close()
+        logging.root.removeHandler(handler)
