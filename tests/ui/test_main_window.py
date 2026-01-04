@@ -1,9 +1,16 @@
 """Tests for main window UI."""
 
+import os
 import tkinter as tk
 from unittest.mock import Mock, patch
 
 import pytest
+
+# Skip all tests in this module when running in CI or without display
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("DISPLAY") or os.environ.get("CI") == "true",
+    reason="GUI tests require display and cannot run in CI",
+)
 
 from src.core.mod_scanner import ModFile
 from src.ui.main_window import HelpDialog, MainWindow, SettingsDialog

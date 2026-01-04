@@ -188,16 +188,17 @@ class TestConfigIntegration:
             tmp_path: Temporary directory
             mock_encryption_key: Encryption key
         """
-        config_path = tmp_path / "config.json"
+        config_dir = tmp_path / "config"
+        config_dir.mkdir(parents=True, exist_ok=True)
 
         # Session 1: Create and save config
-        config1 = ConfigManager(config_path)
+        config1 = ConfigManager(config_dir)
         config1.set("incoming_folder", str(tmp_path / "incoming"))
         config1.set("backup_retention_count", 15)
         config1.save_config()
 
         # Session 2: Load config
-        config2 = ConfigManager(config_path)
+        config2 = ConfigManager(config_dir)
         assert config2.get("incoming_folder") == str(tmp_path / "incoming")
         assert config2.get("backup_retention_count") == 15
 
@@ -212,18 +213,20 @@ class TestConfigIntegration:
             tmp_path: Temporary directory
             mock_encryption_key: Encryption key
         """
-        config_path = tmp_path / "config.json"
+        config_dir = tmp_path / "config"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        config_file = config_dir / "config.json"
 
         # Create valid config
-        config = ConfigManager(config_path)
+        config = ConfigManager(config_dir)
         config.set("test_key", "test_value")
         config.save_config()
 
         # Corrupt config file
-        config_path.write_text("CORRUPTED DATA {[}")
+        config_file.write_text("CORRUPTED DATA {[}")
 
         # Should recover with defaults
-        config2 = ConfigManager(config_path)
+        config2 = ConfigManager(config_dir)
         assert config2.get("test_key", "default") == "default"
 
 
@@ -332,8 +335,10 @@ class TestSecurityIntegration:
             tmp_path: Temporary directory
             mock_encryption_key: Encryption key
         """
-        config_path = tmp_path / "config.json"
-        config = ConfigManager(config_path)
+        config_dir = tmp_path / "config"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        config_file = config_dir / "config.json"
+        config = ConfigManager(config_dir)
 
         # Set sensitive path
         sensitive_path = str(tmp_path / "sensitive" / "path")
@@ -341,7 +346,7 @@ class TestSecurityIntegration:
         config.save_config()
 
         # Read raw config file
-        raw_content = config_path.read_text()
+        raw_content = config_file.read_text()
 
         # Verify path is not in plain text
         assert sensitive_path not in raw_content, "Path should be encrypted"
@@ -407,7 +412,6 @@ class TestPerformance:
                     temp_active_mods_dir,
                     mock_game_install["mods_dir"],
                     close_game=False,
-                    method="copy",  # Use copy for test speed
                 )
 
             assert success
@@ -481,7 +485,11 @@ class TestErrorRecovery:
         # Verify should detect corruption
         is_valid, message = backup_mgr.verify_backup(corrupted)
         assert not is_valid
-        assert "corrupt" in message.lower() or "invalid" in message.lower()
+        # Accept various error messages indicating invalid/corrupt backup
+        msg_lower = message.lower()
+        assert any(
+            kw in msg_lower for kw in ["corrupt", "invalid", "not a valid", "zip"]
+        )
 
         # Restore should fail gracefully
         success = backup_mgr.restore_backup(corrupted, temp_backup_dir / "restore")

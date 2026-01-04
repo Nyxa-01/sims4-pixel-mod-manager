@@ -340,15 +340,21 @@ def sample_backup_zip(tmp_path: Path) -> Path:
     """
     backup_path = tmp_path / "backup_2026-01-01_120000.zip"
 
+    import zlib
+
     with zipfile.ZipFile(backup_path, "w", zipfile.ZIP_DEFLATED) as zf:
-        # Create manifest
+        # Create manifest with proper CRC32 values
+        test_data = b"DBPF" + b"\x00" * 100
+        nested_data = b"DBPF" + b"\x00" * 50
         manifest = {
             "timestamp": "2026-01-01T12:00:00",
             "game_version": "1.98.127.1030",
-            "files": {
-                "test.package": "A1B2C3D4",
-                "nested/mod.package": "E5F6G7H8",
-            },
+            "total_files": 2,
+            "total_size_mb": 0.0,
+            "files": [
+                {"path": "test.package", "crc32": zlib.crc32(test_data) & 0xFFFFFFFF},
+                {"path": "nested/mod.package", "crc32": zlib.crc32(nested_data) & 0xFFFFFFFF},
+            ],
         }
         import json
 
@@ -456,3 +462,24 @@ def mock_linux_platform(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     monkeypatch.setattr(platform, "system", lambda: "Linux")
     monkeypatch.setattr(os, "name", "posix")
+
+
+# =============================================================================
+# CLEANUP FIXTURES
+# =============================================================================
+
+
+@pytest.fixture(autouse=True)
+def reset_loggers() -> Generator[None, None, None]:
+    """Reset all logger handlers after each test to prevent leaking.
+
+    This fixture runs automatically for all tests and cleans up
+    logging handlers that may have been added during test execution.
+    """
+    yield
+    # Clear handlers from all loggers to prevent handler accumulation
+    for name in list(logging.root.manager.loggerDict):
+        logger = logging.getLogger(name)
+        logger.handlers.clear()
+    # Also clear root logger handlers
+    logging.root.handlers.clear()
