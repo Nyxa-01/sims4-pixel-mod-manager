@@ -8,23 +8,18 @@ import logging
 import threading
 import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog, messagebox, scrolledtext, ttk
-from typing import Optional
+from tkinter import filedialog, messagebox, scrolledtext
 
 from src.core.deploy_engine import DeployEngine
 from src.core.exceptions import (
     DeployError,
-    LoadOrderError,
-    ModManagerException,
-    ModScanError,
 )
 from src.core.load_order_engine import LoadOrderEngine
 from src.core.mod_scanner import ModFile, ModScanner
+from src.ui.pixel_theme import PixelTheme
 from src.utils.backup import BackupManager
 from src.utils.config_manager import ConfigManager
 from src.utils.game_detector import GameDetector
-from src.utils.process_manager import GameProcessManager
-from src.ui.pixel_theme import PixelTheme
 
 logger = logging.getLogger(__name__)
 
@@ -63,11 +58,11 @@ class MainWindow:
         # State
         self.incoming_mods: list[ModFile] = []
         self.load_order_slots: dict[str, tk.Listbox] = {}
-        self.current_operation: Optional[threading.Thread] = None
+        self.current_operation: threading.Thread | None = None
 
         # UI Components
-        self.status_label: Optional[tk.Label] = None
-        self.progress_bar: Optional[tk.Canvas] = None
+        self.status_label: tk.Label | None = None
+        self.progress_bar: tk.Canvas | None = None
 
         self._setup_window()
         self._create_menu_bar()
@@ -374,7 +369,7 @@ class MainWindow:
 
                     # Flatten to list
                     self.incoming_mods = []
-                    for category, mods in mods_by_category.items():
+                    for _category, mods in mods_by_category.items():
                         self.incoming_mods.extend(mods)
 
                     # Update UI (must be on main thread)
@@ -386,7 +381,7 @@ class MainWindow:
 
                 except Exception as e:
                     logger.error(f"Scan failed: {e}")
-                    self.root.after(0, lambda: self._show_error("Scan Failed", str(e)))
+                    self.root.after(0, lambda err=e: self._show_error("Scan Failed", str(err)))
                     self.root.after(0, lambda: self._update_status("Scan failed", 0.0))
 
             thread = threading.Thread(target=scan_thread, daemon=True)
@@ -506,7 +501,7 @@ class MainWindow:
 
             except Exception as e:
                 logger.error(f"Deployment failed: {e}")
-                self.root.after(0, lambda: self._show_error("Deployment Failed", str(e)))
+                self.root.after(0, lambda err=e: self._show_error("Deployment Failed", str(err)))
                 self.root.after(0, lambda: self._update_status("Deployment failed", 0.0))
 
         thread = threading.Thread(target=deploy_thread, daemon=True)
@@ -842,7 +837,7 @@ For more information, visit the GitHub repository.
 def run_application() -> None:
     """Run the application."""
     root = tk.Tk()
-    app = MainWindow(root)
+    MainWindow(root)
     root.mainloop()
 
 

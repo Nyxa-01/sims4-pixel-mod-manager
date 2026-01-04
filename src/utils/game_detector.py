@@ -6,9 +6,7 @@ Windows, macOS, and Linux with multiple detection methods and validation.
 
 import logging
 import platform
-import subprocess
 from pathlib import Path
-from typing import Optional
 
 import psutil
 
@@ -58,11 +56,11 @@ class GameDetector:
     def __init__(self) -> None:
         """Initialize game detector with caching."""
         self.system = platform.system()
-        self._game_path_cache: Optional[Path] = None
-        self._mods_path_cache: Optional[Path] = None
+        self._game_path_cache: Path | None = None
+        self._mods_path_cache: Path | None = None
         self._cache_valid = False
 
-    def detect_game_path(self, force_refresh: bool = False) -> Optional[Path]:
+    def detect_game_path(self, force_refresh: bool = False) -> Path | None:
         """Detect Sims 4 installation path.
 
         Tries multiple detection methods in priority order:
@@ -105,7 +103,7 @@ class GameDetector:
         logger.warning("Could not detect Sims 4 installation")
         return None
 
-    def _detect_from_registry(self) -> Optional[Path]:
+    def _detect_from_registry(self) -> Path | None:
         """Detect from Windows Registry (Windows only).
 
         Returns:
@@ -141,7 +139,7 @@ class GameDetector:
 
         return None
 
-    def _detect_from_documents(self) -> Optional[Path]:
+    def _detect_from_documents(self) -> Path | None:
         """Detect from Documents folder.
 
         Returns:
@@ -162,7 +160,7 @@ class GameDetector:
 
         return None
 
-    def _detect_from_steam(self) -> Optional[Path]:
+    def _detect_from_steam(self) -> Path | None:
         """Detect from Steam library folders.
 
         Returns:
@@ -222,7 +220,7 @@ class GameDetector:
         libraries: list[Path] = []
 
         try:
-            with open(vdf_path, "r", encoding="utf-8") as f:
+            with open(vdf_path, encoding="utf-8") as f:
                 content = f.read()
 
             # Simple parsing: look for "path" entries
@@ -239,7 +237,7 @@ class GameDetector:
 
         return libraries
 
-    def _detect_from_common_paths(self) -> Optional[Path]:
+    def _detect_from_common_paths(self) -> Path | None:
         """Check common installation paths.
 
         Returns:
@@ -282,7 +280,7 @@ class GameDetector:
         logger.debug(f"No game executable found in: {path}")
         return False
 
-    def detect_mods_path(self) -> Optional[Path]:
+    def detect_mods_path(self) -> Path | None:
         """Detect Mods folder path.
 
         Returns:
@@ -308,7 +306,7 @@ class GameDetector:
         logger.warning(f"Mods folder not found: {mods_path}")
         return None
 
-    def create_mods_folder(self, parent_path: Optional[Path] = None) -> Optional[Path]:
+    def create_mods_folder(self, parent_path: Path | None = None) -> Path | None:
         """Create Mods folder if it doesn't exist.
 
         Args:
@@ -331,7 +329,7 @@ class GameDetector:
             logger.error(f"Failed to create Mods folder: {e}")
             return None
 
-    def get_game_version(self, path: Optional[Path] = None) -> str:
+    def get_game_version(self, path: Path | None = None) -> str:
         """Get game version from installation.
 
         Args:
@@ -349,7 +347,7 @@ class GameDetector:
         version_file = path / "Game" / "Bin" / "GameVersion.txt"
         if version_file.exists():
             try:
-                with open(version_file, "r") as f:
+                with open(version_file) as f:
                     version = f.read().strip()
                     logger.debug(f"Game version: {version}")
                     return version
@@ -381,7 +379,7 @@ class GameDetector:
 
         return False
 
-    def validate_resource_cfg(self, mods_path: Optional[Path] = None) -> bool:
+    def validate_resource_cfg(self, mods_path: Path | None = None) -> bool:
         """Validate resource.cfg syntax in Mods folder.
 
         Args:
@@ -401,7 +399,7 @@ class GameDetector:
             return True
 
         try:
-            with open(resource_cfg, "r") as f:
+            with open(resource_cfg) as f:
                 content = f.read()
 
             # Basic validation: check for required directives

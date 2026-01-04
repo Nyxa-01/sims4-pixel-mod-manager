@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +91,7 @@ class LoadOrderManager:
         self.categories[name] = slot
         logger.info(f"Added category: {name} (slot {slot})")
 
-    def get_category_slot(self, category: str) -> Optional[int]:
+    def get_category_slot(self, category: str) -> int | None:
         """Get slot number for category.
 
         Args:

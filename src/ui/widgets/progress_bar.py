@@ -4,7 +4,6 @@ Displays progress as filled pixel segments.
 """
 
 import tkinter as tk
-from typing import Optional
 
 
 class PixelProgressBar(tk.Canvas):

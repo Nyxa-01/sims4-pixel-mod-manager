@@ -7,8 +7,9 @@ enforcing time limits on potentially long-running file operations to prevent han
 import platform
 import signal
 import threading
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 

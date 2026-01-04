@@ -10,14 +10,12 @@ import os
 import shutil
 import subprocess
 import zipfile
+import zlib
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Generator, Optional
-
-import zlib
 
 from src.core.exceptions import DeployError, HashValidationError, PathError
-from src.utils.game_detector import GameDetector
 from src.utils.process_manager import GameProcessManager
 
 logger = logging.getLogger(__name__)
@@ -49,17 +47,17 @@ class DeployEngine:
         ...     )
     """
 
-    def __init__(self, backup_dir: Optional[Path] = None) -> None:
+    def __init__(self, backup_dir: Path | None = None) -> None:
         """Initialize deployment engine.
 
         Args:
             backup_dir: Directory for backups (auto-detect if None)
         """
         self.backup_dir = backup_dir
-        self._backup_path: Optional[Path] = None
-        self._deployed_path: Optional[Path] = None
+        self._backup_path: Path | None = None
+        self._deployed_path: Path | None = None
         self._in_transaction = False
-        self._deployment_method: Optional[str] = None
+        self._deployment_method: str | None = None
 
     def transaction(self):
         """Context manager for transactional deployment.
@@ -94,7 +92,7 @@ class DeployEngine:
         self,
         active_mods_path: Path,
         game_mods_path: Path,
-        progress_callback: Optional[Callable[[str, float], None]] = None,
+        progress_callback: Callable[[str, float], None] | None = None,
         close_game: bool = True,
     ) -> bool:
         """Deploy mods with transactional guarantees.
@@ -291,7 +289,7 @@ class DeployEngine:
             True if syntax is valid
         """
         try:
-            with open(cfg_path, "r") as f:
+            with open(cfg_path) as f:
                 content = f.read()
 
             # Check for required directives
@@ -382,7 +380,7 @@ class DeployEngine:
                 logger.warning("Junction creation may require admin privileges")
 
             # Use mklink /J command
-            result = subprocess.run(
+            subprocess.run(
                 ["mklink", "/J", str(target), str(source)],
                 check=True,
                 capture_output=True,
@@ -574,7 +572,7 @@ class DeployEngine:
 
     def _report_progress(
         self,
-        callback: Optional[Callable[[str, float], None]],
+        callback: Callable[[str, float], None] | None,
         step: str,
         percentage: float,
     ) -> None:

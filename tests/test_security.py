@@ -1,7 +1,8 @@
 """Tests for security layer."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from src.core.security import (
     PathEncryption,

@@ -1,10 +1,11 @@
 """Tests for auto-update functionality."""
 
-import pytest
 import json
-from unittest.mock import Mock, patch, MagicMock, mock_open
-from pathlib import Path
-from urllib.error import URLError, HTTPError
+from unittest.mock import Mock, patch
+from urllib.error import HTTPError, URLError
+
+import pytest
+
 from src.utils.updater import Updater
 
 

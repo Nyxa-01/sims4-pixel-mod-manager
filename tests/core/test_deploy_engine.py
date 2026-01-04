@@ -3,16 +3,15 @@
 import os
 import zipfile
 from pathlib import Path
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from src.core.deploy_engine import (
-    DEPLOYMENT_METHODS,
     RESOURCE_CFG_TEMPLATE,
     DeployEngine,
 )
-from src.core.exceptions import DeployError, HashValidationError, PathError
+from src.core.exceptions import DeployError, PathError
 
 
 @pytest.fixture

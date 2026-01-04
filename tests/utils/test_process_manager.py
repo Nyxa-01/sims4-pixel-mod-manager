@@ -1,6 +1,5 @@
 """Tests for game process manager."""
 
-import time
 from unittest.mock import MagicMock, Mock, patch
 
 import psutil

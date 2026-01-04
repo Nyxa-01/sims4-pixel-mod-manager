@@ -1,7 +1,8 @@
 """Tests for load order manager."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from src.core.load_order import (
     LoadOrderManager,

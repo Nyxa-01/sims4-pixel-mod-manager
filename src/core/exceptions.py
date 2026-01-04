@@ -5,7 +5,6 @@ providing detailed error context and recovery hints for robust error handling.
 """
 
 from pathlib import Path
-from typing import Optional
 
 
 class ModManagerException(Exception):
@@ -24,7 +23,7 @@ class ModManagerException(Exception):
         self,
         message: str,
         error_code: str = "UNKNOWN",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
         **kwargs,
     ) -> None:
         """Initialize base exception.
@@ -66,7 +65,7 @@ class ModScanError(ModManagerException):
         path: Path,
         reason: str,
         error_code: str = "SCAN001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
     ) -> None:
         """Initialize mod scan error.
 
@@ -100,9 +99,9 @@ class DeployError(ModManagerException):
     def __init__(
         self,
         operation: str,
-        affected_mods: Optional[list[Path]] = None,
+        affected_mods: list[Path] | None = None,
         error_code: str = "DEPLOY001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
     ) -> None:
         """Initialize deployment error.
 
@@ -139,12 +138,12 @@ class BackupError(ModManagerException):
 
     def __init__(
         self,
-        message: Optional[str] = None,
-        backup_path: Optional[Path] = None,
+        message: str | None = None,
+        backup_path: Path | None = None,
         operation_type: str = "unknown",
         reason: str = "Unknown error",
         error_code: str = "BACKUP001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
         **kwargs,
     ) -> None:
         """Initialize backup error.
@@ -190,12 +189,12 @@ class SecurityError(ModManagerException):
 
     def __init__(
         self,
-        threat_type: Optional[str] = None,
-        affected_path: Optional[Path] = None,
+        threat_type: str | None = None,
+        affected_path: Path | None = None,
         severity: str = "HIGH",
-        details: Optional[str] = None,
+        details: str | None = None,
         error_code: str = "SECURITY001",
-        message: Optional[str] = None,
+        message: str | None = None,
         **kwargs,
     ) -> None:
         """Initialize security error.
@@ -248,12 +247,12 @@ class GameProcessError(ModManagerException):
 
     def __init__(
         self,
-        message: Optional[str] = None,
+        message: str | None = None,
         process_name: str = "unknown",
         action: str = "unknown",
         reason: str = "Unknown error",
         error_code: str = "GAME001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
         **kwargs,
     ) -> None:
         """Initialize game process error.
@@ -296,12 +295,12 @@ class PathError(ModManagerException):
 
     def __init__(
         self,
-        message: Optional[str] = None,
-        path: Optional[Path] = None,
+        message: str | None = None,
+        path: Path | None = None,
         path_type: str = "unknown",
         reason: str = "Unknown error",
         error_code: str = "PATH001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
         **kwargs,
     ) -> None:
         """Initialize path error.
@@ -348,10 +347,10 @@ class LoadOrderError(ModManagerException):
     def __init__(
         self,
         validation_failure: str,
-        category: Optional[str] = None,
-        slot: Optional[int] = None,
+        category: str | None = None,
+        slot: int | None = None,
         error_code: str = "LOADORDER001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
     ) -> None:
         """Initialize load order error.
 
@@ -394,7 +393,7 @@ class ConflictError(ModManagerException):
         conflicting_mods: list[str],
         conflict_type: str = "resource",
         error_code: str = "CONFLICT001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
     ) -> None:
         """Initialize conflict error.
 
@@ -437,8 +436,8 @@ class EncryptionError(ModManagerException):
     def __init__(
         self,
         operation: str,
-        key_path: Optional[Path] = None,
-        reason: Optional[str] = None,
+        key_path: Path | None = None,
+        reason: str | None = None,
         error_code: str = "ENCRYPT001",
     ) -> None:
         """Initialize encryption error.

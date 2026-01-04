@@ -4,7 +4,6 @@ Provides container with thick retro borders.
 """
 
 import tkinter as tk
-from typing import Optional
 
 
 class ChunkyFrame(tk.Frame):

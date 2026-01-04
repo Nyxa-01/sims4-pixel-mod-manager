@@ -2,7 +2,7 @@
 
 import logging
 import tkinter as tk
-from typing import Callable, Optional
+from collections.abc import Callable
 
 from ..pixel_theme import PixelTheme
 
@@ -16,7 +16,7 @@ class PixelButton(tk.Canvas):
         self,
         parent: tk.Widget,
         text: str,
-        command: Optional[Callable[[], None]] = None,
+        command: Callable[[], None] | None = None,
         width: int = 120,
         height: int = 40,
         **kwargs: object,
@@ -55,25 +55,55 @@ class PixelButton(tk.Canvas):
         self._bind_events()
 
     def _render_surfaces(self) -> None:
-        """Pre-render button surfaces for each state."""
-        self.surfaces = {
-            "normal": PixelAssetManager.create_button_surface(
-                self.width, self.height, self.theme.COLORS["primary"], "normal"
-            ),
-            "hover": PixelAssetManager.create_button_surface(
-                self.width, self.height, self.theme.COLORS["primary_hover"], "hover"
-            ),
-            "pressed": PixelAssetManager.create_button_surface(
-                self.width, self.height, self.theme.COLORS["primary"], "pressed"
-            ),
+        """Pre-render button color mappings for each state."""
+        self.surface_colors = {
+            "normal": self.theme.COLORS["primary"],
+            "hover": self.theme.COLORS["primary_hover"],
+            "pressed": self.theme.COLORS["primary"],
         }
 
     def _render(self) -> None:
         """Redraw button in current state."""
         self.delete("all")
 
-        # Draw button surface
-        self.create_image(0, 0, image=self.surfaces[self.state], anchor="nw")
+        # Get colors for current state
+        bg_color = self.surface_colors[self.state]
+
+        # Draw button background with 8-bit style border
+        border_width = 2
+        if self.state == "pressed":
+            # Pressed state: inset border
+            self.create_rectangle(
+                0,
+                0,
+                self.width - 1,
+                self.height - 1,
+                fill=bg_color,
+                outline=self.theme.COLORS["border"],
+            )
+            # Inner shadow
+            self.create_line(0, 0, self.width, 0, fill="#000000", width=border_width)
+            self.create_line(0, 0, 0, self.height, fill="#000000", width=border_width)
+        else:
+            # Normal/hover state: raised border
+            self.create_rectangle(
+                0,
+                0,
+                self.width - 1,
+                self.height - 1,
+                fill=bg_color,
+                outline=self.theme.COLORS["border"],
+            )
+            # Highlight on top and left
+            self.create_line(0, 0, self.width, 0, fill="#ffffff", width=border_width)
+            self.create_line(0, 0, 0, self.height, fill="#ffffff", width=border_width)
+            # Shadow on bottom and right
+            self.create_line(
+                0, self.height - 1, self.width, self.height - 1, fill="#000000", width=border_width
+            )
+            self.create_line(
+                self.width - 1, 0, self.width - 1, self.height, fill="#000000", width=border_width
+            )
 
         # Draw text (centered)
         text_y = self.height // 2

@@ -1,10 +1,11 @@
 """Tests for DBPF conflict detection."""
 
-import pytest
 from pathlib import Path
 from struct import pack
+
+import pytest
+
 from src.core.conflict_detector import ConflictDetector, DBPFParser
-from src.core.mod_scanner import ModFile
 
 
 class TestDBPFParser:

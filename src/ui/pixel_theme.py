@@ -8,9 +8,10 @@ import ctypes
 import logging
 import platform
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
 from tkinter import font as tkfont
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +60,9 @@ class PixelTheme:
 
         self.colors = COLORS
         self.scale_factor = 1.0
-        self.font_small: Optional[tkfont.Font] = None
-        self.font_normal: Optional[tkfont.Font] = None
-        self.font_large: Optional[tkfont.Font] = None
+        self.font_small: tkfont.Font | None = None
+        self.font_normal: tkfont.Font | None = None
+        self.font_large: tkfont.Font | None = None
         self._font_family = FONT_FALLBACK
 
     @classmethod
@@ -193,7 +194,7 @@ class PixelTheme:
         self,
         parent: tk.Widget,
         text: str,
-        command: Optional[Callable] = None,
+        command: Callable | None = None,
         **kwargs: Any,
     ) -> tk.Button:
         """Create pixel-styled button with hover effects.
@@ -274,7 +275,7 @@ class PixelTheme:
     def create_chunky_frame(
         self,
         parent: tk.Widget,
-        color: Optional[str] = None,
+        color: str | None = None,
         **kwargs: Any,
     ) -> tk.Frame:
         """Create pixel-styled frame with thick border.
@@ -495,7 +496,7 @@ class PixelTheme:
         start_value: Any,
         end_value: Any,
         duration: int = ANIM_HOVER_DURATION,
-        callback: Optional[Callable] = None,
+        callback: Callable | None = None,
     ) -> None:
         """Animate widget property over time.
 
@@ -532,7 +533,7 @@ class PixelTheme:
             widget: Widget to add tooltip to
             text: Tooltip text
         """
-        tooltip: Optional[tk.Toplevel] = None
+        tooltip: tk.Toplevel | None = None
 
         def show_tooltip(event: tk.Event) -> None:
             nonlocal tooltip
