@@ -339,15 +339,16 @@ class ConfigManager:
         """
         return self._config.copy()
 
-    def save_config(self, config: dict[str, Any]) -> None:
+    def save_config(self, config: dict[str, Any] | None = None) -> None:
         """Save configuration.
 
         Args:
-            config: Configuration dictionary to save
+            config: Configuration dictionary to save. If None, saves current state.
         """
-        self._config = config.copy()
+        if config is not None:
+            self._config = config.copy()
+            logging.getLogger("config").info("Configuration updated")
         self._save_config()
-        logging.getLogger("config").info("Configuration updated")
 
     def get(self, key: str, default: Any = None) -> Any:
         """Get configuration value.

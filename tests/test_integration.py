@@ -340,8 +340,10 @@ class TestSecurityIntegration:
         config_file = config_dir / "config.json"
         config = ConfigManager(config_dir)
 
-        # Set sensitive path
-        sensitive_path = str(tmp_path / "sensitive" / "path")
+        # Set sensitive path (create parent dir to pass validation)
+        sensitive_parent = tmp_path / "sensitive"
+        sensitive_parent.mkdir(parents=True, exist_ok=True)
+        sensitive_path = str(sensitive_parent / "path")
         config.set("game_path", sensitive_path)
         config.save_config()
 
@@ -491,6 +493,6 @@ class TestErrorRecovery:
             kw in msg_lower for kw in ["corrupt", "invalid", "not a valid", "zip"]
         )
 
-        # Restore should fail gracefully
-        success = backup_mgr.restore_backup(corrupted, temp_backup_dir / "restore")
-        assert not success
+        # Restore should fail gracefully (raises BackupError for corrupted backups)
+        with pytest.raises(BackupError):
+            backup_mgr.restore_backup(corrupted, temp_backup_dir / "restore")
