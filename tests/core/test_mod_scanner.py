@@ -371,10 +371,12 @@ class TestModScanner:
         import threading
 
         results = []
+        lock = threading.Lock()
 
         def scan_worker() -> None:
             result = scanner.scan_folder(incoming_folder)
-            results.append(result)
+            with lock:
+                results.append(result)
 
         threads = [threading.Thread(target=scan_worker) for _ in range(3)]
 

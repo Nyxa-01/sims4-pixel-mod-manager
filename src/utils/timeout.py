@@ -44,8 +44,15 @@ def timeout(seconds: int) -> Callable:
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> T:
-            if platform.system() == "Windows":
-                # Windows: Use threading approach (less precise but works)
+            # Use threading approach on Windows or when not in main thread
+            # (signal.SIGALRM only works in the main thread on Unix)
+            use_threading = (
+                platform.system() == "Windows"
+                or threading.current_thread() is not threading.main_thread()
+            )
+
+            if use_threading:
+                # Threading approach (works in any thread and on Windows)
                 result_container: list[Any] = [TimeoutError(f"{func.__name__} exceeded {seconds}s")]
 
                 def target() -> None:
@@ -73,7 +80,7 @@ def timeout(seconds: int) -> Callable:
                 return result_container[0]
 
             else:
-                # Unix: Use signal.SIGALRM (more precise)
+                # Unix main thread: Use signal.SIGALRM (more precise)
                 def timeout_handler(signum: int, frame: Any) -> None:
                     """Signal handler for timeout."""
                     raise TimeoutError(

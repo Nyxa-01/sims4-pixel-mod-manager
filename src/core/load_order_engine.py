@@ -23,8 +23,8 @@ LOAD_ORDER_SLOTS = [
     ("ZZZ_Overrides", "Override Mods (Load Last)", ["override", "override_"]),
 ]
 
-# Prefix validation regex
-PREFIX_PATTERN = re.compile(r"^\d{3}_\w+$")
+# Prefix validation regex (allows 3 digits or ZZZ for override slot)
+PREFIX_PATTERN = re.compile(r"^(\d{3}|ZZZ)_\w+$")
 
 # Windows MAX_PATH limit
 MAX_PATH_LENGTH = 260
@@ -326,20 +326,21 @@ class LoadOrderEngine:
 
         load_order: list[str] = []
 
-        # Get all slot folders in alphabetical order
+        # Get all slot folders in alphabetical order (case-insensitive)
         slot_folders = sorted(
-            [d for d in path.iterdir() if d.is_dir() and PREFIX_PATTERN.match(d.name)]
+            [d for d in path.iterdir() if d.is_dir() and PREFIX_PATTERN.match(d.name)],
+            key=lambda x: x.name.lower(),
         )
 
-        # Scripts in root (load first)
+        # Scripts in root (load first, case-insensitive sort)
         for ext in SCRIPT_EXTENSIONS:
-            for script in path.glob(f"*{ext}"):
+            for script in sorted(path.glob(f"*{ext}"), key=lambda x: x.name.lower()):
                 load_order.append(script.name)
 
         # Then slot folders
         for slot_folder in slot_folders:
-            # Add all mods in slot (alphabetically)
-            for mod_file in sorted(slot_folder.rglob("*.package")):
+            # Add all mods in slot (alphabetically, case-insensitive)
+            for mod_file in sorted(slot_folder.rglob("*.package"), key=lambda x: x.name.lower()):
                 rel_path = mod_file.relative_to(path)
                 load_order.append(str(rel_path))
 

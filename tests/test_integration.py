@@ -3,6 +3,7 @@
 Tests end-to-end scenarios involving multiple modules.
 """
 
+import os
 from pathlib import Path
 from unittest.mock import patch
 
@@ -230,6 +231,7 @@ class TestConfigIntegration:
 class TestGameDetection:
     """Test game detection integration."""
 
+    @pytest.mark.skipif(os.name != "nt", reason="Windows-only test using winreg")
     def test_detect_and_validate_game_install(
         self,
         mock_game_install: dict[str, Path],

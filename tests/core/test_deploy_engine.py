@@ -417,7 +417,7 @@ class TestDeployEngine:
         original_file.write_text("original content")
 
         with zipfile.ZipFile(backup_path, "w") as zf:
-            zf.write(original_file, "Mods/original.txt")
+            zf.write(original_file, "original.txt")
 
         # Create deployed directory to remove
         deployed = tmp_path / "Mods" / "ActiveMods"
