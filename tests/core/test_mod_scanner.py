@@ -388,3 +388,325 @@ class TestModScanner:
 
         # All threads should complete successfully
         assert len(results) == 3
+
+    def test_scan_folder_skips_non_files(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test that scan skips directories."""
+        incoming = tmp_path / "incoming"
+        incoming.mkdir()
+
+        # Create a subdirectory (not a file)
+        subdir = incoming / "subdir"
+        subdir.mkdir()
+
+        # Create a valid file
+        valid = incoming / "test.package"
+        valid.write_bytes(b"DBPF" + b"\x00" * 100)
+
+        results = scanner.scan_folder(incoming)
+
+        # Should have scanned the file, not the directory
+        all_mods = []
+        for mods in results.values():
+            all_mods.extend(mods)
+        assert len(all_mods) == 1
+
+    def test_scan_folder_skips_unsupported_extensions(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test that scan skips unsupported file types."""
+        incoming = tmp_path / "incoming"
+        incoming.mkdir()
+
+        # Create unsupported file types
+        (incoming / "readme.txt").write_text("readme")
+        (incoming / "image.png").write_bytes(b"\x89PNG")
+        (incoming / "valid.package").write_bytes(b"DBPF" + b"\x00" * 100)
+
+        results = scanner.scan_folder(incoming)
+
+        # Only the .package file should be scanned
+        all_mods = []
+        for mods in results.values():
+            all_mods.extend(mods)
+        assert len(all_mods) == 1
+        assert all_mods[0].path.suffix == ".package"
+
+    def test_scan_folder_handles_invalid_mod(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test that invalid mods are placed in Invalid category."""
+        incoming = tmp_path / "incoming"
+        incoming.mkdir()
+
+        # Create oversized file (will be invalid)
+        oversized = incoming / "oversized.package"
+        oversized.write_bytes(b"DBPF" + b"x" * (501 * 1024 * 1024))
+
+        results = scanner.scan_folder(incoming)
+
+        # File should be in Invalid category due to size
+        assert len(results["Invalid"]) == 1
+        assert "too large" in results["Invalid"][0].validation_errors[0].lower()
+
+    def test_scan_folder_handles_exception(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test that exceptions during scan are handled gracefully."""
+        from unittest.mock import patch
+
+        incoming = tmp_path / "incoming"
+        incoming.mkdir()
+        (incoming / "test.package").write_bytes(b"DBPF" + b"\x00" * 100)
+
+        with patch.object(
+            scanner, "_scan_file_with_timeout", side_effect=RuntimeError("Test error")
+        ):
+            results = scanner.scan_folder(incoming)
+
+        # Error should result in invalid entry
+        assert len(results["Invalid"]) == 1
+        assert "Test error" in results["Invalid"][0].validation_errors[0]
+
+    def test_scan_file_stat_exception(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test scan handles file stat exception."""
+        from unittest.mock import patch
+        from src.core.exceptions import ModScanError
+
+        test_file = tmp_path / "test.package"
+        test_file.write_bytes(b"DBPF" + b"\x00" * 100)
+
+        with patch.object(Path, "stat", side_effect=PermissionError("Access denied")):
+            with pytest.raises(ModScanError, match="Cannot access file"):
+                scanner._scan_file(test_file)
+
+    def test_calculate_hash_exception(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test hash calculation returns zeros on exception."""
+        from unittest.mock import patch
+
+        test_file = tmp_path / "test.package"
+        test_file.write_bytes(b"DBPF" + b"\x00" * 100)
+
+        with patch("builtins.open", side_effect=IOError("Read error")):
+            hash_result = scanner._calculate_hash(test_file)
+
+        assert hash_result == "00000000"
+
+    def test_calculate_entropy_empty_file(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test entropy calculation for empty file."""
+        empty_file = tmp_path / "empty.bin"
+        empty_file.write_bytes(b"")
+
+        entropy = scanner.calculate_entropy(empty_file)
+
+        assert entropy == 0.0
+
+    def test_calculate_entropy_exception(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test entropy calculation handles exception gracefully."""
+        from unittest.mock import patch
+
+        test_file = tmp_path / "test.package"
+        test_file.write_bytes(b"DBPF" + b"\x00" * 100)
+
+        with patch("builtins.open", side_effect=IOError("Read error")):
+            entropy = scanner.calculate_entropy(test_file)
+
+        assert entropy == 0.0
+
+    def test_verify_signature_python_unicode_error(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test Python verification raises SecurityError on UnicodeDecodeError."""
+        invalid_encoding = tmp_path / "bad_encoding.py"
+        # Write bytes that aren't valid UTF-8
+        invalid_encoding.write_bytes(b"\xff\xfe Invalid UTF-8")
+
+        with pytest.raises(SecurityError, match="not valid UTF-8"):
+            scanner.verify_signature(invalid_encoding)
+
+    def test_verify_signature_python_generic_exception(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test Python verification raises SecurityError on generic exception."""
+        from unittest.mock import patch
+
+        test_py = tmp_path / "test.py"
+        test_py.write_text("print('hello')")
+
+        with patch("ast.parse", side_effect=RuntimeError("Parser error")):
+            with pytest.raises(SecurityError, match="Python validation failed"):
+                scanner.verify_signature(test_py)
+
+    def test_verify_signature_cfg_file(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test cfg files pass signature verification (no magic bytes check)."""
+        cfg_file = tmp_path / "resource.cfg"
+        cfg_file.write_text("Priority 1000")
+
+        result = scanner.verify_signature(cfg_file)
+
+        assert result == (True, None)
+
+    def test_verify_signature_ts4script_no_python(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test ts4script without Python files raises SecurityError."""
+        ts4script = tmp_path / "no_python.ts4script"
+
+        # Create ZIP without any .py files
+        with zipfile.ZipFile(ts4script, "w") as zf:
+            zf.writestr("readme.txt", "No Python here")
+            zf.writestr("data.bin", b"\x00" * 100)
+
+        with pytest.raises(SecurityError, match="must contain Python files"):
+            scanner.verify_signature(ts4script)
+
+    def test_verify_signature_permission_error(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test signature verification raises SecurityError on permission denied."""
+        from unittest.mock import patch
+
+        test_file = tmp_path / "test.package"
+        test_file.write_bytes(b"DBPF" + b"\x00" * 100)
+
+        with patch("builtins.open", side_effect=PermissionError("Access denied")):
+            with pytest.raises(SecurityError, match="Permission denied"):
+                scanner.verify_signature(test_file)
+
+    def test_verify_signature_generic_exception(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test signature verification raises SecurityError on generic exception."""
+        from unittest.mock import patch
+
+        test_file = tmp_path / "test.package"
+        test_file.write_bytes(b"DBPF" + b"\x00" * 100)
+
+        with patch("builtins.open", side_effect=RuntimeError("Unexpected error")):
+            with pytest.raises(SecurityError, match="Signature verification failed"):
+                scanner.verify_signature(test_file)
+
+    def test_categorization_library_util(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test categorization of library/utility scripts."""
+        # Use a Python file to test lib/util categorization
+        # (ts4script always contains "script" keyword which overrides)
+        util_py = tmp_path / "my_lib_helpers.py"
+        util_py.write_text("# Utility library")
+
+        mod = scanner._scan_file(util_py)
+        assert mod.category == "Libraries"
+
+    def test_categorization_build_buy(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test categorization of build/buy items."""
+        build_folder = tmp_path / "Build_Mode"
+        build_folder.mkdir()
+        build_item = build_folder / "furniture_set.package"
+        build_item.write_bytes(b"DBPF" + b"\x00" * 100)
+
+        mod = scanner._scan_file(build_item)
+        assert mod.category == "CC"
+
+    def test_categorization_core_keyword_package(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test categorization of package files with core keywords."""
+        mccc_pkg = tmp_path / "mccc_tuner.package"
+        mccc_pkg.write_bytes(b"DBPF" + b"\x00" * 100)
+
+        mod = scanner._scan_file(mccc_pkg)
+        assert mod.category == "Core Scripts"
+
+    def test_categorization_config_file(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test categorization of config files."""
+        cfg_file = tmp_path / "settings.cfg"
+        cfg_file.write_text("Config content")
+
+        mod = scanner._scan_file(cfg_file)
+        assert mod.category == "Libraries"
+
+    def test_validate_file_exception(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test validate_file returns error on exception."""
+        from unittest.mock import patch
+
+        test_file = tmp_path / "test.package"
+        test_file.write_bytes(b"DBPF" + b"\x00" * 100)
+
+        with patch.object(scanner, "_scan_file", side_effect=RuntimeError("Error")):
+            is_valid, errors = scanner.validate_file(test_file)
+
+        assert is_valid is False
+        assert "Error" in errors[0]
+
+    def test_scan_file_with_timeout_returns_none(
+        self,
+        scanner: ModScanner,
+        tmp_path: Path,
+    ) -> None:
+        """Test scan returns error when worker returns None."""
+        from unittest.mock import patch
+        from src.core.exceptions import ModScanError
+
+        test_file = tmp_path / "test.package"
+        test_file.write_bytes(b"DBPF" + b"\x00" * 100)
+
+        # Make the scan worker return None instead of a result
+        with patch.object(scanner, "_scan_file", return_value=None):
+            with pytest.raises(ModScanError, match="Scan returned no result"):
+                scanner._scan_file_with_timeout(test_file)
