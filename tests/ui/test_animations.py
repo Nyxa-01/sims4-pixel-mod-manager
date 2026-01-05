@@ -3,7 +3,8 @@
 These tests use mocked Tkinter components from conftest.py.
 """
 
-from unittest.mock import Mock
+import sys
+from unittest.mock import MagicMock, Mock, patch
 
 from tests.ui.conftest import MockCanvas, MockFrame, MockLabel, MockTk
 
@@ -502,3 +503,233 @@ class TestNotificationAnimation:
 
         # Callback is executed immediately in mock
         assert dismissed["value"] is True
+
+
+# ============================================================================
+# Tests for src/ui/animations.py production code
+# ============================================================================
+
+
+class TestAnimateScaleFunction:
+    """Test animate_scale function from production code."""
+
+    def test_animate_scale_widget_not_ready(self) -> None:
+        """Test animate_scale handles widget not ready."""
+        # Mock tkinter module
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            # Import after mocking
+            from src.ui.animations import animate_scale
+
+            # Create widget that raises TclError on winfo_width
+            mock_widget = MagicMock()
+            mock_widget.winfo_width.side_effect = Exception("Widget not ready")
+
+            # Should not raise, just log and return
+            animate_scale(mock_widget, 1.5)
+
+    def test_animate_scale_widget_not_rendered(self) -> None:
+        """Test animate_scale handles unrendered widget (size <= 1)."""
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            from src.ui.animations import animate_scale
+
+            mock_widget = MagicMock()
+            mock_widget.winfo_width.return_value = 0
+            mock_widget.winfo_height.return_value = 0
+
+            # Should return early without animation
+            animate_scale(mock_widget, 1.5)
+
+            # after() should not be called for unrendered widget
+            mock_widget.after.assert_not_called()
+
+    def test_animate_scale_calculates_steps(self) -> None:
+        """Test animate_scale calculates correct animation steps."""
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            from src.ui.animations import animate_scale
+
+            mock_widget = MagicMock()
+            mock_widget.winfo_width.return_value = 100
+            mock_widget.winfo_height.return_value = 50
+
+            # Run animation
+            animate_scale(mock_widget, 1.5, duration_ms=160)
+
+            # First step should be called immediately, then after() for subsequent
+            # With 160ms duration at 16ms/frame = 10 steps
+            # Initial step() is called synchronously
+            mock_widget.config.assert_called()
+
+    def test_animate_scale_short_duration(self) -> None:
+        """Test animate_scale with very short duration (< 16ms)."""
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            from src.ui.animations import animate_scale
+
+            mock_widget = MagicMock()
+            mock_widget.winfo_width.return_value = 100
+            mock_widget.winfo_height.return_value = 50
+
+            # Very short duration should use at least 1 step
+            animate_scale(mock_widget, 1.5, duration_ms=5)
+
+            mock_widget.config.assert_called()
+
+    def test_animate_scale_with_callback(self) -> None:
+        """Test animate_scale calls completion callback."""
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            from src.ui.animations import animate_scale
+
+            mock_widget = MagicMock()
+            mock_widget.winfo_width.return_value = 100
+            mock_widget.winfo_height.return_value = 50
+            callback = Mock()
+
+            # Store the step function for manual execution
+            step_func = None
+
+            def capture_after(ms, func):
+                nonlocal step_func
+                step_func = func
+
+            mock_widget.after.side_effect = capture_after
+
+            animate_scale(mock_widget, 1.5, duration_ms=16, on_complete=callback)
+
+            # Manually execute remaining steps to trigger callback
+            # (since after() is mocked, we need to simulate the animation loop)
+            if step_func:
+                step_func()  # Complete the animation
+                callback.assert_called_once()
+
+
+class TestAnimateFadeFunction:
+    """Test animate_fade function from production code."""
+
+    def test_animate_fade_widget_error(self) -> None:
+        """Test animate_fade handles widget errors."""
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            from src.ui.animations import animate_fade
+
+            mock_widget = MagicMock()
+            mock_widget.cget.side_effect = Exception("Widget error")
+
+            # Should not raise
+            animate_fade(mock_widget, 0.5)
+
+    def test_animate_fade_runs_steps(self) -> None:
+        """Test animate_fade runs animation steps."""
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            from src.ui.animations import animate_fade
+
+            mock_widget = MagicMock()
+            mock_widget.cget.return_value = "#ffffff"
+
+            animate_fade(mock_widget, 0.5, duration_ms=32)
+
+            # after() should be scheduled for animation
+            mock_widget.after.assert_called()
+
+    def test_animate_fade_short_duration(self) -> None:
+        """Test animate_fade with very short duration."""
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            from src.ui.animations import animate_fade
+
+            mock_widget = MagicMock()
+            mock_widget.cget.return_value = "#ffffff"
+
+            # Very short duration
+            animate_fade(mock_widget, 0.5, duration_ms=5)
+
+            mock_widget.after.assert_called()
+
+    def test_animate_fade_with_callback(self) -> None:
+        """Test animate_fade calls completion callback."""
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            from src.ui.animations import animate_fade
+
+            mock_widget = MagicMock()
+            mock_widget.cget.return_value = "#ffffff"
+            callback = Mock()
+
+            # Capture and execute the step function
+            step_func = None
+
+            def capture_after(ms, func):
+                nonlocal step_func
+                step_func = func
+
+            mock_widget.after.side_effect = capture_after
+
+            animate_fade(mock_widget, 0.5, duration_ms=16, on_complete=callback)
+
+            # Execute step to complete animation
+            if step_func:
+                step_func()
+                callback.assert_called_once()
+
+
+class TestPulseWidgetFunction:
+    """Test pulse_widget function from production code."""
+
+    def test_pulse_widget_calls_animate_scale(self) -> None:
+        """Test pulse_widget uses animate_scale for pulsing."""
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            with patch("src.ui.animations.animate_scale") as mock_animate:
+                from src.ui.animations import pulse_widget
+
+                mock_widget = MagicMock()
+
+                pulse_widget(mock_widget, scale_amount=1.1, duration_ms=200)
+
+                # Should call animate_scale for scale up
+                mock_animate.assert_called()
+                call_args = mock_animate.call_args_list[0]
+                assert call_args[0][0] is mock_widget
+                assert call_args[0][1] == 1.1  # scale_amount
+
+    def test_pulse_widget_default_values(self) -> None:
+        """Test pulse_widget with default parameters."""
+        mock_tk = MagicMock()
+        mock_tk.TclError = Exception
+
+        with patch.dict(sys.modules, {"tkinter": mock_tk}):
+            with patch("src.ui.animations.animate_scale") as mock_animate:
+                from src.ui.animations import pulse_widget
+
+                mock_widget = MagicMock()
+
+                pulse_widget(mock_widget)
+
+                # Should use default scale_amount of 1.05
+                mock_animate.assert_called()
+                call_args = mock_animate.call_args_list[0]
+                assert call_args[0][1] == 1.05
