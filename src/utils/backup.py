@@ -140,9 +140,10 @@ class BackupManager:
                         relative_path = file_path.relative_to(source)
 
                         # Add to manifest (as list of dicts for verify_backup compatibility)
+                        # Use POSIX-style paths for cross-platform compatibility
                         manifest["files"].append(
                             {
-                                "path": str(relative_path),
+                                "path": relative_path.as_posix(),
                                 "crc32": file_hash,
                             }
                         )
