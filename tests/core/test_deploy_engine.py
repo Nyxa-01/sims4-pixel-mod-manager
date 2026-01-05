@@ -507,3 +507,277 @@ class TestDeployEngine:
 
         # Rollback should have been attempted
         # (may fail in test environment, but should be logged)
+
+    def test_deploy_active_mods_not_found(
+        self,
+        engine: DeployEngine,
+        game_mods: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Test deploy fails when active mods path doesn't exist."""
+        non_existent = tmp_path / "nonexistent"
+
+        with engine.transaction():
+            with pytest.raises(PathError, match="Active mods path not found"):
+                engine.deploy(non_existent, game_mods, close_game=False)
+
+    def test_backup_current_mods_exception(
+        self,
+        engine: DeployEngine,
+        tmp_path: Path,
+    ) -> None:
+        """Test backup raises DeployError on failure."""
+        game_mods = tmp_path / "Mods"
+        game_mods.mkdir()
+        engine.backup_dir = tmp_path / "backups"
+
+        # Create a file that will cause zipfile to fail
+        with patch("zipfile.ZipFile", side_effect=PermissionError("Access denied")):
+            with pytest.raises(DeployError, match="Failed to create backup"):
+                engine._backup_current_mods(game_mods)
+
+    def test_generate_resource_cfg_exception(
+        self,
+        engine: DeployEngine,
+        tmp_path: Path,
+    ) -> None:
+        """Test generate_resource_cfg raises DeployError on failure."""
+        game_mods = tmp_path / "Mods"
+        game_mods.mkdir()
+
+        with patch("builtins.open", side_effect=PermissionError("Access denied")):
+            with pytest.raises(DeployError, match="Failed to generate resource.cfg"):
+                engine.generate_resource_cfg(game_mods)
+
+    def test_validate_resource_cfg_syntax_exception(
+        self,
+        engine: DeployEngine,
+        tmp_path: Path,
+    ) -> None:
+        """Test resource.cfg validation handles exception gracefully."""
+        cfg_path = tmp_path / "resource.cfg"
+        cfg_path.write_text(RESOURCE_CFG_TEMPLATE)
+
+        with patch("builtins.open", side_effect=IOError("Read error")):
+            result = engine._validate_resource_cfg_syntax(cfg_path)
+
+        assert result is False
+
+    @patch("os.symlink", side_effect=RuntimeError("Unexpected error"))
+    def test_create_symlink_generic_exception(
+        self,
+        mock_symlink: Mock,
+        engine: DeployEngine,
+        active_mods: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Test symlink creation handles generic exception."""
+        target = tmp_path / "symlink"
+
+        success = engine._create_symlink(active_mods, target)
+
+        assert success is False
+
+    def test_copy_files_exception(
+        self,
+        engine: DeployEngine,
+        active_mods: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Test copy files returns False on exception."""
+        target = tmp_path / "target"
+
+        with patch("shutil.copytree", side_effect=PermissionError("Access denied")):
+            success = engine._copy_files(active_mods, target)
+
+        assert success is False
+
+    def test_remove_deployment_symlink(
+        self,
+        engine: DeployEngine,
+        tmp_path: Path,
+    ) -> None:
+        """Test removing symlink deployment."""
+        deployed = tmp_path / "deployed_link"
+
+        # Create a real symlink for testing
+        target_dir = tmp_path / "real_dir"
+        target_dir.mkdir()
+
+        try:
+            os.symlink(target_dir, deployed, target_is_directory=True)
+
+            engine._remove_deployment(deployed)
+
+            assert not deployed.exists()
+            assert target_dir.exists()  # Original should still exist
+        except OSError:
+            pytest.skip("Symlink creation not supported")
+
+    def test_remove_deployment_exception(
+        self,
+        engine: DeployEngine,
+        tmp_path: Path,
+    ) -> None:
+        """Test remove deployment handles exception gracefully."""
+        deployed = tmp_path / "deployed"
+        deployed.mkdir()
+
+        with patch("shutil.rmtree", side_effect=PermissionError("Access denied")):
+            # Should not raise, just log warning
+            engine._remove_deployment(deployed)
+
+    def test_verify_deployment_exception(
+        self,
+        engine: DeployEngine,
+        active_mods: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Test verification returns False on exception."""
+        target = tmp_path / "deployed"
+        engine._copy_files(active_mods, target)
+
+        with patch.object(engine, "_hash_file", side_effect=IOError("Read error")):
+            result = engine.verify_deployment(active_mods, target)
+
+        assert result is False
+
+    def test_validate_game_accessibility_not_readable(
+        self,
+        engine: DeployEngine,
+        game_mods: Path,
+    ) -> None:
+        """Test validation fails when mods folder is not readable."""
+        (game_mods / "resource.cfg").write_text(RESOURCE_CFG_TEMPLATE)
+
+        with patch("os.access", return_value=False):
+            with pytest.raises(DeployError, match="not readable"):
+                engine._validate_game_accessibility(game_mods)
+
+    def test_rollback_exception(
+        self,
+        engine: DeployEngine,
+        tmp_path: Path,
+    ) -> None:
+        """Test rollback raises DeployError on failure."""
+        backup_path = tmp_path / "backup.zip"
+        with zipfile.ZipFile(backup_path, "w") as zf:
+            zf.writestr("test.txt", "test")
+
+        deployed = tmp_path / "deployed"
+        deployed.mkdir()
+
+        with patch("zipfile.ZipFile", side_effect=IOError("Read error")):
+            with pytest.raises(DeployError, match="Rollback failed"):
+                engine.rollback(backup_path, deployed)
+
+    def test_report_progress_callback_exception(
+        self,
+        engine: DeployEngine,
+    ) -> None:
+        """Test progress reporting handles callback exception gracefully."""
+
+        def bad_callback(step: str, pct: float) -> None:
+            raise RuntimeError("Callback error")
+
+        # Should not raise
+        engine._report_progress(bad_callback, "Test step", 50.0)
+
+    def test_transaction_rollback_failure_logged(
+        self,
+        engine: DeployEngine,
+        tmp_path: Path,
+    ) -> None:
+        """Test rollback failure is logged in transaction exit."""
+        backup = tmp_path / "backup.zip"
+        with zipfile.ZipFile(backup, "w") as zf:
+            zf.writestr("test.txt", "test")
+
+        deployed = tmp_path / "deployed"
+        deployed.mkdir()
+
+        engine._backup_path = backup
+        engine._deployed_path = deployed
+
+        # Make rollback fail
+        with patch.object(engine, "rollback", side_effect=Exception("Rollback error")):
+            with pytest.raises(ValueError):
+                with engine.transaction():
+                    raise ValueError("Test exception")
+
+    def test_deploy_with_fallback_all_methods_fail(
+        self,
+        engine: DeployEngine,
+        active_mods: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Test deploy_with_fallback returns False when all methods fail."""
+        target = tmp_path / "target"
+
+        with (
+            patch.object(engine, "_create_junction", return_value=False),
+            patch.object(engine, "_create_symlink", return_value=False),
+            patch.object(engine, "_copy_files", return_value=False),
+        ):
+            result = engine._deploy_with_fallback(active_mods, target)
+
+        assert result is False
+
+    def test_deploy_with_fallback_junction_exception(
+        self,
+        engine: DeployEngine,
+        active_mods: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Test deploy_with_fallback handles exceptions in methods."""
+        target = tmp_path / "target"
+
+        with (
+            patch.object(engine, "_create_junction", side_effect=Exception("Error")),
+            patch.object(engine, "_create_symlink", side_effect=Exception("Error")),
+            patch.object(engine, "_copy_files", return_value=True),
+        ):
+            result = engine._deploy_with_fallback(active_mods, target)
+
+        assert result is True
+        assert engine._deployment_method == "copy"
+
+    def test_create_junction_non_windows(
+        self,
+        engine: DeployEngine,
+        active_mods: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Test junction creation returns False on non-Windows."""
+        if os.name == "nt":
+            pytest.skip("Test is for non-Windows platforms")
+
+        target = tmp_path / "junction"
+        success = engine._create_junction(active_mods, target)
+
+        assert success is False
+
+
+class TestIsJunctionUtility:
+    """Test _is_junction utility function."""
+
+    def test_is_junction_non_windows(self) -> None:
+        """Test is_junction returns False on non-Windows."""
+        from src.core.deploy_engine import _is_junction
+        from pathlib import Path
+
+        if os.name == "nt":
+            pytest.skip("Test is for non-Windows platforms")
+
+        result = _is_junction(Path("/tmp"))
+
+        assert result is False
+
+    def test_is_junction_with_exception(self, tmp_path: Path) -> None:
+        """Test is_junction handles exceptions gracefully."""
+        from src.core.deploy_engine import _is_junction
+
+        with patch.object(Path, "exists", side_effect=PermissionError("Error")):
+            result = _is_junction(tmp_path)
+
+        assert result is False
