@@ -703,14 +703,19 @@ class TestPulseWidgetFunction:
         mock_tk.TclError = Exception
 
         with patch.dict(sys.modules, {"tkinter": mock_tk}):
-            with patch("src.ui.animations.animate_scale") as mock_animate:
-                from src.ui.animations import pulse_widget
+            # Import module first, then patch the function reference
+            import importlib
 
+            import src.ui.animations as anim_module
+
+            importlib.reload(anim_module)
+
+            with patch.object(anim_module, "animate_scale") as mock_animate:
                 mock_widget = MagicMock()
                 mock_widget.winfo_width.return_value = 100
                 mock_widget.winfo_height.return_value = 50
 
-                pulse_widget(mock_widget, scale_amount=1.1, duration_ms=200)
+                anim_module.pulse_widget(mock_widget, scale_amount=1.1, duration_ms=200)
 
                 # Should call animate_scale for scale up
                 mock_animate.assert_called()
@@ -724,14 +729,19 @@ class TestPulseWidgetFunction:
         mock_tk.TclError = Exception
 
         with patch.dict(sys.modules, {"tkinter": mock_tk}):
-            with patch("src.ui.animations.animate_scale") as mock_animate:
-                from src.ui.animations import pulse_widget
+            # Import module first, then patch the function reference
+            import importlib
 
+            import src.ui.animations as anim_module
+
+            importlib.reload(anim_module)
+
+            with patch.object(anim_module, "animate_scale") as mock_animate:
                 mock_widget = MagicMock()
                 mock_widget.winfo_width.return_value = 100
                 mock_widget.winfo_height.return_value = 50
 
-                pulse_widget(mock_widget)
+                anim_module.pulse_widget(mock_widget)
 
                 # Should use default scale_amount of 1.05
                 mock_animate.assert_called()

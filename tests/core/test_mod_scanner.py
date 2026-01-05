@@ -484,6 +484,7 @@ class TestModScanner:
     ) -> None:
         """Test scan handles file stat exception."""
         from unittest.mock import patch
+
         from src.core.exceptions import ModScanError
 
         test_file = tmp_path / "test.package"
@@ -504,7 +505,7 @@ class TestModScanner:
         test_file = tmp_path / "test.package"
         test_file.write_bytes(b"DBPF" + b"\x00" * 100)
 
-        with patch("builtins.open", side_effect=IOError("Read error")):
+        with patch("builtins.open", side_effect=OSError("Read error")):
             hash_result = scanner._calculate_hash(test_file)
 
         assert hash_result == "00000000"
@@ -533,7 +534,7 @@ class TestModScanner:
         test_file = tmp_path / "test.package"
         test_file.write_bytes(b"DBPF" + b"\x00" * 100)
 
-        with patch("builtins.open", side_effect=IOError("Read error")):
+        with patch("builtins.open", side_effect=OSError("Read error")):
             entropy = scanner.calculate_entropy(test_file)
 
         assert entropy == 0.0
@@ -701,6 +702,7 @@ class TestModScanner:
     ) -> None:
         """Test scan returns error when worker returns None."""
         from unittest.mock import patch
+
         from src.core.exceptions import ModScanError
 
         test_file = tmp_path / "test.package"

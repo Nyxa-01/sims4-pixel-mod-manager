@@ -558,7 +558,7 @@ class TestDeployEngine:
         cfg_path = tmp_path / "resource.cfg"
         cfg_path.write_text(RESOURCE_CFG_TEMPLATE)
 
-        with patch("builtins.open", side_effect=IOError("Read error")):
+        with patch("builtins.open", side_effect=OSError("Read error")):
             result = engine._validate_resource_cfg_syntax(cfg_path)
 
         assert result is False
@@ -637,7 +637,7 @@ class TestDeployEngine:
         target = tmp_path / "deployed"
         engine._copy_files(active_mods, target)
 
-        with patch.object(engine, "_hash_file", side_effect=IOError("Read error")):
+        with patch.object(engine, "_hash_file", side_effect=OSError("Read error")):
             result = engine.verify_deployment(active_mods, target)
 
         assert result is False
@@ -667,7 +667,7 @@ class TestDeployEngine:
         deployed = tmp_path / "deployed"
         deployed.mkdir()
 
-        with patch("zipfile.ZipFile", side_effect=IOError("Read error")):
+        with patch("zipfile.ZipFile", side_effect=OSError("Read error")):
             with pytest.raises(DeployError, match="Rollback failed"):
                 engine.rollback(backup_path, deployed)
 
@@ -763,8 +763,9 @@ class TestIsJunctionUtility:
 
     def test_is_junction_non_windows(self) -> None:
         """Test is_junction returns False on non-Windows."""
-        from src.core.deploy_engine import _is_junction
         from pathlib import Path
+
+        from src.core.deploy_engine import _is_junction
 
         if os.name == "nt":
             pytest.skip("Test is for non-Windows platforms")

@@ -237,7 +237,7 @@ class TestModInstaller:
             call_count += 1
             if call_count == 1:
                 return original_hash_file(path)  # Source hash succeeds
-            raise IOError("Disk read error")  # Backup hash fails
+            raise OSError("Disk read error")  # Backup hash fails
 
         with patch("src.core.installer.hash_file", side_effect=mock_hash_file):
             result = installer.backup_mod(sample_package_mod, backup_dir)
@@ -287,8 +287,8 @@ class TestModInstaller:
 
         # Mock copyfileobj to raise exception
         with (
-            patch.object(shutil, "copyfileobj", side_effect=IOError("Disk full")),
-            pytest.raises(IOError, match="Disk full"),
+            patch.object(shutil, "copyfileobj", side_effect=OSError("Disk full")),
+            pytest.raises(OSError, match="Disk full"),
         ):
             installer.install_mod(sample_package_mod, category="CAS", slot=2)
 
