@@ -286,9 +286,10 @@ class TestModInstaller:
         installer = ModInstaller(temp_mods_dir)
 
         # Mock copyfileobj to raise exception
-        with patch.object(
-            shutil, "copyfileobj", side_effect=IOError("Disk full")
-        ), pytest.raises(IOError, match="Disk full"):
+        with (
+            patch.object(shutil, "copyfileobj", side_effect=IOError("Disk full")),
+            pytest.raises(IOError, match="Disk full"),
+        ):
             installer.install_mod(sample_package_mod, category="CAS", slot=2)
 
         # Verify partial file was cleaned up

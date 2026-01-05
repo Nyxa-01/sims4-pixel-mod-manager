@@ -707,6 +707,8 @@ class TestPulseWidgetFunction:
                 from src.ui.animations import pulse_widget
 
                 mock_widget = MagicMock()
+                mock_widget.winfo_width.return_value = 100
+                mock_widget.winfo_height.return_value = 50
 
                 pulse_widget(mock_widget, scale_amount=1.1, duration_ms=200)
 
@@ -726,6 +728,8 @@ class TestPulseWidgetFunction:
                 from src.ui.animations import pulse_widget
 
                 mock_widget = MagicMock()
+                mock_widget.winfo_width.return_value = 100
+                mock_widget.winfo_height.return_value = 50
 
                 pulse_widget(mock_widget)
 
