@@ -141,3 +141,180 @@ class TestModInstaller:
         source_hash = hash_file(sample_package_mod)
         backup_hash = hash_file(backup_path)
         assert source_hash == backup_hash
+
+    def test_install_mod_source_not_found(self, temp_mods_dir: Path) -> None:
+        """Test install_mod raises FileNotFoundError when source doesn't exist."""
+        installer = ModInstaller(temp_mods_dir)
+        nonexistent = temp_mods_dir / "nonexistent.package"
+
+        with pytest.raises(FileNotFoundError, match="Source mod not found"):
+            installer.install_mod(nonexistent, category="CAS", slot=2)
+
+    def test_uninstall_mod_not_found(self, temp_mods_dir: Path) -> None:
+        """Test uninstall_mod returns False when mod doesn't exist."""
+        installer = ModInstaller(temp_mods_dir)
+        nonexistent = temp_mods_dir / "nonexistent.package"
+
+        result = installer.uninstall_mod(nonexistent)
+
+        assert result is False
+
+    def test_uninstall_mod_exception(
+        self,
+        temp_mods_dir: Path,
+        sample_package_mod: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test uninstall_mod returns False on exception."""
+        from unittest.mock import patch
+
+        installer = ModInstaller(temp_mods_dir)
+
+        # Install mod first
+        installer.install_mod(sample_package_mod, "CAS", 2)
+        installed_path = temp_mods_dir / "002_CAS" / "sample_mod.package"
+        assert installed_path.exists()
+
+        # Mock unlink to raise exception
+        with patch.object(Path, "unlink", side_effect=PermissionError("Access denied")):
+            result = installer.uninstall_mod(installed_path)
+
+        assert result is False
+
+    def test_backup_mod_not_found(self, temp_mods_dir: Path, tmp_path: Path) -> None:
+        """Test backup_mod returns None when mod doesn't exist."""
+        installer = ModInstaller(temp_mods_dir)
+        nonexistent = temp_mods_dir / "nonexistent.package"
+        backup_dir = tmp_path / "backups"
+
+        result = installer.backup_mod(nonexistent, backup_dir)
+
+        assert result is None
+
+    def test_backup_mod_exception(
+        self,
+        temp_mods_dir: Path,
+        sample_package_mod: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Test backup_mod returns None on copy exception."""
+        import shutil
+        from unittest.mock import patch
+
+        installer = ModInstaller(temp_mods_dir)
+        backup_dir = tmp_path / "backups"
+
+        # Mock shutil.copy2 to raise exception
+        with patch.object(shutil, "copy2", side_effect=PermissionError("Access denied")):
+            result = installer.backup_mod(sample_package_mod, backup_dir)
+
+        assert result is None
+
+    def test_backup_mod_exception_with_cleanup(
+        self,
+        temp_mods_dir: Path,
+        sample_package_mod: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Test backup_mod cleans up partial backup file on exception."""
+        from unittest.mock import patch
+
+        installer = ModInstaller(temp_mods_dir)
+        backup_dir = tmp_path / "backups"
+        backup_dir.mkdir(parents=True)
+        expected_backup = backup_dir / sample_package_mod.name
+
+        # Create a partial backup file to simulate interrupted copy
+        expected_backup.write_bytes(b"partial data")
+        assert expected_backup.exists()
+
+        # Mock hash_file to fail on the backup file
+        original_hash_file = hash_file
+        call_count = 0
+
+        def mock_hash_file(path: Path) -> int:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return original_hash_file(path)  # Source hash succeeds
+            raise IOError("Disk read error")  # Backup hash fails
+
+        with patch("src.core.installer.hash_file", side_effect=mock_hash_file):
+            result = installer.backup_mod(sample_package_mod, backup_dir)
+
+        assert result is None
+        # Verify partial file was cleaned up
+        assert not expected_backup.exists()
+
+    def test_backup_mod_hash_mismatch(
+        self,
+        temp_mods_dir: Path,
+        sample_package_mod: Path,
+        tmp_path: Path,
+    ) -> None:
+        """Test backup_mod returns None when hash mismatch detected."""
+        from unittest.mock import patch
+
+        installer = ModInstaller(temp_mods_dir)
+        backup_dir = tmp_path / "backups"
+
+        # Mock hash_file to return different values
+        call_count = 0
+        original_hash = hash_file(sample_package_mod)
+
+        def mock_hash_file(path: Path) -> int:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return original_hash  # First call (source)
+            return original_hash + 1  # Second call (backup) - different hash
+
+        with patch("src.core.installer.hash_file", side_effect=mock_hash_file):
+            result = installer.backup_mod(sample_package_mod, backup_dir)
+
+        assert result is None
+
+    def test_install_mod_copy_exception(
+        self,
+        temp_mods_dir: Path,
+        sample_package_mod: Path,
+    ) -> None:
+        """Test install_mod raises exception and cleans up on copy failure."""
+        import shutil
+        from unittest.mock import patch
+
+        installer = ModInstaller(temp_mods_dir)
+
+        # Mock copyfileobj to raise exception
+        with patch.object(
+            shutil, "copyfileobj", side_effect=IOError("Disk full")
+        ), pytest.raises(IOError, match="Disk full"):
+            installer.install_mod(sample_package_mod, category="CAS", slot=2)
+
+        # Verify partial file was cleaned up
+        expected_file = temp_mods_dir / "002_CAS" / "sample_mod.package"
+        assert not expected_file.exists()
+
+    def test_install_mod_hash_mismatch_after_copy(
+        self,
+        temp_mods_dir: Path,
+        sample_package_mod: Path,
+    ) -> None:
+        """Test install_mod detects hash mismatch after copy."""
+        from unittest.mock import patch
+
+        installer = ModInstaller(temp_mods_dir)
+        original_hash = hash_file(sample_package_mod)
+
+        call_count = 0
+
+        def mock_hash_file(path: Path) -> int:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return original_hash  # First call (source before copy)
+            return original_hash + 1  # Second call (dest after copy) - different
+
+        with patch("src.core.installer.hash_file", side_effect=mock_hash_file):
+            with pytest.raises(ValueError, match="File corruption detected"):
+                installer.install_mod(sample_package_mod, category="CAS", slot=2)
