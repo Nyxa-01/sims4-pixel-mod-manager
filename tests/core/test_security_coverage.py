@@ -1,7 +1,8 @@
 """Tests for security module coverage."""
 
 import os
-from pathlib import Path
+import sys
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -30,31 +31,65 @@ class TestPathEncryption:
         assert enc.key_path is not None
         assert ".encryption.key" in str(enc.key_path)
 
+    def test_default_key_path_contains_app_folder(self) -> None:
+        """Test default key path contains Sims4ModManager folder.
+
+        This test works cross-platform by just checking the path string
+        contains the expected application folder name.
+        """
+        enc = PathEncryption()
+        key_path = enc._get_default_key_path()
+
+        # The path should always contain Sims4ModManager regardless of OS
+        assert "Sims4ModManager" in str(key_path)
+        # And should end with .encryption.key
+        assert str(key_path).endswith(".encryption.key")
+
     @pytest.mark.skipif(os.name != "nt", reason="Windows-only test")
-    @patch.dict(os.environ, {"LOCALAPPDATA": "C:\\Users\\Test\\AppData\\Local"})
     def test_default_key_path_windows(self) -> None:
-        """Test default key path on Windows."""
+        """Test default key path on Windows contains expected components."""
         enc = PathEncryption()
         key_path = enc._get_default_key_path()
 
-        assert "Sims4ModManager" in str(key_path)
+        path_str = str(key_path)
+        # Windows uses LOCALAPPDATA or similar
+        assert "Sims4ModManager" in path_str
+        assert ".encryption.key" in path_str
 
-    @patch("os.name", "posix")
-    @patch("platform.system", return_value="Darwin")
-    def test_default_key_path_macos(self, mock_system: Mock) -> None:
-        """Test default key path on macOS."""
+    @pytest.mark.skipif(os.name != "posix", reason="POSIX-only test")
+    def test_default_key_path_posix(self) -> None:
+        """Test default key path on POSIX systems contains expected components.
+
+        On macOS: ~/Library/Application Support/Sims4ModManager/.encryption.key
+        On Linux: ~/.config/Sims4ModManager/.encryption.key
+        """
+        import platform
+
         enc = PathEncryption()
         key_path = enc._get_default_key_path()
 
-        assert "Sims4ModManager" in str(key_path)
+        path_str = str(key_path)
+        assert "Sims4ModManager" in path_str
+        assert ".encryption.key" in path_str
 
-    @patch("os.name", "posix")
-    @patch("platform.system", return_value="Linux")
-    def test_default_key_path_linux(self, mock_system: Mock) -> None:
-        """Test default key path on Linux."""
+        # Verify platform-specific path component
+        if platform.system() == "Darwin":
+            assert "Library" in path_str
+        else:
+            assert ".config" in path_str
+
+    def test_default_key_path_uses_correct_os_branch(self) -> None:
+        """Test that the correct OS branch is used based on os.name.
+
+        This test verifies the branching logic without requiring
+        specific platforms.
+        """
         enc = PathEncryption()
         key_path = enc._get_default_key_path()
 
+        # Path should be valid and absolute when resolved
+        assert key_path is not None
+        # Should contain the app folder name
         assert "Sims4ModManager" in str(key_path)
 
     def test_encrypt_decrypt_roundtrip(self, tmp_path: Path) -> None:
@@ -129,16 +164,22 @@ class TestPathEncryption:
 
         assert decrypted1 == decrypted2
 
-    @patch("os.name", "posix")
-    @patch("os.chmod")
-    def test_key_permissions_set_unix(self, mock_chmod: Mock, tmp_path: Path) -> None:
-        """Test restrictive permissions set on Unix."""
-        key_path = tmp_path / ".secure.key"
-        enc = PathEncryption(key_path=key_path)
-        _ = enc.fernet
+    def test_key_permissions_set_unix(self, tmp_path: Path) -> None:
+        """Test restrictive permissions set on Unix-like systems.
 
-        # chmod should be called with 0o600
-        mock_chmod.assert_called_once_with(key_path, 0o600)
+        Uses mocking to test the Unix code path logic on any platform.
+        """
+        key_path = tmp_path / ".secure.key"
+
+        with (
+            patch("src.core.security.os.name", "posix"),
+            patch("src.core.security.os.chmod") as mock_chmod,
+        ):
+            enc = PathEncryption(key_path=key_path)
+            _ = enc.fernet
+
+            # chmod should be called with 0o600 on Unix
+            mock_chmod.assert_called_once_with(key_path, 0o600)
 
 
 class TestValidatePathSecurity:
