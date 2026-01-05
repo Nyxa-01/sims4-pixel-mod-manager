@@ -1,7 +1,7 @@
 """Tests for main window UI."""
 
 import os
-import tkinter as tk
+import sys
 from unittest.mock import Mock, patch
 
 import pytest
@@ -11,6 +11,12 @@ pytestmark = pytest.mark.skipif(
     not os.environ.get("DISPLAY") or os.environ.get("CI") == "true",
     reason="GUI tests require display and cannot run in CI",
 )
+
+# Skip collection entirely if tkinter is not available
+try:
+    import tkinter as tk
+except ImportError:
+    pytest.skip("tkinter not available", allow_module_level=True)
 
 from src.core.mod_scanner import ModFile
 from src.ui.main_window import HelpDialog, MainWindow, SettingsDialog

@@ -1,10 +1,15 @@
 """Tests for auto-update functionality."""
 
 import json
-from unittest.mock import Mock, patch
+import sys
+from unittest.mock import MagicMock, Mock, patch
 from urllib.error import HTTPError, URLError
 
 import pytest
+
+# Mock tkinter before importing updater (which imports tkinter at module level)
+sys.modules["tkinter"] = MagicMock()
+sys.modules["tkinter.messagebox"] = MagicMock()
 
 from src.utils.updater import Updater
 
