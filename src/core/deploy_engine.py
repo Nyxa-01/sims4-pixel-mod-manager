@@ -165,9 +165,8 @@ class DeployEngine:
         if not self.verify_deployment(active_mods_path, deployed_active):
             raise HashValidationError(
                 active_mods_path,
-                0,
-                0,
-                recovery_hint="Deployment verification failed, rolling back",
+                expected_hash=0,
+                actual_hash=0,
             )
 
         # Step 8: Final validation
