@@ -1,8 +1,7 @@
 """Tests for security module coverage."""
 
 import os
-import sys
-from pathlib import Path, PurePosixPath, PureWindowsPath
+from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest

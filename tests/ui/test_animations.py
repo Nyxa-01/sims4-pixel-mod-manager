@@ -3,10 +3,7 @@
 These tests use mocked Tkinter components from conftest.py.
 """
 
-from typing import Any
-from unittest.mock import Mock, patch
-
-import pytest
+from unittest.mock import Mock
 
 from tests.ui.conftest import MockCanvas, MockFrame, MockLabel, MockTk
 
@@ -498,7 +495,7 @@ class TestNotificationAnimation:
         def dismiss() -> None:
             dismissed["value"] = True
 
-        notification = MockToplevel(mock_tk_root)
+        _notification = MockToplevel(mock_tk_root)  # Created but callback tests mock_tk_root
 
         # Schedule auto-dismiss (in real code, after 5000ms)
         mock_tk_root.after(5000, dismiss)

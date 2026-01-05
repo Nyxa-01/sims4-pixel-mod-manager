@@ -53,9 +53,13 @@ class TestModManagerException:
         assert exc.context["another_key"] == 123
 
     def test_exception_is_catchable(self) -> None:
-        """Test exception can be caught as Exception."""
-        with pytest.raises(Exception):
+        """Test ModManagerException is raised as expected."""
+        with pytest.raises(ModManagerException):
             raise ModManagerException("Test")
+
+    def test_mod_manager_exception_is_exception_subclass(self) -> None:
+        """ModManagerException should remain an Exception subclass."""
+        assert issubclass(ModManagerException, Exception)
 
     def test_exception_inheritance(self) -> None:
         """Test exception inherits from Exception."""
