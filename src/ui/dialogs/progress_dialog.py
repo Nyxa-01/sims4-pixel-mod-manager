@@ -1,7 +1,7 @@
 """Progress dialog for long-running operations."""
 
 import tkinter as tk
-from typing import Optional, Callable
+from collections.abc import Callable
 
 
 class ProgressDialog(tk.Toplevel):
@@ -24,7 +24,7 @@ class ProgressDialog(tk.Toplevel):
         super().__init__(parent)
 
         self.cancelled = False
-        self.cancel_callback: Optional[Callable[[], None]] = None
+        self.cancel_callback: Callable[[], None] | None = None
 
         # Window setup
         self.title(title)
@@ -47,8 +47,8 @@ class ProgressDialog(tk.Toplevel):
 
     def _build_ui(self, cancelable: bool) -> None:
         """Build dialog UI."""
-        from ..widgets.progress_bar import PixelProgressBar
         from ..widgets.pixel_button import PixelButton
+        from ..widgets.progress_bar import PixelProgressBar
 
         # Title label
         self.title_label = tk.Label(

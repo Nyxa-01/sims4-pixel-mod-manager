@@ -3,7 +3,6 @@
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 
 from cryptography.fernet import Fernet
 
@@ -13,7 +12,7 @@ logger = logging.getLogger(__name__)
 class PathEncryption:
     """Handles encryption/decryption of file paths in config."""
 
-    def __init__(self, key_path: Optional[Path] = None) -> None:
+    def __init__(self, key_path: Path | None = None) -> None:
         """Initialize encryption.
 
         Args:
@@ -23,7 +22,7 @@ class PathEncryption:
             key_path = self._get_default_key_path()
 
         self.key_path = key_path
-        self._fernet: Optional[Fernet] = None
+        self._fernet: Fernet | None = None
 
     def _get_default_key_path(self) -> Path:
         """Get platform-specific default key location.
@@ -109,7 +108,7 @@ class PathEncryption:
             raise ValueError("Invalid encrypted path") from e
 
 
-def validate_path_security(path: Path, allowed_base: Optional[Path] = None) -> bool:
+def validate_path_security(path: Path, allowed_base: Path | None = None) -> bool:
     """Validate path doesn't escape allowed directory.
 
     Args:

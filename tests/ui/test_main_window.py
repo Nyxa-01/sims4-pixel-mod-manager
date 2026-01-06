@@ -1,8 +1,7 @@
 """Tests for main window UI."""
 
 import tkinter as tk
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -76,7 +75,7 @@ class TestMainWindowInit:
             mock_instance = Mock()
             mock_theme.get_instance.return_value = mock_instance
 
-            window = MainWindow(root)
+            MainWindow(root)  # Window created but not used
 
             mock_instance.apply_theme.assert_called_once_with(root)
 
@@ -99,7 +98,7 @@ class TestMainWindowInit:
 
     def test_window_geometry(self, root, mock_managers):
         """Test window size and centering."""
-        window = MainWindow(root)
+        MainWindow(root)  # Window created but not used
 
         # Check minimum size
         assert root.minsize() == (600, 400)
@@ -107,7 +106,7 @@ class TestMainWindowInit:
     def test_shortcuts_bound(self, main_window):
         """Test keyboard shortcuts are bound."""
         # Check bindings exist
-        bindings = main_window.root.bind()
+        main_window.root.bind()  # Verify method exists
         # Note: Can't easily verify specific bindings without triggering them
 
 
@@ -340,7 +339,7 @@ class TestHelpDialog:
     def test_help_text_contains_shortcuts(self, root):
         """Test help text contains keyboard shortcuts."""
         with patch("src.ui.main_window.PixelTheme"):
-            dialog = HelpDialog(root)
+            HelpDialog(root)  # Dialog created but not used
 
             # Help text widget should exist
             # Note: Can't easily verify text content in tests

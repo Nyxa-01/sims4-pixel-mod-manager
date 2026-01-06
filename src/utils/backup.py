@@ -7,12 +7,12 @@ integrity checking, retention policies, and progress reporting.
 import json
 import logging
 import zipfile
-from dataclasses import asdict, dataclass
+import zlib
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Optional
-
-import zlib
+from typing import Any
 
 from src.core.exceptions import BackupError, HashValidationError
 
@@ -71,7 +71,7 @@ class BackupManager:
         source: Path,
         backup_dir: Path,
         game_version: str = "Unknown",
-        progress_callback: Optional[Callable[[float], None]] = None,
+        progress_callback: Callable[[float], None] | None = None,
     ) -> Path:
         """Create timestamped backup with integrity manifest.
 
@@ -211,7 +211,7 @@ class BackupManager:
         backup_path: Path,
         target: Path,
         verify_hashes: bool = True,
-        progress_callback: Optional[Callable[[float], None]] = None,
+        progress_callback: Callable[[float], None] | None = None,
     ) -> bool:
         """Restore backup with integrity verification.
 
@@ -339,7 +339,7 @@ class BackupManager:
 
         return backups
 
-    def delete_old_backups(self, backup_dir: Path, keep: Optional[int] = None) -> int:
+    def delete_old_backups(self, backup_dir: Path, keep: int | None = None) -> int:
         """Delete old backups according to retention policy.
 
         Args:

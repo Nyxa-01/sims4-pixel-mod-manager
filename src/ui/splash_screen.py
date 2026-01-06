@@ -1,8 +1,6 @@
 """Splash screen displayed during app initialization."""
 
 import tkinter as tk
-from pathlib import Path
-from typing import Optional
 
 
 class SplashScreen:
@@ -26,9 +24,9 @@ class SplashScreen:
         """
         self.title = title
         self.version = version
-        self.window: Optional[tk.Tk] = None
-        self.progress_label: Optional[tk.Label] = None
-        self.progress_canvas: Optional[tk.Canvas] = None
+        self.window: tk.Tk | None = None
+        self.progress_label: tk.Label | None = None
+        self.progress_canvas: tk.Canvas | None = None
 
     def show(self) -> None:
         """Display splash screen."""

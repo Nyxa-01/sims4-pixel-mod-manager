@@ -7,7 +7,6 @@ prefixes, automatic categorization, and validation of file placement rules.
 import logging
 import re
 from pathlib import Path
-from typing import Optional
 
 from src.core.exceptions import LoadOrderError, PathError
 from src.core.mod_scanner import ModFile
@@ -93,7 +92,7 @@ class LoadOrderEngine:
                 raise LoadOrderError(f"Failed to create slot folder: {prefix}") from e
 
         # Place mods in appropriate slots
-        for category, mod_list in mods.items():
+        for _category, mod_list in mods.items():
             for mod in mod_list:
                 try:
                     self._place_mod_file(mod, output)
@@ -122,7 +121,7 @@ class LoadOrderEngine:
         mod_category = mod.category.lower() if mod.category else ""
 
         # Check each slot's keywords
-        for prefix, description, keywords in self.slots:
+        for prefix, _description, keywords in self.slots:
             # Skip ZZZ_Overrides (only for explicit overrides)
             if prefix == "ZZZ_Overrides":
                 continue
@@ -358,7 +357,7 @@ class LoadOrderEngine:
         """
         return PREFIX_PATTERN.match(prefix) is not None
 
-    def get_slot_description(self, prefix: str) -> Optional[str]:
+    def get_slot_description(self, prefix: str) -> str | None:
         """Get description for a slot prefix.
 
         Args:

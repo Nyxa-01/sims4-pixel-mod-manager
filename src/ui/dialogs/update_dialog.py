@@ -1,7 +1,6 @@
 """Update notification dialog."""
 
 import tkinter as tk
-from typing import Optional
 
 
 class UpdateDialog(tk.Toplevel):

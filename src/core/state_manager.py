@@ -4,14 +4,15 @@ Provides centralized state management with observer pattern for UI updates.
 All state mutations are protected by locks for thread safety.
 """
 
+import copy
+import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from threading import Lock, RLock
-from typing import Optional, Dict, List, Callable, Any
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from datetime import datetime
-import logging
-import copy
+from threading import Lock, RLock
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ class ModFile:
     mod_type: str
     category: str
     is_valid: bool
-    validation_errors: List[str] = field(default_factory=list)
+    validation_errors: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -46,14 +47,14 @@ class ApplicationState:
     """Application state data structure."""
 
     app_state: AppState = AppState.INITIALIZING
-    game_path: Optional[Path] = None
-    mods_path: Optional[Path] = None
-    incoming_mods: List[ModFile] = field(default_factory=list)
-    active_mods: Dict[str, List[ModFile]] = field(default_factory=dict)
-    last_deploy: Optional[datetime] = None
+    game_path: Path | None = None
+    mods_path: Path | None = None
+    incoming_mods: list[ModFile] = field(default_factory=list)
+    active_mods: dict[str, list[ModFile]] = field(default_factory=dict)
+    last_deploy: datetime | None = None
     total_deploys: int = 0
     is_game_running: bool = False
-    current_operation: Optional[str] = None
+    current_operation: str | None = None
     progress: float = 0.0  # 0.0 to 1.0
 
 
@@ -76,7 +77,7 @@ class StateManager:
 
         self._state = ApplicationState()
         self._state_lock = RLock()  # Reentrant lock for nested calls
-        self._observers: List[Callable[[ApplicationState], None]] = []
+        self._observers: list[Callable[[ApplicationState], None]] = []
         self._observers_lock = Lock()
 
         logger.info("StateManager initialized")
@@ -122,9 +123,7 @@ class StateManager:
             logger.info(f"State transition: {old_state.value} → {new_state.value}")
             self._notify_observers()
 
-    def update_paths(
-        self, game_path: Optional[Path] = None, mods_path: Optional[Path] = None
-    ) -> None:
+    def update_paths(self, game_path: Path | None = None, mods_path: Path | None = None) -> None:
         """Update game paths (thread-safe).
 
         Args:
@@ -140,7 +139,7 @@ class StateManager:
                 logger.info(f"Mods path updated: {mods_path}")
             self._notify_observers()
 
-    def set_incoming_mods(self, mods: List[ModFile]) -> None:
+    def set_incoming_mods(self, mods: list[ModFile]) -> None:
         """Set incoming mods list (thread-safe).
 
         Args:
@@ -151,7 +150,7 @@ class StateManager:
             logger.info(f"Incoming mods updated: {len(mods)} files")
             self._notify_observers()
 
-    def set_active_mods(self, mods: Dict[str, List[ModFile]]) -> None:
+    def set_active_mods(self, mods: dict[str, list[ModFile]]) -> None:
         """Set active mods by category (thread-safe).
 
         Args:
@@ -182,7 +181,7 @@ class StateManager:
             logger.info(f"Game running: {is_running}")
             self._notify_observers()
 
-    def set_operation(self, operation: Optional[str], progress: float = 0.0) -> None:
+    def set_operation(self, operation: str | None, progress: float = 0.0) -> None:
         """Set current operation and progress (thread-safe).
 
         Args:

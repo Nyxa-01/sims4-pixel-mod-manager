@@ -1,7 +1,8 @@
 """Tests for mod scanner."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from src.core.scanner import ModFile, ModScanner
 

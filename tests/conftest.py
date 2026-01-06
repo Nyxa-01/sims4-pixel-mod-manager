@@ -7,13 +7,11 @@ import logging
 import os
 import platform
 import zipfile
-from datetime import datetime
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from unittest.mock import Mock
 
 import pytest
-
 
 # =============================================================================
 # LOGGING

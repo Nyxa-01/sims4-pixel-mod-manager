@@ -4,7 +4,7 @@ Provides container with thick retro borders.
 """
 
 import tkinter as tk
-from typing import Any, Union
+from typing import Any
 
 
 class ChunkyFrame(tk.Frame):
@@ -18,7 +18,7 @@ class ChunkyFrame(tk.Frame):
 
     def __init__(
         self,
-        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         border_color: str = "#00e0ff",
         border_width: int = 4,
         bg: str = "#1a1a1a",

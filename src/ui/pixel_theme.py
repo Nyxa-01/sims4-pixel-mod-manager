@@ -8,9 +8,10 @@ import ctypes
 import logging
 import platform
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
 from tkinter import font as tkfont
-from typing import Any, Callable, Optional, Union
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +60,9 @@ class PixelTheme:
 
         self.colors = COLORS
         self.scale_factor = 1.0
-        self.font_small: Optional[tkfont.Font] = None
-        self.font_normal: Optional[tkfont.Font] = None
-        self.font_large: Optional[tkfont.Font] = None
+        self.font_small: tkfont.Font | None = None
+        self.font_normal: tkfont.Font | None = None
+        self.font_large: tkfont.Font | None = None
         self._font_family = FONT_FALLBACK
 
     @classmethod
@@ -86,7 +87,7 @@ class PixelTheme:
         """
         return int(size * self.scale_factor)
 
-    def get_font(self, size: str = "normal") -> Optional[tkfont.Font]:
+    def get_font(self, size: str = "normal") -> tkfont.Font | None:
         """Get a font by size category.
 
         Args:
@@ -102,7 +103,7 @@ class PixelTheme:
         }
         return fonts.get(size, self.font_normal)
 
-    def setup_dpi_awareness(self, root: Union[tk.Tk, tk.Toplevel]) -> None:
+    def setup_dpi_awareness(self, root: tk.Tk | tk.Toplevel) -> None:
         """Configure DPI awareness for crisp rendering.
 
         Args:
@@ -130,7 +131,7 @@ class PixelTheme:
             logger.error(f"DPI setup failed: {e}")
             self.scale_factor = 1.0
 
-    def get_scale_factor(self, root: Union[tk.Tk, tk.Toplevel]) -> float:
+    def get_scale_factor(self, root: tk.Tk | tk.Toplevel) -> float:
         """Calculate DPI scale factor.
 
         Args:
@@ -147,7 +148,7 @@ class PixelTheme:
         except Exception:
             return 1.0
 
-    def load_fonts(self, root: Union[tk.Tk, tk.Toplevel]) -> None:
+    def load_fonts(self, root: tk.Tk | tk.Toplevel) -> None:
         """Load Press Start 2P font or fallback.
 
         Args:
@@ -190,7 +191,7 @@ class PixelTheme:
 
         logger.debug(f"Fonts loaded: {self._font_family} at {base_size}pt base")
 
-    def apply_theme(self, root: Union[tk.Tk, tk.Toplevel]) -> None:
+    def apply_theme(self, root: tk.Tk | tk.Toplevel) -> None:
         """Apply global theme to application.
 
         Args:
@@ -218,9 +219,9 @@ class PixelTheme:
 
     def create_pixel_button(
         self,
-        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         text: str,
-        command: Optional[Callable[[], None]] = None,
+        command: Callable[[], None] | None = None,
         **kwargs: Any,
     ) -> tk.Button:
         """Create pixel-styled button with hover effects.
@@ -303,8 +304,8 @@ class PixelTheme:
 
     def create_chunky_frame(
         self,
-        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
-        color: Optional[str] = None,
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
+        color: str | None = None,
         **kwargs: Any,
     ) -> tk.Frame:
         """Create pixel-styled frame with thick border.
@@ -333,7 +334,7 @@ class PixelTheme:
 
     def create_pixel_listbox(
         self,
-        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         **kwargs: Any,
     ) -> tk.Listbox:
         """Create pixel-styled listbox with alternating colors.
@@ -369,7 +370,7 @@ class PixelTheme:
 
     def create_pixel_label(
         self,
-        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         text: str,
         size: str = "normal",
         **kwargs: Any,
@@ -385,7 +386,7 @@ class PixelTheme:
         Returns:
             Styled label widget
         """
-        font_map: dict[str, Optional[tkfont.Font]] = {
+        font_map: dict[str, tkfont.Font | None] = {
             "small": self.font_small,
             "normal": self.font_normal,
             "large": self.font_large,
@@ -408,7 +409,7 @@ class PixelTheme:
 
     def create_pixel_entry(
         self,
-        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         **kwargs: Any,
     ) -> tk.Entry:
         """Create pixel-styled entry field.
@@ -442,7 +443,7 @@ class PixelTheme:
 
     def create_progress_bar(
         self,
-        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         width: int = 200,
         height: int = 20,
         **kwargs: Any,
@@ -531,7 +532,7 @@ class PixelTheme:
         start_value: Any,
         end_value: Any,
         duration: int = ANIM_HOVER_DURATION,
-        callback: Optional[Callable] = None,
+        callback: Callable | None = None,
     ) -> None:
         """Animate widget property over time.
 
@@ -561,14 +562,14 @@ class PixelTheme:
 
         step(0)
 
-    def create_tooltip(self, widget: Union[tk.Tk, tk.Toplevel, tk.Widget], text: str) -> None:
+    def create_tooltip(self, widget: tk.Tk | tk.Toplevel | tk.Widget, text: str) -> None:
         """Add tooltip to widget.
 
         Args:
             widget: Widget to add tooltip to
             text: Tooltip text
         """
-        tooltip: Optional[tk.Toplevel] = None
+        tooltip: tk.Toplevel | None = None
 
         def show_tooltip(event: tk.Event) -> None:
             nonlocal tooltip

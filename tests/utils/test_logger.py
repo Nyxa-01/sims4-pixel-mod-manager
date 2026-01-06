@@ -1,10 +1,9 @@
 """Tests for JSON logging system."""
 
-import pytest
 import json
 import logging
-from pathlib import Path
-from src.utils.logger import setup_logging, get_logger, JsonFormatter, log_with_context
+
+from src.utils.logger import JsonFormatter, get_logger, log_with_context, setup_logging
 
 
 class TestJsonFormatter:
@@ -350,7 +349,7 @@ class TestExceptionLogging:
         logger = get_logger("test")
 
         try:
-            1 / 0
+            _ = 1 / 0  # Intentionally trigger ZeroDivisionError
         except ZeroDivisionError:
             logger.exception("Division error")
 

@@ -9,7 +9,6 @@ import logging
 import platform
 import sys
 import time
-from typing import Optional
 
 import psutil
 
@@ -225,12 +224,12 @@ class GameProcessManager:
                 proc.terminate()
             except psutil.NoSuchProcess:
                 logger.debug(f"Process {proc.pid} already exited")
-            except psutil.AccessDenied:
+            except psutil.AccessDenied as e:
                 logger.warning(f"Access denied for process {proc.pid}")
                 raise GameProcessError(
                     f"Insufficient permissions to close {proc.name()}",
                     recovery_hint="Run application as administrator",
-                )
+                ) from e
 
         # Step 2: Wait for graceful exit
         if self.wait_for_game_exit(timeout):
@@ -248,12 +247,12 @@ class GameProcessManager:
                 time.sleep(FORCE_KILL_DELAY)
             except psutil.NoSuchProcess:
                 pass
-            except psutil.AccessDenied:
+            except psutil.AccessDenied as e:
                 logger.error(f"Cannot force kill process {proc.pid}")
                 raise GameProcessError(
                     f"Failed to terminate {proc.name()}",
                     recovery_hint="Manually close the game and retry",
-                )
+                ) from e
 
         # Final verification
         if self.is_game_running():

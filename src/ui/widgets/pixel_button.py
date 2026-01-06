@@ -2,7 +2,8 @@
 
 import logging
 import tkinter as tk
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable
+from typing import Any
 
 from ..pixel_theme import PixelTheme
 
@@ -14,9 +15,9 @@ class PixelButton(tk.Canvas):
 
     def __init__(
         self,
-        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         text: str,
-        command: Optional[Callable[[], None]] = None,
+        command: Callable[[], None] | None = None,
         width: int = 120,
         height: int = 40,
         **kwargs: Any,

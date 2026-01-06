@@ -2,8 +2,7 @@
 
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 
 class WizardDialog(tk.Toplevel):
@@ -22,7 +21,7 @@ class WizardDialog(tk.Toplevel):
         """
         super().__init__(parent)
 
-        self.result: Optional[Dict[str, Any]] = None
+        self.result: dict[str, Any] | None = None
         self.current_page = 0
         self.pages = ["welcome", "paths", "options"]
 
@@ -273,7 +272,7 @@ class WizardDialog(tk.Toplevel):
         }
         self.destroy()
 
-    def show(self) -> Optional[Dict[str, Any]]:
+    def show(self) -> dict[str, Any] | None:
         """Show wizard and wait for result.
 
         Returns:

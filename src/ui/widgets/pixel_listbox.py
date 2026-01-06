@@ -4,8 +4,9 @@ Supports reordering items via drag-drop for load order management.
 """
 
 import tkinter as tk
+from collections.abc import Callable
 from tkinter import font as tkfont
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any
 
 
 class PixelListbox(tk.Canvas):
@@ -19,7 +20,7 @@ class PixelListbox(tk.Canvas):
 
     def __init__(
         self,
-        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         width: int = 400,
         height: int = 300,
         **kwargs: Any,
@@ -40,15 +41,15 @@ class PixelListbox(tk.Canvas):
             **kwargs,
         )
 
-        self.items: List[str] = []
-        self.selected_index: Optional[int] = None
-        self.drag_start_index: Optional[int] = None
+        self.items: list[str] = []
+        self.selected_index: int | None = None
+        self.drag_start_index: int | None = None
         self.item_height = 32
         self.padding = 4
 
         # Callbacks
-        self.reorder_callback: Optional[Callable[[List[str]], None]] = None
-        self.selection_callback: Optional[Callable[[int, str], None]] = None
+        self.reorder_callback: Callable[[list[str]], None] | None = None
+        self.selection_callback: Callable[[int, str], None] | None = None
 
         # Font
         try:
@@ -67,7 +68,7 @@ class PixelListbox(tk.Canvas):
         self.bind("<MouseWheel>", self._on_mousewheel)
         self.bind("<Motion>", self._on_hover)
 
-    def set_items(self, items: List[str]) -> None:
+    def set_items(self, items: list[str]) -> None:
         """Set listbox items.
 
         Args:
@@ -77,7 +78,7 @@ class PixelListbox(tk.Canvas):
         self.selected_index = None
         self._render()
 
-    def get_items(self) -> List[str]:
+    def get_items(self) -> list[str]:
         """Get current items list.
 
         Returns:
@@ -85,7 +86,7 @@ class PixelListbox(tk.Canvas):
         """
         return self.items.copy()
 
-    def get_selected(self) -> Optional[Tuple[int, str]]:
+    def get_selected(self) -> tuple[int, str] | None:
         """Get selected item.
 
         Returns:
@@ -95,7 +96,7 @@ class PixelListbox(tk.Canvas):
             return (self.selected_index, self.items[self.selected_index])
         return None
 
-    def on_reorder(self, callback: Callable[[List[str]], None]) -> None:
+    def on_reorder(self, callback: Callable[[list[str]], None]) -> None:
         """Register callback for item reordering.
 
         Args:
@@ -148,7 +149,7 @@ class PixelListbox(tk.Canvas):
         # Update scroll region
         self.configure(scrollregion=(0, 0, self.winfo_width(), y_offset))
 
-    def _get_item_at_y(self, y: int) -> Optional[int]:
+    def _get_item_at_y(self, y: int) -> int | None:
         """Get item index at Y coordinate.
 
         Args:

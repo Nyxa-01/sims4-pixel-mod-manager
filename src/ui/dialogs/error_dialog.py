@@ -1,7 +1,6 @@
 """Error display dialog with details expander."""
 
 import tkinter as tk
-from typing import Optional
 
 
 class ErrorDialog(tk.Toplevel):
@@ -20,8 +19,8 @@ class ErrorDialog(tk.Toplevel):
         self,
         parent: tk.Tk,
         message: str,
-        details: Optional[str] = None,
-        hint: Optional[str] = None,
+        details: str | None = None,
+        hint: str | None = None,
     ) -> None:
         """Initialize error dialog.
 
@@ -162,8 +161,8 @@ class ErrorDialog(tk.Toplevel):
         cls,
         parent: tk.Tk,
         message: str,
-        details: Optional[str] = None,
-        hint: Optional[str] = None,
+        details: str | None = None,
+        hint: str | None = None,
     ) -> None:
         """Convenience method to show error.
 

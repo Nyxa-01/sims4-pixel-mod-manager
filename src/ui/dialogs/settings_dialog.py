@@ -1,9 +1,9 @@
 """Settings dialog for configuration management."""
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Dict, Any
+from tkinter import filedialog, messagebox
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from ...utils.config_manager import ConfigManager
@@ -27,7 +27,7 @@ class SettingsDialog(tk.Toplevel):
         super().__init__(parent)
 
         self.config_manager = config_manager
-        self.result: Optional[Dict[str, Any]] = None
+        self.result: dict[str, Any] | None = None
 
         # Window setup
         self.title("⚙️ Settings")
@@ -239,7 +239,7 @@ class SettingsDialog(tk.Toplevel):
         self.result = None
         self.destroy()
 
-    def show(self) -> Optional[Dict[str, Any]]:
+    def show(self) -> dict[str, Any] | None:
         """Show dialog and wait for result.
 
         Returns:

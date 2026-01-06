@@ -7,13 +7,13 @@ Creates separate log files for different categories:
 - error.log: All errors and exceptions
 """
 
-import logging
 import json
+import logging
 import sys
-from pathlib import Path
-from typing import Optional, Any
 from datetime import datetime, timezone
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
+from typing import Any
 
 
 class JsonFormatter(logging.Formatter):
@@ -53,7 +53,7 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(log_data)
 
 
-def setup_logging(log_dir: Optional[Path] = None, level: str = "INFO") -> None:
+def setup_logging(log_dir: Path | None = None, level: str = "INFO") -> None:
     """Setup application logging with rotation.
 
     Args:

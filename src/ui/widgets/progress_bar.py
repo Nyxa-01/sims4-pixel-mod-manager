@@ -4,7 +4,7 @@ Displays progress as filled pixel segments.
 """
 
 import tkinter as tk
-from typing import Any, Union
+from typing import Any
 
 
 class PixelProgressBar(tk.Canvas):
@@ -17,7 +17,7 @@ class PixelProgressBar(tk.Canvas):
 
     def __init__(
         self,
-        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         segments: int = 20,
         width: int = 400,
         height: int = 32,

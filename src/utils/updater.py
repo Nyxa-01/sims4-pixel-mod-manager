@@ -17,9 +17,8 @@ import tempfile
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox
-from typing import Optional
-from urllib.request import urlopen, Request
-from urllib.error import URLError, HTTPError
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ class Updater:
         self.owner = owner
         self.repo = repo
         self.api_url = self.GITHUB_API_URL.format(owner=owner, repo=repo)
-        self.latest_release: Optional[dict] = None
+        self.latest_release: dict | None = None
 
         # Load current version from VERSION file
         version_file = Path(__file__).parent.parent.parent / "VERSION"
@@ -113,7 +112,7 @@ class Updater:
             logger.error("Invalid version format")
             return False
 
-    def get_download_url(self) -> Optional[str]:
+    def get_download_url(self) -> str | None:
         """
         Get download URL for current platform.
 
