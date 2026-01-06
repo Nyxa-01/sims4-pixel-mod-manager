@@ -4,6 +4,7 @@ import logging
 import zlib
 from pathlib import Path
 
+
 logger = logging.getLogger(__name__)
 
 # Supported mod file extensions

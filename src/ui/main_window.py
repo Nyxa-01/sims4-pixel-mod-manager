@@ -21,6 +21,7 @@ from src.utils.backup import BackupManager
 from src.utils.config_manager import ConfigManager
 from src.utils.game_detector import GameDetector
 
+
 logger = logging.getLogger(__name__)
 
 # Window configuration

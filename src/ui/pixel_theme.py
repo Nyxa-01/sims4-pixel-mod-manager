@@ -13,6 +13,7 @@ from pathlib import Path
 from tkinter import font as tkfont
 from typing import Any, Optional
 
+
 logger = logging.getLogger(__name__)
 
 # NES Classic-inspired color palette

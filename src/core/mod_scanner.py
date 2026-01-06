@@ -19,6 +19,7 @@ from pathlib import Path
 from ..core.exceptions import ModScanError, SecurityError
 from ..utils.timeout import timeout
 
+
 logger = logging.getLogger(__name__)
 
 # File type detection

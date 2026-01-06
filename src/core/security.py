@@ -6,6 +6,7 @@ from pathlib import Path
 
 from cryptography.fernet import Fernet
 
+
 logger = logging.getLogger(__name__)
 
 

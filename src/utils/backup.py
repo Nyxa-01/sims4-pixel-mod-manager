@@ -16,6 +16,7 @@ from typing import Any
 
 from src.core.exceptions import BackupError, HashValidationError
 
+
 logger = logging.getLogger(__name__)
 
 # Backup configuration

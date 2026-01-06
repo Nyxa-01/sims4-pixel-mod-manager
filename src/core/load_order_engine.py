@@ -11,6 +11,7 @@ from pathlib import Path
 from src.core.exceptions import LoadOrderError, PathError
 from src.core.mod_scanner import ModFile
 
+
 logger = logging.getLogger(__name__)
 
 # Fixed load order slots (immutable)

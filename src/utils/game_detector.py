@@ -10,6 +10,7 @@ from pathlib import Path
 
 import psutil
 
+
 logger = logging.getLogger(__name__)
 
 # Game executable names by platform

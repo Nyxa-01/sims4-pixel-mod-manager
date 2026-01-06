@@ -14,6 +14,7 @@ import psutil
 
 from src.core.exceptions import GameProcessError
 
+
 logger = logging.getLogger(__name__)
 
 

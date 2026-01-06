@@ -4,6 +4,7 @@ import logging
 import tkinter as tk
 from collections.abc import Callable
 
+
 logger = logging.getLogger(__name__)
 
 

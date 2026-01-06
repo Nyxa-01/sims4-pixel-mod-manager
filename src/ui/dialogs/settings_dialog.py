@@ -5,6 +5,7 @@ from pathlib import Path
 from tkinter import filedialog, messagebox
 from typing import TYPE_CHECKING, Any
 
+
 if TYPE_CHECKING:
     from ...utils.config_manager import ConfigManager
 

@@ -7,6 +7,7 @@ from typing import Any
 
 from ..pixel_theme import PixelTheme
 
+
 logger = logging.getLogger(__name__)
 
 

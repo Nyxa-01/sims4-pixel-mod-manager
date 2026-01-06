@@ -18,6 +18,7 @@ from cryptography.fernet import Fernet, InvalidToken
 
 from ..core.exceptions import EncryptionError, PathError
 
+
 logger = logging.getLogger(__name__)
 
 
