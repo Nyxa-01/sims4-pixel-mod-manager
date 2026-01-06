@@ -6,6 +6,7 @@ Supports reordering items via drag-drop for load order management.
 import tkinter as tk
 from collections.abc import Callable
 from tkinter import font as tkfont
+from typing import Any
 
 
 class PixelListbox(tk.Canvas):
@@ -17,7 +18,9 @@ class PixelListbox(tk.Canvas):
         listbox.on_reorder(my_callback)
     """
 
-    def __init__(self, parent, width: int = 400, height: int = 300, **kwargs):
+    def __init__(
+        self, parent: tk.Widget, width: int = 400, height: int = 300, **kwargs: Any
+    ) -> None:
         """Initialize pixel listbox.
 
         Args:
@@ -153,7 +156,7 @@ class PixelListbox(tk.Canvas):
             return index
         return None
 
-    def _on_click(self, event) -> None:
+    def _on_click(self, event: tk.Event[Any]) -> None:
         """Handle mouse click."""
         index = self._get_item_at_y(event.y)
         if index is not None:
@@ -164,7 +167,7 @@ class PixelListbox(tk.Canvas):
             if self.selection_callback:
                 self.selection_callback(index, self.items[index])
 
-    def _on_drag(self, event) -> None:
+    def _on_drag(self, event: tk.Event[Any]) -> None:
         """Handle mouse drag."""
         if self.drag_start_index is None:
             return
@@ -178,17 +181,17 @@ class PixelListbox(tk.Canvas):
             self.selected_index = target_index
             self._render()
 
-    def _on_release(self, event) -> None:
+    def _on_release(self, event: tk.Event[Any]) -> None:
         """Handle mouse release."""
         if self.drag_start_index is not None and self.reorder_callback:
             self.reorder_callback(self.items.copy())
         self.drag_start_index = None
 
-    def _on_mousewheel(self, event) -> None:
+    def _on_mousewheel(self, event: tk.Event[Any]) -> None:
         """Handle mousewheel scroll."""
         self.yview_scroll(-1 * int(event.delta / 120), "units")
 
-    def _on_hover(self, event) -> None:
+    def _on_hover(self, event: tk.Event[Any]) -> None:
         """Handle mouse hover."""
         index = self._get_item_at_y(event.y)
         if index is not None:

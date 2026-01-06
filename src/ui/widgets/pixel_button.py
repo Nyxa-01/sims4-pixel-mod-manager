@@ -111,12 +111,13 @@ class PixelButton(tk.Canvas):
         if self.state == "pressed":
             text_y += 2  # Shift text down with button
 
+        font = self.theme.get_font(8) or "TkDefaultFont"
         self.create_text(
             self.width // 2,
             text_y,
             text=self.text,
             fill=self.theme.COLORS["text"],
-            font=self.theme.get_font(8),
+            font=font,
             anchor="center",
         )
 
