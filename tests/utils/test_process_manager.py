@@ -389,9 +389,7 @@ class TestGameProcessManager:
         """Test all defined process names are detected."""
         # Create mock process for each name
         game_procs = [MagicMock(info={"name": name}) for name in GAME_PROCESS_NAMES]
-        launcher_procs = [
-            MagicMock(info={"name": name}) for name in LAUNCHER_PROCESS_NAMES
-        ]
+        launcher_procs = [MagicMock(info={"name": name}) for name in LAUNCHER_PROCESS_NAMES]
 
         mock_process_iter.return_value = game_procs + launcher_procs
 

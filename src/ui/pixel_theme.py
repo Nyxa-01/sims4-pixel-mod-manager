@@ -31,9 +31,7 @@ COLORS = {
 
 # Font configuration
 FONT_NAME = "Press Start 2P"
-FONT_PATH = (
-    Path(__file__).parent.parent.parent / "assets" / "fonts" / "PressStart2P.ttf"
-)
+FONT_PATH = Path(__file__).parent.parent.parent / "assets" / "fonts" / "PressStart2P.ttf"
 FONT_FALLBACK = "Courier New"
 BASE_FONT_SIZE = 8
 
@@ -563,9 +561,7 @@ class PixelTheme:
 
         step(0)
 
-    def create_tooltip(
-        self, widget: Union[tk.Tk, tk.Toplevel, tk.Widget], text: str
-    ) -> None:
+    def create_tooltip(self, widget: Union[tk.Tk, tk.Toplevel, tk.Widget], text: str) -> None:
         """Add tooltip to widget.
 
         Args:

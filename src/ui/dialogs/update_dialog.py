@@ -13,9 +13,7 @@ class UpdateDialog(tk.Toplevel):
             # User wants to download
     """
 
-    def __init__(
-        self, parent: tk.Tk, current: str, latest: str, changelog: str
-    ) -> None:
+    def __init__(self, parent: tk.Tk, current: str, latest: str, changelog: str) -> None:
         """Initialize update dialog.
 
         Args:
@@ -123,9 +121,9 @@ class UpdateDialog(tk.Toplevel):
         button_frame = tk.Frame(self, bg="#1a1a1a")
         button_frame.pack(pady=20)
 
-        PixelButton(
-            button_frame, text="⬇️ Download", command=self._download, width=150
-        ).pack(side=tk.LEFT, padx=5)
+        PixelButton(button_frame, text="⬇️ Download", command=self._download, width=150).pack(
+            side=tk.LEFT, padx=5
+        )
 
         PixelButton(button_frame, text="Later", command=self._cancel, width=100).pack(
             side=tk.LEFT, padx=5

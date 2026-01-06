@@ -163,9 +163,7 @@ class TestConflictDetector:
 
         assert resources is None  # Should handle gracefully
 
-    def test_build_resource_map_no_conflicts(
-        self, detector, tmp_path, create_dbpf_package
-    ):
+    def test_build_resource_map_no_conflicts(self, detector, tmp_path, create_dbpf_package):
         """Test building resource map with no conflicts."""
         mod1 = tmp_path / "mod1.package"
         mod2 = tmp_path / "mod2.package"
@@ -176,18 +174,10 @@ class TestConflictDetector:
         detector.build_resource_map([mod1, mod2])
 
         assert len(detector.resource_map) == 2
-        assert (
-            len(detector.resource_map[(0x12345678, 0x00000000, 0x1111111111111111)])
-            == 1
-        )
-        assert (
-            len(detector.resource_map[(0x87654321, 0x00000000, 0x2222222222222222)])
-            == 1
-        )
+        assert len(detector.resource_map[(0x12345678, 0x00000000, 0x1111111111111111)]) == 1
+        assert len(detector.resource_map[(0x87654321, 0x00000000, 0x2222222222222222)]) == 1
 
-    def test_build_resource_map_with_conflicts(
-        self, detector, tmp_path, create_dbpf_package
-    ):
+    def test_build_resource_map_with_conflicts(self, detector, tmp_path, create_dbpf_package):
         """Test building resource map with conflicts."""
         mod1 = tmp_path / "mod1.package"
         mod2 = tmp_path / "mod2.package"
@@ -204,9 +194,7 @@ class TestConflictDetector:
         assert "mod1.package" in detector.resource_map[same_resource]
         assert "mod2.package" in detector.resource_map[same_resource]
 
-    def test_detect_conflicts_no_conflicts(
-        self, detector, tmp_path, create_dbpf_package
-    ):
+    def test_detect_conflicts_no_conflicts(self, detector, tmp_path, create_dbpf_package):
         """Test conflict detection with no conflicts."""
         mod1 = tmp_path / "mod1.package"
         mod2 = tmp_path / "mod2.package"
@@ -219,9 +207,7 @@ class TestConflictDetector:
 
         assert len(conflicts) == 0
 
-    def test_detect_conflicts_with_conflicts(
-        self, detector, tmp_path, create_dbpf_package
-    ):
+    def test_detect_conflicts_with_conflicts(self, detector, tmp_path, create_dbpf_package):
         """Test conflict detection with conflicts."""
         mod1 = tmp_path / "mod1.package"
         mod2 = tmp_path / "mod2.package"
@@ -245,14 +231,10 @@ class TestConflictDetector:
         conflict_mods = list(conflicts.values())
 
         # Resource A conflict
-        assert any(
-            set(mods) == {"mod1.package", "mod2.package"} for mods in conflict_mods
-        )
+        assert any(set(mods) == {"mod1.package", "mod2.package"} for mods in conflict_mods)
 
         # Resource B conflict
-        assert any(
-            set(mods) == {"mod2.package", "mod3.package"} for mods in conflict_mods
-        )
+        assert any(set(mods) == {"mod2.package", "mod3.package"} for mods in conflict_mods)
 
     def test_detect_conflicts_three_way(self, detector, tmp_path, create_dbpf_package):
         """Test three-way conflict detection."""

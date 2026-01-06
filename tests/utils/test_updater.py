@@ -85,9 +85,7 @@ class TestUpdater:
     @patch("src.utils.updater.urlopen")
     def test_check_for_updates_http_error(self, mock_urlopen, updater):
         """Test handling HTTP errors."""
-        mock_urlopen.side_effect = HTTPError(
-            "https://example.com", 404, "Not Found", {}, None
-        )
+        mock_urlopen.side_effect = HTTPError("https://example.com", 404, "Not Found", {}, None)
 
         result = updater.check_for_updates()
 

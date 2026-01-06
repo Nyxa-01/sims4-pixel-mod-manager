@@ -62,9 +62,9 @@ class ErrorDialog(tk.Toplevel):
         from ..widgets.pixel_button import PixelButton
 
         # Error icon
-        tk.Label(
-            self, text="❌", font=("Courier New", 48), fg="#ff0000", bg="#1a1a1a"
-        ).pack(pady=20)
+        tk.Label(self, text="❌", font=("Courier New", 48), fg="#ff0000", bg="#1a1a1a").pack(
+            pady=20
+        )
 
         # Message
         tk.Label(

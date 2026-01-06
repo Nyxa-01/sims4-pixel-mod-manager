@@ -268,25 +268,20 @@ class LoadOrderEngine:
         nested_scripts = self._find_nested_scripts(path)
         if nested_scripts:
             for script in nested_scripts:
-                warnings.append(
-                    f"Script file nested (must be in root): {script.relative_to(path)}"
-                )
+                warnings.append(f"Script file nested (must be in root): {script.relative_to(path)}")
 
         # Check path lengths
         for file_path in path.rglob("*"):
             if file_path.is_file():
                 if len(str(file_path)) > MAX_PATH_LENGTH:
-                    warnings.append(
-                        f"Path exceeds Windows limit: {file_path.relative_to(path)}"
-                    )
+                    warnings.append(f"Path exceeds Windows limit: {file_path.relative_to(path)}")
 
         # Check package nesting depth
         for file_path in path.rglob("*.package"):
             depth = len(file_path.relative_to(path).parts) - 1  # Exclude filename
             if depth > MAX_PACKAGE_DEPTH:
                 warnings.append(
-                    f"Package nested too deep ({depth} levels): "
-                    f"{file_path.relative_to(path)}"
+                    f"Package nested too deep ({depth} levels): " f"{file_path.relative_to(path)}"
                 )
 
         # Validate prefix format

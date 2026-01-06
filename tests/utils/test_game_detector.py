@@ -271,9 +271,7 @@ class TestGameDetector:
     ) -> None:
         """Test validation of valid resource.cfg."""
         resource_cfg = mock_mods_folder / "resource.cfg"
-        resource_cfg.write_text(
-            "Priority 500\nPackedFile Base/*.package\nPackedFile */*.package"
-        )
+        resource_cfg.write_text("Priority 500\nPackedFile Base/*.package\nPackedFile */*.package")
 
         assert detector.validate_resource_cfg(mock_mods_folder) is True
 

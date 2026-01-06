@@ -291,9 +291,7 @@ class TestDeployEngine:
         success = engine._create_symlink(active_mods, target)
 
         assert success is True
-        mock_symlink.assert_called_once_with(
-            active_mods, target, target_is_directory=True
-        )
+        mock_symlink.assert_called_once_with(active_mods, target, target_is_directory=True)
 
     @patch("os.symlink", side_effect=OSError("Permission denied"))
     def test_create_symlink_failure(
@@ -480,9 +478,7 @@ class TestDeployEngine:
 
         # Deploy
         with engine.transaction():
-            success = engine.deploy(
-                active_mods, game_mods, progress_callback, close_game=False
-            )
+            success = engine.deploy(active_mods, game_mods, progress_callback, close_game=False)
 
         assert success is True
         assert (game_mods / "resource.cfg").exists()

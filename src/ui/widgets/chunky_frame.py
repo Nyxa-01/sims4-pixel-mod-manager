@@ -40,9 +40,7 @@ class ChunkyFrame(tk.Frame):
 
         # Inner frame for content
         self.inner_frame = tk.Frame(self, bg=bg)
-        self.inner_frame.pack(
-            padx=border_width, pady=border_width, fill=tk.BOTH, expand=True
-        )
+        self.inner_frame.pack(padx=border_width, pady=border_width, fill=tk.BOTH, expand=True)
 
     def get_content_frame(self) -> tk.Frame:
         """Get inner frame for adding content.

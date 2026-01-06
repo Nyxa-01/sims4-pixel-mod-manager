@@ -163,9 +163,7 @@ class BackupError(ModManagerException):
         # If message not provided, build it from parameters
         if message is None:
             if backup_path:
-                message = (
-                    f"Backup {operation_type} failed for '{backup_path}': {reason}"
-                )
+                message = f"Backup {operation_type} failed for '{backup_path}': {reason}"
             else:
                 message = reason
 
@@ -422,8 +420,7 @@ class ConflictError(ModManagerException):
 
         if recovery_hint is None:
             recovery_hint = (
-                "Choose which mod to prioritize using load order, "
-                "or remove conflicting mods"
+                "Choose which mod to prioritize using load order, " "or remove conflicting mods"
             )
 
         super().__init__(message, error_code, recovery_hint)

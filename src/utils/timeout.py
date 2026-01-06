@@ -45,9 +45,7 @@ def timeout(seconds: int) -> Callable:
         def wrapper(*args: Any, **kwargs: Any) -> T:
             if platform.system() == "Windows":
                 # Windows: Use threading approach (less precise but works)
-                result_container: list[Any] = [
-                    TimeoutError(f"{func.__name__} exceeded {seconds}s")
-                ]
+                result_container: list[Any] = [TimeoutError(f"{func.__name__} exceeded {seconds}s")]
 
                 def target() -> None:
                     """Execute function in separate thread."""

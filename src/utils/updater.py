@@ -30,9 +30,7 @@ class Updater:
     GITHUB_API_URL = "https://api.github.com/repos/{owner}/{repo}/releases/latest"
     CURRENT_VERSION = "1.0.0"  # Should match VERSION file
 
-    def __init__(
-        self, owner: str = "yourusername", repo: str = "sims4_pixel_mod_manager"
-    ):
+    def __init__(self, owner: str = "yourusername", repo: str = "sims4_pixel_mod_manager"):
         """
         Initialize updater.
 
@@ -209,9 +207,7 @@ class Updater:
             matches = actual == expected_checksum
 
             if not matches:
-                logger.error(
-                    f"Checksum mismatch! Expected: {expected_checksum}, Got: {actual}"
-                )
+                logger.error(f"Checksum mismatch! Expected: {expected_checksum}, Got: {actual}")
 
             return matches
 
@@ -278,9 +274,7 @@ class Updater:
         progress_dialog.transient(parent)
         progress_dialog.grab_set()
 
-        label = tk.Label(
-            progress_dialog, text="Downloading update...", font=("Arial", 10)
-        )
+        label = tk.Label(progress_dialog, text="Downloading update...", font=("Arial", 10))
         label.pack(pady=20)
 
         # Download in background (simplified - should use threading)

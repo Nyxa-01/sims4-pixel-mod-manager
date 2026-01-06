@@ -135,13 +135,9 @@ class GameProcessManager:
             for proc in psutil.process_iter(["pid", "name"]):
                 try:
                     proc_name = proc.info.get("name", "")
-                    if any(
-                        game.lower() in proc_name.lower() for game in GAME_PROCESS_NAMES
-                    ):
+                    if any(game.lower() in proc_name.lower() for game in GAME_PROCESS_NAMES):
                         processes.append(proc)
-                        logger.debug(
-                            f"Found game process: {proc_name} (PID: {proc.pid})"
-                        )
+                        logger.debug(f"Found game process: {proc_name} (PID: {proc.pid})")
 
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
@@ -168,13 +164,10 @@ class GameProcessManager:
                 try:
                     proc_name = proc.info.get("name", "")
                     if any(
-                        launcher.lower() in proc_name.lower()
-                        for launcher in LAUNCHER_PROCESS_NAMES
+                        launcher.lower() in proc_name.lower() for launcher in LAUNCHER_PROCESS_NAMES
                     ):
                         processes.append(proc)
-                        logger.debug(
-                            f"Found launcher process: {proc_name} (PID: {proc.pid})"
-                        )
+                        logger.debug(f"Found launcher process: {proc_name} (PID: {proc.pid})")
 
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
@@ -228,9 +221,7 @@ class GameProcessManager:
         # Step 1: Graceful termination
         for proc in processes:
             try:
-                logger.debug(
-                    f"Sending terminate signal to {proc.name()} (PID: {proc.pid})"
-                )
+                logger.debug(f"Sending terminate signal to {proc.name()} (PID: {proc.pid})")
                 proc.terminate()
             except psutil.NoSuchProcess:
                 logger.debug(f"Process {proc.pid} already exited")

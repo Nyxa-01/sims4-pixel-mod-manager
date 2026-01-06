@@ -63,14 +63,10 @@ class WizardDialog(tk.Toplevel):
         nav_frame = tk.Frame(self, bg="#1a1a1a")
         nav_frame.pack(pady=20)
 
-        self.back_button = PixelButton(
-            nav_frame, text="← Back", command=self._go_back, width=100
-        )
+        self.back_button = PixelButton(nav_frame, text="← Back", command=self._go_back, width=100)
         self.back_button.pack(side=tk.LEFT, padx=5)
 
-        self.next_button = PixelButton(
-            nav_frame, text="Next →", command=self._go_next, width=100
-        )
+        self.next_button = PixelButton(nav_frame, text="Next →", command=self._go_next, width=100)
         self.next_button.pack(side=tk.LEFT, padx=5)
 
         self.finish_button = PixelButton(
@@ -165,9 +161,7 @@ class WizardDialog(tk.Toplevel):
             fg="#ffffff",
         ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
 
-        PixelButton(game_frame, text="📁", command=self._browse_game, width=50).pack(
-            side=tk.LEFT
-        )
+        PixelButton(game_frame, text="📁", command=self._browse_game, width=50).pack(side=tk.LEFT)
 
         # Mods path
         tk.Label(
@@ -189,9 +183,7 @@ class WizardDialog(tk.Toplevel):
             fg="#ffffff",
         ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
 
-        PixelButton(mods_frame, text="📁", command=self._browse_mods, width=50).pack(
-            side=tk.LEFT
-        )
+        PixelButton(mods_frame, text="📁", command=self._browse_mods, width=50).pack(side=tk.LEFT)
 
         # Auto-detect button
         PixelButton(

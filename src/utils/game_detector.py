@@ -39,13 +39,7 @@ COMMON_PATHS = {
     "Linux": [
         Path.home() / "Documents" / "Electronic Arts" / "The Sims 4",
         Path.home() / ".steam" / "steam" / "steamapps" / "common" / "The Sims 4",
-        Path.home()
-        / ".local"
-        / "share"
-        / "Steam"
-        / "steamapps"
-        / "common"
-        / "The Sims 4",
+        Path.home() / ".local" / "share" / "Steam" / "steamapps" / "common" / "The Sims 4",
     ],
 }
 
@@ -185,9 +179,7 @@ class GameDetector:
                 ]
             )
         elif self.system == "Darwin":
-            steam_paths.append(
-                Path.home() / "Library" / "Application Support" / "Steam"
-            )
+            steam_paths.append(Path.home() / "Library" / "Application Support" / "Steam")
         else:  # Linux
             steam_paths.extend(
                 [
@@ -302,17 +294,11 @@ class GameDetector:
 
         # Mods folder is typically in Documents
         if self.system == "Windows":
-            mods_path = (
-                Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
-            )
+            mods_path = Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
         elif self.system == "Darwin":
-            mods_path = (
-                Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
-            )
+            mods_path = Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
         else:  # Linux
-            mods_path = (
-                Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
-            )
+            mods_path = Path.home() / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
 
         if mods_path.exists():
             logger.info(f"Found Mods folder: {mods_path}")

@@ -298,9 +298,7 @@ class TestLogContext:
         setup_logging(log_dir=log_dir)
 
         logger = get_logger("test")
-        log_with_context(
-            logger, "INFO", "Test message", mod_name="test.package", size_mb=2.5
-        )
+        log_with_context(logger, "INFO", "Test message", mod_name="test.package", size_mb=2.5)
 
         for handler in logger.handlers:
             handler.flush()

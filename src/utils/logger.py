@@ -139,9 +139,7 @@ def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(name)
 
 
-def log_with_context(
-    logger: logging.Logger, level: str, message: str, **context: Any
-) -> None:
+def log_with_context(logger: logging.Logger, level: str, message: str, **context: Any) -> None:
     """Log message with additional context.
 
     Args:
@@ -170,8 +168,6 @@ def setup_exception_logging() -> None:
             return
 
         logger = get_logger("exception")
-        logger.critical(
-            "Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)
-        )
+        logger.critical("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
 
     sys.excepthook = handle_exception

@@ -293,9 +293,7 @@ def mock_config(tmp_path: Path) -> dict:
         "active_mods_folder": str(tmp_path / "ActiveMods"),
         "backup_folder": str(tmp_path / "backups"),
         "game_path": str(tmp_path / "The Sims 4"),
-        "mods_path": str(
-            tmp_path / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
-        ),
+        "mods_path": str(tmp_path / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"),
         "max_mod_size_mb": 500,
         "backup_retention_count": 10,
         "scan_timeout_seconds": 30,

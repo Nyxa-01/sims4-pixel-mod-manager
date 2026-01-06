@@ -71,9 +71,7 @@ class TestFullWorkflow:
         deploy_engine = DeployEngine()
         game_mods_path = mock_game_install["mods_dir"]
 
-        with patch(
-            "src.utils.game_detector.GameDetector.is_game_running"
-        ) as mock_running:
+        with patch("src.utils.game_detector.GameDetector.is_game_running") as mock_running:
             mock_running.return_value = False
 
             with deploy_engine.transaction():
@@ -100,9 +98,7 @@ class TestFullWorkflow:
             sample_package_mod: Sample mod file
         """
         # Setup: Create initial mods
-        (temp_active_mods_dir / "mod1.package").write_bytes(
-            sample_package_mod.read_bytes()
-        )
+        (temp_active_mods_dir / "mod1.package").write_bytes(sample_package_mod.read_bytes())
         (temp_active_mods_dir / "mod2.package").write_bytes(b"DBPF" + b"\x00" * 50)
 
         backup_mgr = BackupManager()
@@ -150,9 +146,7 @@ class TestFullWorkflow:
             sample_package_mod: Sample mod file
         """
         # Setup
-        (temp_active_mods_dir / "mod.package").write_bytes(
-            sample_package_mod.read_bytes()
-        )
+        (temp_active_mods_dir / "mod.package").write_bytes(sample_package_mod.read_bytes())
 
         deploy_engine = DeployEngine()
         game_mods_path = mock_game_install["mods_dir"]
@@ -162,9 +156,7 @@ class TestFullWorkflow:
         existing_mod.write_bytes(b"DBPF" + b"\x00" * 100)
 
         # Simulate deployment failure
-        with patch(
-            "src.core.deploy_engine.DeployEngine._deploy_with_fallback"
-        ) as mock_deploy:
+        with patch("src.core.deploy_engine.DeployEngine._deploy_with_fallback") as mock_deploy:
             mock_deploy.side_effect = Exception("Deployment failed")
 
             try:
@@ -283,9 +275,7 @@ class TestGameDetection:
         detector = GameDetector()
 
         # Mock home directory
-        monkeypatch.setenv(
-            "USERPROFILE", str(mock_game_install["documents"].parent.parent)
-        )
+        monkeypatch.setenv("USERPROFILE", str(mock_game_install["documents"].parent.parent))
         monkeypatch.setenv("HOME", str(mock_game_install["documents"].parent.parent))
 
         mods_path = detector.detect_mods_path()
@@ -407,9 +397,7 @@ class TestPerformance:
 
         deploy_engine = DeployEngine()
 
-        with patch(
-            "src.utils.game_detector.GameDetector.is_game_running"
-        ) as mock_running:
+        with patch("src.utils.game_detector.GameDetector.is_game_running") as mock_running:
             mock_running.return_value = False
 
             # This should handle 60 mods efficiently
@@ -442,9 +430,7 @@ class TestErrorRecovery:
             sample_package_mod: Sample mod file
         """
         # Setup
-        (temp_active_mods_dir / "mod.package").write_bytes(
-            sample_package_mod.read_bytes()
-        )
+        (temp_active_mods_dir / "mod.package").write_bytes(sample_package_mod.read_bytes())
 
         deploy_engine = DeployEngine()
         game_mods_path = mock_game_install["mods_dir"]

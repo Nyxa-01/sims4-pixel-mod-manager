@@ -11,9 +11,7 @@ class ConfirmDialog(tk.Toplevel):
             # User clicked Yes
     """
 
-    def __init__(
-        self, parent: tk.Tk, title: str, message: str, icon: str = "❓"
-    ) -> None:
+    def __init__(self, parent: tk.Tk, title: str, message: str, icon: str = "❓") -> None:
         """Initialize confirmation dialog.
 
         Args:
@@ -54,9 +52,9 @@ class ConfirmDialog(tk.Toplevel):
         from ..widgets.pixel_button import PixelButton
 
         # Icon
-        tk.Label(
-            self, text=icon, font=("Courier New", 32), fg="#00e0ff", bg="#1a1a1a"
-        ).pack(pady=20)
+        tk.Label(self, text=icon, font=("Courier New", 32), fg="#00e0ff", bg="#1a1a1a").pack(
+            pady=20
+        )
 
         # Message
         tk.Label(

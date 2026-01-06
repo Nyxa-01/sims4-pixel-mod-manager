@@ -63,9 +63,7 @@ class ConfigManager:
         # Check if this is being called directly (not from get_instance)
         # by checking if _instance is None
 
-        self.config_dir = (
-            config_dir if config_dir is not None else self._get_config_dir()
-        )
+        self.config_dir = config_dir if config_dir is not None else self._get_config_dir()
         self.config_path = self.config_dir / "config.json"
         self.key_path = self.config_dir / ".encryption.key"
         self.log_path = self.config_dir / "logs" / "config.log"
@@ -147,9 +145,7 @@ class ConfigManager:
 
         file_handler = logging.FileHandler(self.log_path)
         file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-        )
+        file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 
         config_logger = logging.getLogger("config")
         config_logger.addHandler(file_handler)

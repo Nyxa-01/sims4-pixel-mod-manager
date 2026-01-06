@@ -175,9 +175,7 @@ class ModScanner:
                     )
                 )
 
-        logger.info(
-            f"Scan complete: {scanned_count} valid, {skipped_count} invalid/skipped"
-        )
+        logger.info(f"Scan complete: {scanned_count} valid, {skipped_count} invalid/skipped")
 
         return results
 

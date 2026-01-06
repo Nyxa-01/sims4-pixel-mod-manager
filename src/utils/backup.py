@@ -134,9 +134,7 @@ class BackupManager:
             total_size = 0
 
             # Create backup zip (atomic write to temp file)
-            with zipfile.ZipFile(
-                temp_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6
-            ) as zf:
+            with zipfile.ZipFile(temp_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
                 for idx, file_path in enumerate(files_to_backup):
                     try:
                         # Calculate hash
@@ -316,9 +314,7 @@ class BackupManager:
 
                 try:
                     with zipfile.ZipFile(backup_file, "r") as zf:
-                        manifest = json.loads(
-                            zf.read(MANIFEST_FILENAME).decode("utf-8")
-                        )
+                        manifest = json.loads(zf.read(MANIFEST_FILENAME).decode("utf-8"))
                         file_count = manifest["total_files"]
                         is_valid = self._test_zip_integrity(backup_file)
                 except Exception:
@@ -491,15 +487,11 @@ class BackupManager:
         Args:
             backup_dir: Backup storage directory
         """
-        total_size = sum(
-            f.stat().st_size for f in backup_dir.glob("backup_*.zip") if f.is_file()
-        )
+        total_size = sum(f.stat().st_size for f in backup_dir.glob("backup_*.zip") if f.is_file())
 
         if total_size > MAX_BACKUP_SIZE_WARNING:
             size_gb = round(total_size / (1024 * 1024 * 1024), 2)
-            logger.warning(
-                f"Total backup size ({size_gb} GB) exceeds recommended limit (5 GB)"
-            )
+            logger.warning(f"Total backup size ({size_gb} GB) exceeds recommended limit (5 GB)")
 
 
 def get_default_backup_manager() -> BackupManager:

@@ -91,9 +91,7 @@ class PixelListbox(tk.Canvas):
         Returns:
             Tuple of (index, item) or None
         """
-        if self.selected_index is not None and 0 <= self.selected_index < len(
-            self.items
-        ):
+        if self.selected_index is not None and 0 <= self.selected_index < len(self.items):
             return (self.selected_index, self.items[self.selected_index])
         return None
 

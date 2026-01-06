@@ -128,9 +128,7 @@ class ConflictDetector:
         logger.info(f"Found {len(conflicts)} resource conflicts")
         return conflicts
 
-    def check_mod_conflicts(
-        self, mod_path: Path, existing_mods: list[Path]
-    ) -> list[str]:
+    def check_mod_conflicts(self, mod_path: Path, existing_mods: list[Path]) -> list[str]:
         """Check if new mod conflicts with existing mods.
 
         Args:

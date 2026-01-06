@@ -89,9 +89,9 @@ class SettingsDialog(tk.Toplevel):
             insertbackground="#00ff00",
         ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
 
-        PixelButton(
-            game_frame, text="📁", command=self._browse_game_path, width=50
-        ).pack(side=tk.LEFT)
+        PixelButton(game_frame, text="📁", command=self._browse_game_path, width=50).pack(
+            side=tk.LEFT
+        )
 
         # Mods path
         tk.Label(
@@ -115,9 +115,9 @@ class SettingsDialog(tk.Toplevel):
             insertbackground="#00ff00",
         ).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
 
-        PixelButton(
-            mods_frame, text="📁", command=self._browse_mods_path, width=50
-        ).pack(side=tk.LEFT)
+        PixelButton(mods_frame, text="📁", command=self._browse_mods_path, width=50).pack(
+            side=tk.LEFT
+        )
 
         # Options section
         options_frame = ChunkyFrame(self, border_color="#ff6ec7")
@@ -182,9 +182,9 @@ class SettingsDialog(tk.Toplevel):
         PixelButton(button_frame, text="💾 Save", command=self._save, width=120).pack(
             side=tk.LEFT, padx=5
         )
-        PixelButton(
-            button_frame, text="❌ Cancel", command=self._cancel, width=120
-        ).pack(side=tk.LEFT, padx=5)
+        PixelButton(button_frame, text="❌ Cancel", command=self._cancel, width=120).pack(
+            side=tk.LEFT, padx=5
+        )
 
     def _load_config(self) -> None:
         """Load config into UI."""
@@ -192,9 +192,7 @@ class SettingsDialog(tk.Toplevel):
         self.mods_path_var.set(str(self.config_manager.get("mods_path", "")))
         self.auto_backup_var.set(self.config_manager.get("auto_backup", True))
         self.auto_update_var.set(self.config_manager.get("check_updates", True))
-        self.close_game_var.set(
-            self.config_manager.get("close_game_before_deploy", True)
-        )
+        self.close_game_var.set(self.config_manager.get("close_game_before_deploy", True))
 
     def _browse_game_path(self) -> None:
         """Browse for game path."""

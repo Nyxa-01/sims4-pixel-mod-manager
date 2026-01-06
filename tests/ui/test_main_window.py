@@ -178,9 +178,9 @@ class TestMainWindowActions:
 
         # Mock threading to run synchronously
         with patch("src.ui.main_window.threading.Thread") as mock_thread:
-            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[
-                1
-            ]["target"]()
+            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1][
+                "target"
+            ]()
 
             main_window._scan_mods()
             main_window.root.update()  # Process after() calls
@@ -279,9 +279,7 @@ class TestMainWindowActions:
         main_window._assign_mod_to_slot(event)
 
         # Verify
-        main_window.load_order_engine.assign_mod_to_slot.assert_called_once_with(
-            test_mod
-        )
+        main_window.load_order_engine.assign_mod_to_slot.assert_called_once_with(test_mod)
         assert main_window.load_order_slots["000_Core"].size() == 1
 
     def test_remove_from_slot(self, main_window):
@@ -362,9 +360,9 @@ class TestErrorHandling:
         ):
 
             # Make thread run synchronously
-            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[
-                1
-            ]["target"]()
+            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1][
+                "target"
+            ]()
 
             main_window._scan_mods()
             main_window.root.update()
@@ -384,9 +382,9 @@ class TestErrorHandling:
         ):
 
             mock_confirm.return_value = True
-            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[
-                1
-            ]["target"]()
+            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1][
+                "target"
+            ]()
 
             main_window._deploy_mods()
             main_window.root.update()
@@ -443,9 +441,9 @@ class TestIntegration:
         main_window.scanner.scan_folder.return_value = {"package": [test_mod]}
 
         with patch("src.ui.main_window.threading.Thread") as mock_thread:
-            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[
-                1
-            ]["target"]()
+            mock_thread.return_value.start.side_effect = lambda: mock_thread.call_args[1][
+                "target"
+            ]()
             main_window._scan_mods()
             main_window.root.update()
 

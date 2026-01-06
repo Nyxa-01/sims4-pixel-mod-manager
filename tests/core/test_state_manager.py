@@ -27,9 +27,7 @@ class TestApplicationState:
 
     def test_custom_values(self):
         """Test creating state with custom values."""
-        state = ApplicationState(
-            app_state=AppState.SCANNING, total_deploys=5, progress=0.5
-        )
+        state = ApplicationState(app_state=AppState.SCANNING, total_deploys=5, progress=0.5)
 
         assert state.app_state == AppState.SCANNING
         assert state.total_deploys == 5
