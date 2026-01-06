@@ -104,7 +104,7 @@ class ConfigManager:
             with cls._lock:
                 if cls._instance is None:  # Double-checked locking
                     cls._instance = cls.__new__(cls)
-                    cls._instance.__init__(config_dir)
+                    cls._instance.__init__(config_dir)  # type: ignore[misc]
         return cls._instance
 
     @classmethod
@@ -376,9 +376,9 @@ class ConfigManager:
         if key in ["game_path", "mods_path", "app_data_path"]:
             if value and not Path(value).parent.exists():
                 raise PathError(
-                    Path(value),
-                    key,
-                    "Parent directory does not exist",
+                    path=Path(value),
+                    path_type=key,
+                    reason="Parent directory does not exist",
                 )
 
         self._config[key] = value
@@ -424,7 +424,7 @@ class ConfigManager:
         self._transaction_backup = self._config.copy()
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Exit transaction context.
 
         Args:
@@ -447,4 +447,4 @@ class ConfigManager:
             self._config = self._transaction_backup or {}
 
         self._transaction_backup = None
-        return False  # Don't suppress exceptions
+        # Return None to propagate exceptions (same as False)

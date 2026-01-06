@@ -9,7 +9,7 @@ import signal
 import threading
 from collections.abc import Callable
 from functools import wraps
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 T = TypeVar("T")
 
@@ -77,7 +77,7 @@ def timeout(seconds: int) -> Callable:
                 if isinstance(result_container[0], Exception):
                     raise result_container[0]
 
-                return result_container[0]
+                return cast(T, result_container[0])
 
             else:
                 # Unix main thread: Use signal.SIGALRM (more precise)

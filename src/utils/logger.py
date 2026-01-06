@@ -43,7 +43,7 @@ class JsonFormatter(logging.Formatter):
             log_data["context"] = record.context
 
         # Add exception info if present
-        if record.exc_info:
+        if record.exc_info and record.exc_info[0] is not None:
             log_data["exception"] = {
                 "type": record.exc_info[0].__name__,
                 "message": str(record.exc_info[1]),
@@ -154,7 +154,11 @@ def log_with_context(logger: logging.Logger, level: str, message: str, **context
 def setup_exception_logging() -> None:
     """Setup global exception handler to log uncaught exceptions."""
 
-    def handle_exception(exc_type, exc_value, exc_traceback):
+    def handle_exception(
+        exc_type: type[BaseException],
+        exc_value: BaseException,
+        exc_traceback: Any,
+    ) -> None:
         """Handle uncaught exceptions."""
         if issubclass(exc_type, KeyboardInterrupt):
             # Allow Ctrl+C to exit

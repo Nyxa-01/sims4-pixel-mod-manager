@@ -70,7 +70,7 @@ class StateManager:
     _instance: Optional["StateManager"] = None
     _lock: Lock = Lock()
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Private constructor. Use get_instance() instead."""
         if StateManager._instance is not None:
             raise RuntimeError("Use StateManager.get_instance() instead")

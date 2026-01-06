@@ -141,7 +141,8 @@ class Updater:
         # Find matching asset
         for asset in self.latest_release.get("assets", []):
             if target_pattern in asset["name"]:
-                return asset["browser_download_url"]
+                url: str = asset["browser_download_url"]
+                return url
 
         logger.warning(f"No asset found for pattern: {target_pattern}")
         return None
@@ -156,7 +157,8 @@ class Updater:
         if not self.latest_release:
             return ""
 
-        return self.latest_release.get("body", "")
+        body: str = self.latest_release.get("body", "")
+        return body
 
     def download_update(self, url: str, dest_path: Path) -> bool:
         """
