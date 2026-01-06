@@ -8,23 +8,18 @@ import logging
 import threading
 import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog, messagebox, scrolledtext, ttk
-from typing import Optional
+from tkinter import filedialog, messagebox, scrolledtext
 
 from src.core.deploy_engine import DeployEngine
 from src.core.exceptions import (
     DeployError,
-    LoadOrderError,
-    ModManagerException,
-    ModScanError,
 )
 from src.core.load_order_engine import LoadOrderEngine
 from src.core.mod_scanner import ModFile, ModScanner
+from src.ui.pixel_theme import PixelTheme
 from src.utils.backup import BackupManager
 from src.utils.config_manager import ConfigManager
 from src.utils.game_detector import GameDetector
-from src.utils.process_manager import GameProcessManager
-from src.ui.pixel_theme import PixelTheme
 
 logger = logging.getLogger(__name__)
 
@@ -63,11 +58,11 @@ class MainWindow:
         # State
         self.incoming_mods: list[ModFile] = []
         self.load_order_slots: dict[str, tk.Listbox] = {}
-        self.current_operation: Optional[threading.Thread] = None
+        self.current_operation: threading.Thread | None = None
 
         # UI Components
-        self.status_label: Optional[tk.Label] = None
-        self.progress_bar: Optional[tk.Canvas] = None
+        self.status_label: tk.Label | None = None
+        self.progress_bar: tk.Canvas | None = None
 
         self._setup_window()
         self._create_menu_bar()
@@ -97,7 +92,11 @@ class MainWindow:
 
         # File menu
         file_menu = tk.Menu(menubar, tearoff=0)
-        file_menu.add_command(label="Open Incoming Folder...", command=self._open_incoming_folder, accelerator="Ctrl+O")
+        file_menu.add_command(
+            label="Open Incoming Folder...",
+            command=self._open_incoming_folder,
+            accelerator="Ctrl+O",
+        )
         file_menu.add_command(label="Refresh", command=self._refresh_display, accelerator="F5")
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
@@ -106,11 +105,15 @@ class MainWindow:
         # Tools menu
         tools_menu = tk.Menu(menubar, tearoff=0)
         tools_menu.add_command(label="Scan Mods", command=self._scan_mods, accelerator="Ctrl+S")
-        tools_menu.add_command(label="Generate Load Order", command=self._generate_load_order, accelerator="Ctrl+G")
+        tools_menu.add_command(
+            label="Generate Load Order", command=self._generate_load_order, accelerator="Ctrl+G"
+        )
         tools_menu.add_command(label="Deploy", command=self._deploy_mods, accelerator="Ctrl+D")
         tools_menu.add_command(label="Backup", command=self._create_backup, accelerator="Ctrl+B")
         tools_menu.add_separator()
-        tools_menu.add_command(label="Settings...", command=self._open_settings, accelerator="Ctrl+,")
+        tools_menu.add_command(
+            label="Settings...", command=self._open_settings, accelerator="Ctrl+,"
+        )
         menubar.add_cascade(label="Tools", menu=tools_menu)
 
         # Help menu
@@ -159,10 +162,14 @@ class MainWindow:
         scan_btn = self.theme.create_pixel_button(button_frame, "SCAN", command=self._scan_mods)
         scan_btn.pack(side=tk.LEFT, padx=5)
 
-        generate_btn = self.theme.create_pixel_button(button_frame, "GENERATE", command=self._generate_structure)
+        generate_btn = self.theme.create_pixel_button(
+            button_frame, "GENERATE", command=self._generate_structure
+        )
         generate_btn.pack(side=tk.LEFT, padx=5)
 
-        deploy_btn = self.theme.create_pixel_button(button_frame, "DEPLOY", command=self._deploy_mods)
+        deploy_btn = self.theme.create_pixel_button(
+            button_frame, "DEPLOY", command=self._deploy_mods
+        )
         deploy_btn.pack(side=tk.LEFT, padx=5)
 
     def _create_incoming_panel(self, parent: tk.Frame) -> None:
@@ -277,7 +284,9 @@ class MainWindow:
 
     def _create_status_bar(self) -> None:
         """Create status bar with progress."""
-        status_frame = self.theme.create_chunky_frame(self.root, color=self.theme.colors["secondary"])
+        status_frame = self.theme.create_chunky_frame(
+            self.root, color=self.theme.colors["secondary"]
+        )
         status_frame.pack(fill=tk.X, side=tk.BOTTOM, padx=10, pady=10)
 
         # Status text
@@ -298,7 +307,7 @@ class MainWindow:
 
     def _bind_shortcuts(self) -> None:
         """Bind keyboard shortcuts.
-        
+
         Shortcuts:
             Ctrl+S: Scan incoming mods
             Ctrl+G: Generate load order
@@ -315,7 +324,7 @@ class MainWindow:
         self.root.bind("<Control-comma>", lambda e: self._open_settings())
         self.root.bind("<F1>", lambda e: self._show_help())
         self.root.bind("<F5>", lambda e: self._refresh_display())
-        
+
         # Legacy shortcuts (keep for compatibility)
         self.root.bind("<Control-o>", lambda e: self._open_incoming_folder())
 
@@ -344,9 +353,7 @@ class MainWindow:
 
             if not incoming_path.exists():
                 # Prompt user for folder
-                incoming_path = filedialog.askdirectory(
-                    title="Select Incoming Mods Folder"
-                )
+                incoming_path = filedialog.askdirectory(title="Select Incoming Mods Folder")
                 if not incoming_path:
                     self._update_status("Scan cancelled", 0.0)
                     return
@@ -362,18 +369,19 @@ class MainWindow:
 
                     # Flatten to list
                     self.incoming_mods = []
-                    for category, mods in mods_by_category.items():
+                    for _category, mods in mods_by_category.items():
                         self.incoming_mods.extend(mods)
 
                     # Update UI (must be on main thread)
                     self.root.after(0, self._update_incoming_list)
-                    self.root.after(0, lambda: self._update_status(
-                        f"Scanned {len(self.incoming_mods)} mods", 1.0
-                    ))
+                    self.root.after(
+                        0,
+                        lambda: self._update_status(f"Scanned {len(self.incoming_mods)} mods", 1.0),
+                    )
 
                 except Exception as e:
                     logger.error(f"Scan failed: {e}")
-                    self.root.after(0, lambda: self._show_error("Scan Failed", str(e)))
+                    self.root.after(0, lambda err=e: self._show_error("Scan Failed", str(err)))
                     self.root.after(0, lambda: self._update_status("Scan failed", 0.0))
 
             thread = threading.Thread(target=scan_thread, daemon=True)
@@ -486,15 +494,14 @@ class MainWindow:
                     )
 
                 if success:
-                    self.root.after(0, lambda: messagebox.showinfo(
-                        "Success",
-                        "Mods deployed successfully!"
-                    ))
+                    self.root.after(
+                        0, lambda: messagebox.showinfo("Success", "Mods deployed successfully!")
+                    )
                     self.root.after(0, lambda: self._update_status("Deployed successfully", 1.0))
 
             except Exception as e:
                 logger.error(f"Deployment failed: {e}")
-                self.root.after(0, lambda: self._show_error("Deployment Failed", str(e)))
+                self.root.after(0, lambda err=e: self._show_error("Deployment Failed", str(err)))
                 self.root.after(0, lambda: self._update_status("Deployment failed", 0.0))
 
         thread = threading.Thread(target=deploy_thread, daemon=True)
@@ -609,14 +616,14 @@ class MainWindow:
             message: Error message
         """
         messagebox.showerror(title, message)
-    
+
     def _generate_load_order(self) -> None:
         """Alias for _generate_structure for keyboard shortcut."""
         self._generate_structure()
-    
+
     def _refresh_display(self) -> None:
         """Refresh mod lists and display.
-        
+
         Re-scans incoming folder and updates UI.
         """
         logger.info("Refreshing display")
@@ -688,7 +695,9 @@ class SettingsDialog:
         save_btn = self.theme.create_pixel_button(button_frame, "SAVE", command=self._save)
         save_btn.pack(side=tk.LEFT, padx=5)
 
-        cancel_btn = self.theme.create_pixel_button(button_frame, "CANCEL", command=self.dialog.destroy)
+        cancel_btn = self.theme.create_pixel_button(
+            button_frame, "CANCEL", command=self.dialog.destroy
+        )
         cancel_btn.pack(side=tk.LEFT, padx=5)
 
     def _create_path_setting(
@@ -777,7 +786,9 @@ class HelpDialog:
         )
         help_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        help_text.insert(tk.END, """
+        help_text.insert(
+            tk.END,
+            """
 SIMS 4 PIXEL MOD MANAGER - HELP
 
 QUICK START:
@@ -809,7 +820,8 @@ FEATURES:
 - Encrypted config storage
 
 For more information, visit the GitHub repository.
-        """)
+        """,
+        )
 
         help_text.config(state=tk.DISABLED)
 
@@ -825,7 +837,7 @@ For more information, visit the GitHub repository.
 def run_application() -> None:
     """Run the application."""
     root = tk.Tk()
-    app = MainWindow(root)
+    MainWindow(root)
     root.mainloop()
 
 

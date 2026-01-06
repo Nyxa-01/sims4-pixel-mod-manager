@@ -7,13 +7,11 @@ import logging
 import os
 import platform
 import zipfile
-from datetime import datetime
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from unittest.mock import Mock
 
 import pytest
-
 
 # =============================================================================
 # LOGGING
@@ -212,6 +210,7 @@ def malicious_mod(tmp_path: Path) -> Path:
     mal_file = tmp_path / "malicious.package"
     # High entropy data (appears encrypted/packed)
     import random
+
     random.seed(42)  # Reproducible
     mal_file.write_bytes(bytes([random.randint(0, 255) for _ in range(1000)]))
     return mal_file
@@ -316,6 +315,7 @@ def mock_encryption_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
 
     # Generate test key
     from cryptography.fernet import Fernet
+
     key = Fernet.generate_key()
     key_file.write_bytes(key)
 
@@ -340,17 +340,24 @@ def sample_backup_zip(tmp_path: Path) -> Path:
     """
     backup_path = tmp_path / "backup_2026-01-01_120000.zip"
 
+    import zlib
+
     with zipfile.ZipFile(backup_path, "w", zipfile.ZIP_DEFLATED) as zf:
-        # Create manifest
+        # Create manifest with proper CRC32 values
+        test_data = b"DBPF" + b"\x00" * 100
+        nested_data = b"DBPF" + b"\x00" * 50
         manifest = {
             "timestamp": "2026-01-01T12:00:00",
             "game_version": "1.98.127.1030",
-            "files": {
-                "test.package": "A1B2C3D4",
-                "nested/mod.package": "E5F6G7H8",
-            },
+            "total_files": 2,
+            "total_size_mb": 0.0,
+            "files": [
+                {"path": "test.package", "crc32": zlib.crc32(test_data) & 0xFFFFFFFF},
+                {"path": "nested/mod.package", "crc32": zlib.crc32(nested_data) & 0xFFFFFFFF},
+            ],
         }
         import json
+
         zf.writestr("manifest.json", json.dumps(manifest, indent=2))
 
         # Add mock mod files
@@ -455,3 +462,29 @@ def mock_linux_platform(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     monkeypatch.setattr(platform, "system", lambda: "Linux")
     monkeypatch.setattr(os, "name", "posix")
+
+
+# =============================================================================
+# CLEANUP FIXTURES
+# =============================================================================
+
+
+@pytest.fixture(autouse=True)
+def reset_loggers() -> Generator[None, None, None]:
+    """Reset all logger handlers after each test to prevent leaking.
+
+    This fixture runs automatically for all tests and cleans up
+    logging handlers that may have been added during test execution.
+    """
+    yield
+    # Close handlers BEFORE clearing to prevent resource warnings
+    for name in list(logging.root.manager.loggerDict):
+        logger = logging.getLogger(name)
+        for handler in logger.handlers[:]:
+            handler.close()
+            logger.removeHandler(handler)
+
+    # Also close root logger handlers
+    for handler in logging.root.handlers[:]:
+        handler.close()
+        logging.root.removeHandler(handler)

@@ -4,13 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from src.core.exceptions import LoadOrderError, PathError
+from src.core.exceptions import LoadOrderError
 from src.core.load_order_engine import (
     LOAD_ORDER_SLOTS,
     MAX_PACKAGE_DEPTH,
     MAX_PATH_LENGTH,
     PREFIX_PATTERN,
-    SCRIPT_EXTENSIONS,
     LoadOrderEngine,
     get_default_engine,
 )
@@ -426,10 +425,11 @@ class TestLoadOrderEngine:
         assert engine.validate_prefix("000_Core") is True
         assert engine.validate_prefix("020_MainMods") is True
         assert engine.validate_prefix("999_Test") is True
+        assert engine.validate_prefix("ZZZ_Overrides") is True  # Special override slot
 
     def test_validate_prefix_invalid(self, engine: LoadOrderEngine) -> None:
         """Test prefix validation with invalid prefixes."""
-        assert engine.validate_prefix("ZZZ_Overrides") is False  # Letters in number
+        assert engine.validate_prefix("ABC_Invalid") is False  # Letters that aren't ZZZ
         assert engine.validate_prefix("Core_000") is False  # Wrong order
         assert engine.validate_prefix("00_Test") is False  # Too few digits
         assert engine.validate_prefix("0000_Test") is False  # Too many digits

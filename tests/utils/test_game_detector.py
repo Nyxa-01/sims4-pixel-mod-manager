@@ -1,5 +1,6 @@
 """Tests for game path detector."""
 
+import platform
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
 
@@ -22,6 +23,10 @@ def detector() -> GameDetector:
 def mock_game_installation(tmp_path: Path) -> Path:
     """Create mock game installation structure.
 
+    Creates platform-specific executable structure:
+    - Windows/Linux: Game/Bin/TS4_x64.exe
+    - macOS: The Sims 4.app (in root, as validator checks both locations)
+
     Args:
         tmp_path: Pytest tmp_path fixture
 
@@ -35,9 +40,20 @@ def mock_game_installation(tmp_path: Path) -> Path:
     game_bin = game_root / "Game" / "Bin"
     game_bin.mkdir(parents=True)
 
-    # Create executable
-    exe = game_bin / "TS4_x64.exe"
-    exe.write_bytes(b"mock executable")
+    # Create platform-specific executable
+    if platform.system() == "Darwin":
+        # macOS: Create .app bundle in root (validator checks root for macOS)
+        app_bundle = game_root / "The Sims 4.app"
+        app_bundle.mkdir()
+        # Also create internal structure for completeness
+        contents = app_bundle / "Contents" / "MacOS"
+        contents.mkdir(parents=True)
+        exe = contents / "The Sims 4"
+        exe.write_bytes(b"mock executable")
+    else:
+        # Windows/Linux: Create .exe in Game/Bin
+        exe = game_bin / "TS4_x64.exe"
+        exe.write_bytes(b"mock executable")
 
     # Create version file
     version_file = game_bin / "GameVersion.txt"
@@ -271,9 +287,7 @@ class TestGameDetector:
     ) -> None:
         """Test validation of valid resource.cfg."""
         resource_cfg = mock_mods_folder / "resource.cfg"
-        resource_cfg.write_text(
-            "Priority 500\nPackedFile Base/*.package\nPackedFile */*.package"
-        )
+        resource_cfg.write_text("Priority 500\nPackedFile Base/*.package\nPackedFile */*.package")
 
         assert detector.validate_resource_cfg(mock_mods_folder) is True
 
@@ -317,7 +331,7 @@ class TestGameDetector:
         tmp_path: Path,
     ) -> None:
         """Test parsing Steam library folders VDF."""
-        vdf_content = '''
+        vdf_content = """
         "libraryfolders"
         {
             "0"
@@ -329,7 +343,7 @@ class TestGameDetector:
                 "path"		"D:\\\\SteamLibrary"
             }
         }
-        '''
+        """
 
         vdf_file = tmp_path / "libraryfolders.vdf"
         vdf_file.write_text(vdf_content)

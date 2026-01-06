@@ -73,6 +73,8 @@ extend-exclude = '''
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+[tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors
     "W",   # pycodestyle warnings
@@ -88,8 +90,12 @@ ignore = [
     "C901",  # too complex
 ]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
+# These files have intentional late imports after tkinter availability checks
+"tests/ui/test_main_window.py" = ["E402"]
+"tests/ui/test_pixel_theme.py" = ["E402"]
+"tests/utils/test_updater.py" = ["E402"]
 
 [tool.mypy]
 python_version = "3.10"

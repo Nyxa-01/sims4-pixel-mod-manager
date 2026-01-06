@@ -29,6 +29,8 @@ MANIFEST
 # PyInstaller
 *.manifest
 *.spec
+# Exception: keep our build.spec for CI/CD
+!build.spec
 
 # Installer logs
 pip-log.txt

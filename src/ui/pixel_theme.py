@@ -8,9 +8,10 @@ import ctypes
 import logging
 import platform
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
 from tkinter import font as tkfont
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,9 @@ logger = logging.getLogger(__name__)
 COLORS = {
     "bg_dark": "#000000",
     "bg_mid": "#1A1A1A",
+    "background": "#000000",  # Alias for bg_dark
     "primary": "#1D4ED8",
+    "primary_hover": "#2563EB",  # Lighter primary for hover state
     "secondary": "#06B6D4",
     "success": "#10B981",
     "warning": "#F59E0B",
@@ -59,9 +62,9 @@ class PixelTheme:
 
         self.colors = COLORS
         self.scale_factor = 1.0
-        self.font_small: Optional[tkfont.Font] = None
-        self.font_normal: Optional[tkfont.Font] = None
-        self.font_large: Optional[tkfont.Font] = None
+        self.font_small: tkfont.Font | None = None
+        self.font_normal: tkfont.Font | None = None
+        self.font_large: tkfont.Font | None = None
         self._font_family = FONT_FALLBACK
 
     @classmethod
@@ -119,6 +122,38 @@ class PixelTheme:
             return max(1.0, min(scale, 3.0))  # Clamp 1.0-3.0
         except Exception:
             return 1.0
+
+    def scale_size(self, size: int) -> int:
+        """Scale a pixel size by the DPI scale factor.
+
+        Args:
+            size: Base pixel size
+
+        Returns:
+            Scaled pixel size
+        """
+        return int(size * self.scale_factor)
+
+    def get_font(self, size: int) -> tkfont.Font | None:
+        """Get a font at the specified size.
+
+        Args:
+            size: Font size (maps to small/normal/large)
+
+        Returns:
+            Appropriate font object, or None if not loaded
+        """
+        if size <= 8:
+            return self.font_small
+        elif size <= 10:
+            return self.font_normal
+        else:
+            return self.font_large
+
+    @property
+    def COLORS(self) -> dict[str, str]:
+        """Alias for colors dict (backwards compatibility)."""
+        return self.colors
 
     def load_fonts(self, root: tk.Tk) -> None:
         """Load Press Start 2P font or fallback.
@@ -193,7 +228,7 @@ class PixelTheme:
         self,
         parent: tk.Widget,
         text: str,
-        command: Optional[Callable] = None,
+        command: Callable | None = None,
         **kwargs: Any,
     ) -> tk.Button:
         """Create pixel-styled button with hover effects.
@@ -274,7 +309,7 @@ class PixelTheme:
     def create_chunky_frame(
         self,
         parent: tk.Widget,
-        color: Optional[str] = None,
+        color: str | None = None,
         **kwargs: Any,
     ) -> tk.Frame:
         """Create pixel-styled frame with thick border.
@@ -495,7 +530,7 @@ class PixelTheme:
         start_value: Any,
         end_value: Any,
         duration: int = ANIM_HOVER_DURATION,
-        callback: Optional[Callable] = None,
+        callback: Callable | None = None,
     ) -> None:
         """Animate widget property over time.
 
@@ -532,7 +567,7 @@ class PixelTheme:
             widget: Widget to add tooltip to
             text: Tooltip text
         """
-        tooltip: Optional[tk.Toplevel] = None
+        tooltip: tk.Toplevel | None = None
 
         def show_tooltip(event: tk.Event) -> None:
             nonlocal tooltip
@@ -576,4 +611,3 @@ def get_theme() -> PixelTheme:
         PixelTheme instance
     """
     return PixelTheme.get_instance()
-

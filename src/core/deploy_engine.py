@@ -4,20 +4,21 @@ This module provides the core deployment logic with automatic rollback,
 multiple deployment methods (junction/symlink/copy), and verification.
 """
 
+from __future__ import annotations
+
 import ctypes
 import logging
 import os
 import shutil
 import subprocess
 import zipfile
+import zlib
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Generator, Optional
-
-import zlib
+from types import TracebackType
 
 from src.core.exceptions import DeployError, HashValidationError, PathError
-from src.utils.game_detector import GameDetector
 from src.utils.process_manager import GameProcessManager
 
 logger = logging.getLogger(__name__)
@@ -49,19 +50,19 @@ class DeployEngine:
         ...     )
     """
 
-    def __init__(self, backup_dir: Optional[Path] = None) -> None:
+    def __init__(self, backup_dir: Path | None = None) -> None:
         """Initialize deployment engine.
 
         Args:
             backup_dir: Directory for backups (auto-detect if None)
         """
         self.backup_dir = backup_dir
-        self._backup_path: Optional[Path] = None
-        self._deployed_path: Optional[Path] = None
+        self._backup_path: Path | None = None
+        self._deployed_path: Path | None = None
         self._in_transaction = False
-        self._deployment_method: Optional[str] = None
+        self._deployment_method: str | None = None
 
-    def transaction(self):
+    def transaction(self) -> DeployEngine:
         """Context manager for transactional deployment.
 
         Example:
@@ -70,13 +71,18 @@ class DeployEngine:
         """
         return self
 
-    def __enter__(self) -> "DeployEngine":
+    def __enter__(self) -> DeployEngine:
         """Enter transaction context."""
         self._in_transaction = True
         logger.info("=== BEGIN DEPLOYMENT TRANSACTION ===")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         """Exit transaction context and handle rollback."""
         if exc_type is not None:
             logger.error(f"Transaction failed: {exc_val}")
@@ -94,7 +100,7 @@ class DeployEngine:
         self,
         active_mods_path: Path,
         game_mods_path: Path,
-        progress_callback: Optional[Callable[[str, float], None]] = None,
+        progress_callback: Callable[[str, float], None] | None = None,
         close_game: bool = True,
     ) -> bool:
         """Deploy mods with transactional guarantees.
@@ -167,9 +173,8 @@ class DeployEngine:
         if not self.verify_deployment(active_mods_path, deployed_active):
             raise HashValidationError(
                 active_mods_path,
-                0,
-                0,
-                recovery_hint="Deployment verification failed, rolling back",
+                expected_hash=0,
+                actual_hash=0,
             )
 
         # Step 8: Final validation
@@ -291,7 +296,7 @@ class DeployEngine:
             True if syntax is valid
         """
         try:
-            with open(cfg_path, "r") as f:
+            with open(cfg_path) as f:
                 content = f.read()
 
             # Check for required directives
@@ -375,14 +380,14 @@ class DeployEngine:
             return False
 
         try:
-            # Check for admin privileges
-            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            # Check for admin privileges (Windows-only API)
+            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0  # type: ignore[attr-defined]
 
             if not is_admin:
                 logger.warning("Junction creation may require admin privileges")
 
             # Use mklink /J command
-            result = subprocess.run(
+            subprocess.run(
                 ["mklink", "/J", str(target), str(source)],
                 check=True,
                 capture_output=True,
@@ -448,7 +453,7 @@ class DeployEngine:
             deployed_path: Path to remove
         """
         try:
-            if deployed_path.is_symlink() or deployed_path.is_junction():
+            if deployed_path.is_symlink() or deployed_path.is_junction():  # type: ignore[attr-defined]
                 # Remove link without following
                 os.unlink(deployed_path)
                 logger.info(f"Removed link: {deployed_path}")
@@ -574,7 +579,7 @@ class DeployEngine:
 
     def _report_progress(
         self,
-        callback: Optional[Callable[[str, float], None]],
+        callback: Callable[[str, float], None] | None,
         step: str,
         percentage: float,
     ) -> None:
@@ -613,5 +618,5 @@ def _is_junction(path: Path) -> bool:
         return False
 
 
-# Add is_junction helper to Path
-Path.is_junction = lambda self: _is_junction(self)
+# Add is_junction helper to Path (monkey-patch for junction detection)
+Path.is_junction = lambda self: _is_junction(self)  # type: ignore[attr-defined]

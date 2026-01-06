@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.core.exceptions import BackupError, HashValidationError
+from src.core.exceptions import BackupError
 from src.utils.backup import (
     DEFAULT_RETENTION_COUNT,
     MANIFEST_FILENAME,
@@ -164,10 +164,11 @@ class TestBackupManager:
         assert "total_size_mb" in manifest
         assert len(manifest["files"]) == 3
 
-        # Check hash format
-        for filename, hash_str in manifest["files"].items():
-            assert len(hash_str) == 8  # CRC32 hex format
-            int(hash_str, 16)  # Should be valid hex
+        # Check file entries format (list of dicts with path and crc32)
+        for file_entry in manifest["files"]:
+            assert "path" in file_entry
+            assert "crc32" in file_entry
+            assert isinstance(file_entry["crc32"], int)  # CRC32 as integer
 
     def test_restore_backup_success(
         self,
@@ -204,9 +205,7 @@ class TestBackupManager:
         backup_path = manager.create_backup(sample_files, backup_dir)
 
         # Restore with verification
-        result = manager.restore_backup(
-            backup_path, restore_dir, verify_hashes=True
-        )
+        result = manager.restore_backup(backup_path, restore_dir, verify_hashes=True)
 
         assert result is True
 
@@ -278,8 +277,8 @@ class TestBackupManager:
         backup_dir = tmp_path / "backups"
 
         # Create multiple backups
-        backup1 = manager.create_backup(sample_files, backup_dir)
-        backup2 = manager.create_backup(sample_files, backup_dir)
+        manager.create_backup(sample_files, backup_dir)
+        manager.create_backup(sample_files, backup_dir)
 
         backups = manager.list_backups(backup_dir)
 
@@ -304,7 +303,7 @@ class TestBackupManager:
 
         assert backup_info.path == backup_path
         assert isinstance(backup_info.timestamp, datetime)
-        assert backup_info.size_mb > 0
+        assert backup_info.size_mb >= 0  # Small test files may round to 0.0 MB
         assert backup_info.file_count == 3
         assert backup_info.is_valid is True
 

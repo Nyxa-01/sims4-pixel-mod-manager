@@ -7,12 +7,11 @@ integrity checking, retention policies, and progress reporting.
 import json
 import logging
 import zipfile
-from dataclasses import asdict, dataclass
+import zlib
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Optional
-
-import zlib
 
 from src.core.exceptions import BackupError, HashValidationError
 
@@ -71,7 +70,7 @@ class BackupManager:
         source: Path,
         backup_dir: Path,
         game_version: str = "Unknown",
-        progress_callback: Optional[Callable[[float], None]] = None,
+        progress_callback: Callable[[float], None] | None = None,
     ) -> Path:
         """Create timestamped backup with integrity manifest.
 
@@ -102,9 +101,9 @@ class BackupManager:
                 recovery_hint="Check permissions",
             ) from e
 
-        # Generate timestamped filename
+        # Generate timestamped filename with microseconds for uniqueness
         timestamp = datetime.now()
-        filename = f"backup_{timestamp.strftime('%Y-%m-%d_%H%M%S')}.zip"
+        filename = f"backup_{timestamp.strftime('%Y-%m-%d_%H%M%S')}_{timestamp.microsecond:06d}.zip"
         backup_path = backup_dir / filename
         temp_path = backup_dir / f"{filename}.tmp"
 
@@ -127,23 +126,27 @@ class BackupManager:
                 "game_version": game_version,
                 "total_files": total_files,
                 "total_size_mb": 0.0,
-                "files": {},
+                "files": [],
             }
 
             total_size = 0
 
             # Create backup zip (atomic write to temp file)
-            with zipfile.ZipFile(
-                temp_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6
-            ) as zf:
+            with zipfile.ZipFile(temp_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
                 for idx, file_path in enumerate(files_to_backup):
                     try:
                         # Calculate hash
                         file_hash = self._hash_file(file_path)
                         relative_path = file_path.relative_to(source)
 
-                        # Add to manifest
-                        manifest["files"][str(relative_path)] = f"{file_hash:08x}"
+                        # Add to manifest (as list of dicts for verify_backup compatibility)
+                        # Use POSIX-style paths for cross-platform compatibility
+                        manifest["files"].append(
+                            {
+                                "path": relative_path.as_posix(),
+                                "crc32": file_hash,
+                            }
+                        )
 
                         # Add to zip
                         zf.write(file_path, relative_path)
@@ -212,7 +215,7 @@ class BackupManager:
         backup_path: Path,
         target: Path,
         verify_hashes: bool = True,
-        progress_callback: Optional[Callable[[float], None]] = None,
+        progress_callback: Callable[[float], None] | None = None,
     ) -> bool:
         """Restore backup with integrity verification.
 
@@ -303,9 +306,19 @@ class BackupManager:
 
         for backup_file in backup_dir.glob("backup_*.zip"):
             try:
-                # Parse timestamp from filename
+                # Parse timestamp from filename (supports both old and new format)
                 timestamp_str = backup_file.stem.replace("backup_", "")
-                timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d_%H%M%S")
+                # Try new format with microseconds first
+                try:
+                    # Format: 2026-01-04_020000_123456
+                    parts = timestamp_str.rsplit("_", 1)
+                    if len(parts) == 2 and len(parts[1]) == 6 and parts[1].isdigit():
+                        base_timestamp = datetime.strptime(parts[0], "%Y-%m-%d_%H%M%S")
+                        timestamp = base_timestamp.replace(microsecond=int(parts[1]))
+                    else:
+                        timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d_%H%M%S")
+                except ValueError:
+                    timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d_%H%M%S")
 
                 # Get file size
                 size_mb = round(backup_file.stat().st_size / (1024 * 1024), 2)
@@ -341,7 +354,7 @@ class BackupManager:
 
         return backups
 
-    def delete_old_backups(self, backup_dir: Path, keep: Optional[int] = None) -> int:
+    def delete_old_backups(self, backup_dir: Path, keep: int | None = None) -> int:
         """Delete old backups according to retention policy.
 
         Args:
@@ -378,10 +391,10 @@ class BackupManager:
 
     def verify_backup(self, backup_path: Path) -> tuple[bool, str]:
         """Verify backup integrity using CRC32 manifest.
-        
+
         Args:
             backup_path: Path to backup ZIP file
-            
+
         Returns:
             Tuple of (is_valid, error_message)
             - (True, "") if backup is valid
@@ -389,10 +402,10 @@ class BackupManager:
         """
         if not backup_path.exists():
             return (False, f"Backup not found: {backup_path}")
-        
+
         if not zipfile.is_zipfile(backup_path):
             return (False, "Not a valid ZIP file")
-        
+
         try:
             # Test zip integrity
             if not self._test_zip_integrity(backup_path):
@@ -406,23 +419,38 @@ class BackupManager:
                 manifest_data = zf.read(MANIFEST_FILENAME)
                 manifest = json.loads(manifest_data.decode("utf-8"))
 
+                # Validate manifest is a dict
+                if not isinstance(manifest, dict):
+                    return (False, "Invalid manifest format: expected dict")
+
                 # Validate manifest structure
                 required_keys = ["timestamp", "total_files", "files"]
                 if not all(key in manifest for key in required_keys):
                     return (False, "Manifest has invalid structure")
-                
+
+                # Validate files is a list
+                files_list = manifest.get("files", [])
+                if not isinstance(files_list, list):
+                    return (False, "Invalid manifest: files must be a list")
+
                 # Verify each file's CRC32 hash
-                for file_info in manifest.get("files", []):
+                for file_info in files_list:
+                    # Validate file_info is a dict with required keys
+                    if not isinstance(file_info, dict):
+                        return (False, "Invalid manifest: file entry must be dict")
+                    if "path" not in file_info or "crc32" not in file_info:
+                        return (False, "Invalid manifest: file entry missing path or crc32")
+
                     filepath = file_info["path"]
                     expected_crc = file_info["crc32"]
-                    
+
                     if filepath not in zf.namelist():
                         return (False, f"Missing file in backup: {filepath}")
-                    
+
                     # Calculate actual CRC32
                     file_data = zf.read(filepath)
-                    actual_crc = zlib.crc32(file_data) & 0xffffffff
-                    
+                    actual_crc = zlib.crc32(file_data) & 0xFFFFFFFF
+
                     if actual_crc != expected_crc:
                         return (False, f"CRC mismatch for {filepath}")
 
@@ -489,15 +517,11 @@ class BackupManager:
         Args:
             backup_dir: Backup storage directory
         """
-        total_size = sum(
-            f.stat().st_size for f in backup_dir.glob("backup_*.zip") if f.is_file()
-        )
+        total_size = sum(f.stat().st_size for f in backup_dir.glob("backup_*.zip") if f.is_file())
 
         if total_size > MAX_BACKUP_SIZE_WARNING:
             size_gb = round(total_size / (1024 * 1024 * 1024), 2)
-            logger.warning(
-                f"Total backup size ({size_gb} GB) exceeds recommended limit (5 GB)"
-            )
+            logger.warning(f"Total backup size ({size_gb} GB) exceeds recommended limit (5 GB)")
 
 
 def get_default_backup_manager() -> BackupManager:

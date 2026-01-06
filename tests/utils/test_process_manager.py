@@ -1,6 +1,5 @@
 """Tests for game process manager."""
 
-import time
 from unittest.mock import MagicMock, Mock, patch
 
 import psutil
@@ -60,13 +59,13 @@ class TestGameProcessManager:
 
     def test_initialization(self, manager: GameProcessManager) -> None:
         """Test manager initialization."""
-        assert manager.close_launchers is False
+        assert manager._should_close_launchers is False
         assert manager._terminated_processes == []
 
     def test_initialization_with_launcher_close(self) -> None:
         """Test manager with launcher close enabled."""
         manager = GameProcessManager(close_launchers=True)
-        assert manager.close_launchers is True
+        assert manager._should_close_launchers is True
 
     def test_context_manager(self, manager: GameProcessManager) -> None:
         """Test context manager protocol."""
@@ -232,47 +231,100 @@ class TestGameProcessManager:
 
     @patch("psutil.process_iter")
     @patch("time.sleep")
+    @patch("time.time")
     def test_close_game_safely_force_kill(
         self,
+        mock_time: Mock,
         mock_sleep: Mock,
         mock_process_iter: Mock,
         manager: GameProcessManager,
         mock_game_process: Mock,
+        disable_logging,
     ) -> None:
-        """Test force kill after graceful timeout."""
-        # Process doesn't exit gracefully, requires force kill
-        mock_process_iter.side_effect = [
-            [mock_game_process],  # Initial detection
-            [mock_game_process],  # Still running after terminate
-            [mock_game_process] * 20,  # Multiple checks during wait
-            [mock_game_process],  # Before force kill
-            [],  # After force kill
-        ]
+        """Test force kill after graceful timeout.
 
-        result = manager.close_game_safely(timeout=1)
+        This test verifies that when a process doesn't exit gracefully within
+        the timeout period, close_game_safely will force kill it.
+        """
+        # Track state to control process_iter behavior
+        force_kill_happened = [False]
+
+        def process_iter_side_effect(*args, **kwargs):
+            # After kill() is called, return empty list (process gone)
+            if force_kill_happened[0]:
+                return []
+            # Otherwise return the process (still running)
+            return [mock_game_process]
+
+        mock_process_iter.side_effect = process_iter_side_effect
+
+        # Track kill call to signal process termination
+        def kill_side_effect():
+            force_kill_happened[0] = True
+
+        mock_game_process.kill.side_effect = kill_side_effect
+
+        # Control time progression. The wait_for_game_exit loop calls time.time()
+        # for start_time and each loop condition check.
+        # We want the loop to iterate a few times before timing out.
+        time_call_count = [0]
+
+        def time_side_effect():
+            time_call_count[0] += 1
+            if time_call_count[0] == 1:
+                return 0  # start_time
+            elif time_call_count[0] <= 3:
+                return 0.05  # Within 0.1s timeout, loop continues
+            return 0.2  # Past timeout, loop exits
+
+        mock_time.side_effect = time_side_effect
+
+        # Use a small but non-zero timeout to actually exercise the loop
+        result = manager.close_game_safely(timeout=0.1)
 
         assert result is True
         mock_game_process.terminate.assert_called_once()
         mock_game_process.kill.assert_called_once()
+        # Verify sleep was called (loop iterated at least once)
+        assert mock_sleep.call_count >= 1
 
     @patch("psutil.process_iter")
     @patch("time.sleep")
+    @patch("time.time")
     def test_wait_for_game_exit_success(
         self,
+        mock_time: Mock,
         mock_sleep: Mock,
         mock_process_iter: Mock,
         manager: GameProcessManager,
+        disable_logging,
     ) -> None:
-        """Test waiting for game exit successfully."""
-        # First call: game running, second call: game exited
-        mock_process_iter.side_effect = [
-            [MagicMock(info={"name": "TS4_x64.exe"})],
-            [],
-        ]
+        """Test waiting for game exit successfully.
+
+        Verifies that when the game exits before the timeout, the function
+        returns True.
+        """
+        # Track process_iter calls to simulate game exiting after 2 checks
+        process_iter_call_count = [0]
+
+        def process_iter_side_effect(*args, **kwargs):
+            process_iter_call_count[0] += 1
+            if process_iter_call_count[0] <= 2:
+                # Game still running
+                return [MagicMock(info={"name": "TS4_x64.exe"})]
+            # Game exited
+            return []
+
+        mock_process_iter.side_effect = process_iter_side_effect
+
+        # Time stays within timeout
+        mock_time.return_value = 0
 
         result = manager.wait_for_game_exit(timeout=5)
 
         assert result is True
+        # Verify loop iterated at least once
+        assert mock_sleep.call_count >= 1
 
     @patch("psutil.process_iter")
     @patch("time.sleep")
@@ -284,33 +336,70 @@ class TestGameProcessManager:
         mock_process_iter: Mock,
         manager: GameProcessManager,
         mock_game_process: Mock,
+        disable_logging,
     ) -> None:
-        """Test timeout when waiting for game exit."""
-        # Game never exits
+        """Test timeout when waiting for game exit.
+
+        Verifies that when the game doesn't exit within the timeout period,
+        the function returns False after the loop has iterated multiple times.
+        """
+        # Game never exits - always return process
         mock_process_iter.return_value = [mock_game_process]
 
-        # Simulate time passing
-        mock_time.side_effect = [0, 11]  # Start, then past timeout
+        # Simulate time progression with a generator that won't exhaust:
+        # - Call 1: 0 (start_time)
+        # - Calls 2-4: values within timeout (loop iterates)
+        # - Calls 5+: value past timeout (loop exits)
+        time_call_count = [0]
+
+        def time_side_effect():
+            time_call_count[0] += 1
+            if time_call_count[0] == 1:
+                return 0  # start_time
+            elif time_call_count[0] <= 4:
+                # Within timeout - return values that allow 2-3 loop iterations
+                return (time_call_count[0] - 1) * 3  # 3, 6, 9 seconds
+            # Past timeout - always return value > timeout
+            return 15
+
+        mock_time.side_effect = time_side_effect
 
         result = manager.wait_for_game_exit(timeout=10)
 
         assert result is False
+        # Verify the loop actually iterated (sleep was called)
+        assert mock_sleep.call_count >= 1
 
     @patch("psutil.process_iter")
     @patch("time.sleep")
+    @patch("time.time")
     def test_close_launchers(
         self,
+        mock_time: Mock,
         mock_sleep: Mock,
         mock_process_iter: Mock,
         manager: GameProcessManager,
         mock_launcher_process: Mock,
+        disable_logging,
     ) -> None:
-        """Test closing launcher processes."""
-        # First call: launcher exists, second: launcher gone
-        mock_process_iter.side_effect = [
-            [mock_launcher_process],  # Initial detection
-            [],  # After terminate
-        ]
+        """Test closing launcher processes.
+
+        Verifies that launchers are terminated gracefully and the function
+        returns True when they exit.
+        """
+        # Track calls: first call returns launcher, subsequent calls return empty
+        call_count = [0]
+
+        def process_iter_side_effect(*args, **kwargs):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                return [mock_launcher_process]  # Initial detection
+            return []  # Launcher exited after terminate
+
+        mock_process_iter.side_effect = process_iter_side_effect
+
+        # Time stays within timeout
+        mock_time.return_value = 0
 
         result = manager.close_launchers()
 
@@ -345,11 +434,13 @@ class TestGameProcessManager:
     ) -> None:
         """Test restoring terminated processes."""
         # Manually add terminated process
-        manager._terminated_processes.append({
-            "pid": 12345,
-            "name": "TS4_x64.exe",
-            "exe": "C:/path/to/game.exe",
-        })
+        manager._terminated_processes.append(
+            {
+                "pid": 12345,
+                "name": "TS4_x64.exe",
+                "exe": "C:/path/to/game.exe",
+            }
+        )
 
         result = manager.restore_processes()
 
@@ -386,12 +477,8 @@ class TestGameProcessManager:
     ) -> None:
         """Test all defined process names are detected."""
         # Create mock process for each name
-        game_procs = [
-            MagicMock(info={"name": name}) for name in GAME_PROCESS_NAMES
-        ]
-        launcher_procs = [
-            MagicMock(info={"name": name}) for name in LAUNCHER_PROCESS_NAMES
-        ]
+        game_procs = [MagicMock(info={"name": name}) for name in GAME_PROCESS_NAMES]
+        launcher_procs = [MagicMock(info={"name": name}) for name in LAUNCHER_PROCESS_NAMES]
 
         mock_process_iter.return_value = game_procs + launcher_procs
 
