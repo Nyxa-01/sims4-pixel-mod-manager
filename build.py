@@ -155,6 +155,27 @@ class Builder:
             exe_name = self.config.get_executable_name(target_platform)
             exe_path = self.config.dist_dir / exe_name
 
+            # Handle ONEDIR mode: PyInstaller creates a directory with exe inside
+            if not exe_path.exists():
+                # Check for ONEDIR structure (directory with same base name)
+                base_name = exe_name.replace(".exe", "").replace(".app", "")
+                onedir_path = self.config.dist_dir / base_name
+
+                if onedir_path.is_dir():
+                    if target_platform == BuildConfig.WINDOWS:
+                        # Windows: exe inside directory
+                        exe_path = onedir_path / f"{base_name}.exe"
+                    elif target_platform == BuildConfig.MACOS:
+                        # macOS: .app bundle is created by BUNDLE, check for it
+                        app_bundle = self.config.dist_dir / f"{base_name}.app"
+                        if app_bundle.exists():
+                            exe_path = app_bundle
+                        else:
+                            exe_path = onedir_path
+                    else:  # Linux
+                        # Linux: executable inside directory (no extension)
+                        exe_path = onedir_path / base_name
+
             if not exe_path.exists():
                 raise FileNotFoundError(f"Build succeeded but executable not found: {exe_path}")
 
