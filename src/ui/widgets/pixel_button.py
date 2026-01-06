@@ -3,6 +3,7 @@
 import logging
 import tkinter as tk
 from collections.abc import Callable
+from typing import Any
 
 from ..pixel_theme import PixelTheme
 
@@ -19,7 +20,7 @@ class PixelButton(tk.Canvas):
         command: Callable[[], None] | None = None,
         width: int = 120,
         height: int = 40,
-        **kwargs: object,
+        **kwargs: Any,
     ) -> None:
         """Initialize pixel button.
 

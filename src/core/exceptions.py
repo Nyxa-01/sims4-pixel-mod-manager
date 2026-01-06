@@ -5,6 +5,7 @@ providing detailed error context and recovery hints for robust error handling.
 """
 
 from pathlib import Path
+from typing import Any
 
 
 class ModManagerException(Exception):
@@ -24,7 +25,7 @@ class ModManagerException(Exception):
         message: str,
         error_code: str = "UNKNOWN",
         recovery_hint: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Initialize base exception.
 
@@ -144,7 +145,7 @@ class BackupError(ModManagerException):
         reason: str = "Unknown error",
         error_code: str = "BACKUP001",
         recovery_hint: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Initialize backup error.
 
@@ -195,7 +196,7 @@ class SecurityError(ModManagerException):
         details: str | None = None,
         error_code: str = "SECURITY001",
         message: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Initialize security error.
 
@@ -253,7 +254,7 @@ class GameProcessError(ModManagerException):
         reason: str = "Unknown error",
         error_code: str = "GAME001",
         recovery_hint: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Initialize game process error.
 
@@ -301,7 +302,7 @@ class PathError(ModManagerException):
         reason: str = "Unknown error",
         error_code: str = "PATH001",
         recovery_hint: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Initialize path error.
 

@@ -19,7 +19,9 @@ logger = logging.getLogger(__name__)
 COLORS = {
     "bg_dark": "#000000",
     "bg_mid": "#1A1A1A",
+    "background": "#000000",  # Alias for bg_dark
     "primary": "#1D4ED8",
+    "primary_hover": "#2563EB",  # Lighter primary for hover state
     "secondary": "#06B6D4",
     "success": "#10B981",
     "warning": "#F59E0B",
@@ -120,6 +122,38 @@ class PixelTheme:
             return max(1.0, min(scale, 3.0))  # Clamp 1.0-3.0
         except Exception:
             return 1.0
+
+    def scale_size(self, size: int) -> int:
+        """Scale a pixel size by the DPI scale factor.
+
+        Args:
+            size: Base pixel size
+
+        Returns:
+            Scaled pixel size
+        """
+        return int(size * self.scale_factor)
+
+    def get_font(self, size: int) -> tkfont.Font | None:
+        """Get a font at the specified size.
+
+        Args:
+            size: Font size (maps to small/normal/large)
+
+        Returns:
+            Appropriate font object, or None if not loaded
+        """
+        if size <= 8:
+            return self.font_small
+        elif size <= 10:
+            return self.font_normal
+        else:
+            return self.font_large
+
+    @property
+    def COLORS(self) -> dict[str, str]:
+        """Alias for colors dict (backwards compatibility)."""
+        return self.colors
 
     def load_fonts(self, root: tk.Tk) -> None:
         """Load Press Start 2P font or fallback.

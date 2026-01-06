@@ -4,11 +4,14 @@ This module provides safe detection and termination of Sims 4 and
 related launcher processes to prevent file locks during mod deployment.
 """
 
+from __future__ import annotations
+
 import ctypes
 import logging
 import platform
 import sys
 import time
+from types import TracebackType
 
 import psutil
 
@@ -25,7 +28,7 @@ def is_admin() -> bool:
     """
     try:
         if platform.system() == "Windows":
-            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+            return bool(ctypes.windll.shell32.IsUserAnAdmin())  # type: ignore[attr-defined]
         else:
             # Unix: Check if running as root
             import os
@@ -56,8 +59,8 @@ def request_admin_elevation() -> bool:
         script = sys.argv[0]
         params = " ".join(sys.argv[1:])
 
-        # Request elevation via ShellExecute
-        ret = ctypes.windll.shell32.ShellExecuteW(
+        # Request elevation via ShellExecute (Windows-only API)
+        ret: int = ctypes.windll.shell32.ShellExecuteW(  # type: ignore[attr-defined]
             None, "runas", sys.executable, f'"{script}" {params}', None, 1
         )
 
@@ -112,7 +115,12 @@ class GameProcessManager:
         logger.debug("GameProcessManager context entered")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         """Exit context manager and cleanup."""
         logger.debug("GameProcessManager context exited")
         # Context manager ensures proper cleanup

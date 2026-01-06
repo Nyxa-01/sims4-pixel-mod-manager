@@ -4,16 +4,24 @@ This module provides the core deployment logic with automatic rollback,
 multiple deployment methods (junction/symlink/copy), and verification.
 """
 
+from __future__ import annotations
+
 import ctypes
 import logging
 import os
 import shutil
 import subprocess
+import sys
 import zipfile
 import zlib
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
+from types import TracebackType
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Any
 
 from src.core.exceptions import DeployError, HashValidationError, PathError
 from src.utils.process_manager import GameProcessManager
@@ -59,7 +67,7 @@ class DeployEngine:
         self._in_transaction = False
         self._deployment_method: str | None = None
 
-    def transaction(self):
+    def transaction(self) -> DeployEngine:
         """Context manager for transactional deployment.
 
         Example:
@@ -68,13 +76,18 @@ class DeployEngine:
         """
         return self
 
-    def __enter__(self) -> "DeployEngine":
+    def __enter__(self) -> DeployEngine:
         """Enter transaction context."""
         self._in_transaction = True
         logger.info("=== BEGIN DEPLOYMENT TRANSACTION ===")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         """Exit transaction context and handle rollback."""
         if exc_type is not None:
             logger.error(f"Transaction failed: {exc_val}")
@@ -372,8 +385,8 @@ class DeployEngine:
             return False
 
         try:
-            # Check for admin privileges
-            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            # Check for admin privileges (Windows-only API)
+            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0  # type: ignore[attr-defined]
 
             if not is_admin:
                 logger.warning("Junction creation may require admin privileges")
@@ -445,7 +458,7 @@ class DeployEngine:
             deployed_path: Path to remove
         """
         try:
-            if deployed_path.is_symlink() or deployed_path.is_junction():
+            if deployed_path.is_symlink() or deployed_path.is_junction():  # type: ignore[attr-defined]
                 # Remove link without following
                 os.unlink(deployed_path)
                 logger.info(f"Removed link: {deployed_path}")
@@ -610,5 +623,5 @@ def _is_junction(path: Path) -> bool:
         return False
 
 
-# Add is_junction helper to Path
-Path.is_junction = lambda self: _is_junction(self)
+# Add is_junction helper to Path (monkey-patch for junction detection)
+Path.is_junction = lambda self: _is_junction(self)  # type: ignore[attr-defined]
