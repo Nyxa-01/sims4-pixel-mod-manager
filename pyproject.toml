@@ -126,18 +126,21 @@ addopts = [
     "--tb=short",
     "--cov=src",
     "--cov-report=term-missing",
-    "--cov-report=html",
+    "--cov-report=html:htmlcov",
+    "--cov-fail-under=75",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
-    "ui: marks tests that require GUI",
+    "ui: marks tests that require GUI (Tkinter)",
+    "windows: Windows-specific tests",
 ]
 
 [tool.coverage.run]
 source = ["src"]
 omit = [
     "*/tests/*",
+    "*/test_*.py",
     "*/__pycache__/*",
     "*/site-packages/*",
 ]
@@ -146,3 +149,12 @@ omit = [
 precision = 2
 show_missing = true
 skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstract",
+]
