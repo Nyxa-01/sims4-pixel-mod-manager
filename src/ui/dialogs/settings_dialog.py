@@ -3,20 +3,23 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import TYPE_CHECKING, Optional, Dict, Any
+
+if TYPE_CHECKING:
+    from ...utils.config_manager import ConfigManager
 
 
 class SettingsDialog(tk.Toplevel):
     """Modal settings dialog.
-    
+
     Usage:
         dialog = SettingsDialog(parent, config_manager)
         result = dialog.show()
     """
-    
-    def __init__(self, parent, config_manager):
+
+    def __init__(self, parent: tk.Tk, config_manager: "ConfigManager") -> None:
         """Initialize settings dialog.
-        
+
         Args:
             parent: Parent window
             config_manager: ConfigManager instance

@@ -118,16 +118,16 @@ class GameDetector:
             import winreg
 
             # Try HKEY_LOCAL_MACHINE first
-            reg_paths = [
-                (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Maxis\The Sims 4"),
-                (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Maxis\The Sims 4"),
-                (winreg.HKEY_CURRENT_USER, r"SOFTWARE\Maxis\The Sims 4"),
+            reg_paths: list[tuple[int, str]] = [
+                (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Maxis\The Sims 4"),  # type: ignore[attr-defined]
+                (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Maxis\The Sims 4"),  # type: ignore[attr-defined]
+                (winreg.HKEY_CURRENT_USER, r"SOFTWARE\Maxis\The Sims 4"),  # type: ignore[attr-defined]
             ]
 
             for hkey, subkey in reg_paths:
                 try:
-                    with winreg.OpenKey(hkey, subkey) as key:
-                        install_dir, _ = winreg.QueryValueEx(key, "Install Dir")
+                    with winreg.OpenKey(hkey, subkey) as key:  # type: ignore[attr-defined]
+                        install_dir, _ = winreg.QueryValueEx(key, "Install Dir")  # type: ignore[attr-defined]
                         path = Path(install_dir)
                         logger.debug(f"Registry found: {path}")
                         return path

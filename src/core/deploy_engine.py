@@ -61,7 +61,7 @@ class DeployEngine:
         self._in_transaction = False
         self._deployment_method: Optional[str] = None
 
-    def transaction(self):
+    def transaction(self) -> "DeployEngine":
         """Context manager for transactional deployment.
 
         Example:
@@ -76,7 +76,12 @@ class DeployEngine:
         logger.info("=== BEGIN DEPLOYMENT TRANSACTION ===")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object
+    ) -> None:
         """Exit transaction context and handle rollback."""
         if exc_type is not None:
             logger.error(f"Transaction failed: {exc_val}")
@@ -169,7 +174,6 @@ class DeployEngine:
                 active_mods_path,
                 0,
                 0,
-                recovery_hint="Deployment verification failed, rolling back",
             )
 
         # Step 8: Final validation
@@ -376,7 +380,7 @@ class DeployEngine:
 
         try:
             # Check for admin privileges
-            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            is_admin = bool(ctypes.windll.shell32.IsUserAnAdmin() != 0)  # type: ignore[attr-defined]
 
             if not is_admin:
                 logger.warning("Junction creation may require admin privileges")
@@ -448,7 +452,9 @@ class DeployEngine:
             deployed_path: Path to remove
         """
         try:
-            if deployed_path.is_symlink() or deployed_path.is_junction():
+            # Check if is_junction exists (Python 3.12+ on Windows)
+            is_junction = getattr(deployed_path, 'is_junction', lambda: False)()
+            if deployed_path.is_symlink() or is_junction:
                 # Remove link without following
                 os.unlink(deployed_path)
                 logger.info(f"Removed link: {deployed_path}")
@@ -613,5 +619,5 @@ def _is_junction(path: Path) -> bool:
         return False
 
 
-# Add is_junction helper to Path
-Path.is_junction = lambda self: _is_junction(self)
+# Note: is_junction is available in Python 3.12+ on Windows
+# For earlier versions, use _is_junction helper function

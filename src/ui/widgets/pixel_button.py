@@ -2,7 +2,7 @@
 
 import logging
 import tkinter as tk
-from typing import Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 from ..pixel_theme import PixelTheme
 
@@ -14,12 +14,12 @@ class PixelButton(tk.Canvas):
 
     def __init__(
         self,
-        parent: tk.Widget,
+        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
         text: str,
         command: Optional[Callable[[], None]] = None,
         width: int = 120,
         height: int = 40,
-        **kwargs: object,
+        **kwargs: Any,
     ) -> None:
         """Initialize pixel button.
 
@@ -32,61 +32,64 @@ class PixelButton(tk.Canvas):
             **kwargs: Additional Canvas arguments
         """
         self.theme = PixelTheme.get_instance()
-        self.width = self.theme.scale_size(width)
-        self.height = self.theme.scale_size(height)
+        self.btn_width = self.theme.scale_size(width)
+        self.btn_height = self.theme.scale_size(height)
 
         super().__init__(
             parent,
-            width=self.width,
-            height=self.height,
+            width=self.btn_width,
+            height=self.btn_height,
             highlightthickness=0,
-            bg=self.theme.COLORS["background"],
+            bg=self.theme.colors["bg_dark"],
             **kwargs,
         )
 
         self.text = text
         self.command = command
-        self.state = "normal"
+        self.btn_state = "normal"
         self.enabled = True
 
-        # Pre-render button states
-        self._render_surfaces()
         self._render()
         self._bind_events()
-
-    def _render_surfaces(self) -> None:
-        """Pre-render button surfaces for each state."""
-        self.surfaces = {
-            "normal": PixelAssetManager.create_button_surface(
-                self.width, self.height, self.theme.COLORS["primary"], "normal"
-            ),
-            "hover": PixelAssetManager.create_button_surface(
-                self.width, self.height, self.theme.COLORS["primary_hover"], "hover"
-            ),
-            "pressed": PixelAssetManager.create_button_surface(
-                self.width, self.height, self.theme.COLORS["primary"], "pressed"
-            ),
-        }
 
     def _render(self) -> None:
         """Redraw button in current state."""
         self.delete("all")
 
-        # Draw button surface
-        self.create_image(0, 0, image=self.surfaces[self.state], anchor="nw")
+        # Determine colors based on state
+        if self.btn_state == "hover":
+            bg_color = self.theme.colors["highlight"]
+        elif self.btn_state == "pressed":
+            bg_color = self.theme.colors["secondary"]
+        else:
+            bg_color = self.theme.colors["primary"]
+
+        # Draw button background
+        border = 3
+        self.create_rectangle(
+            border, border,
+            self.btn_width - border, self.btn_height - border,
+            fill=bg_color, outline=self.theme.colors["border"], width=2
+        )
 
         # Draw text (centered)
-        text_y = self.height // 2
-        if self.state == "pressed":
+        text_y = self.btn_height // 2
+        if self.btn_state == "pressed":
             text_y += 2  # Shift text down with button
 
+        text_kwargs: dict[str, Any] = {
+            "text": self.text,
+            "fill": self.theme.colors["text"],
+            "anchor": "center",
+        }
+        btn_font = self.theme.get_font("small")
+        if btn_font is not None:
+            text_kwargs["font"] = btn_font
+
         self.create_text(
-            self.width // 2,
+            self.btn_width // 2,
             text_y,
-            text=self.text,
-            fill=self.theme.COLORS["text"],
-            font=self.theme.get_font(8),
-            anchor="center",
+            **text_kwargs,
         )
 
     def _bind_events(self) -> None:
@@ -96,29 +99,29 @@ class PixelButton(tk.Canvas):
         self.bind("<ButtonPress-1>", self._on_press)
         self.bind("<ButtonRelease-1>", self._on_release)
 
-    def _on_enter(self, event: tk.Event) -> None:
+    def _on_enter(self, event: "tk.Event[Any]") -> None:
         """Handle mouse enter."""
         if self.enabled:
             self._set_state("hover")
 
-    def _on_leave(self, event: tk.Event) -> None:
+    def _on_leave(self, event: "tk.Event[Any]") -> None:
         """Handle mouse leave."""
         if self.enabled:
             self._set_state("normal")
 
-    def _on_press(self, event: tk.Event) -> None:
+    def _on_press(self, event: "tk.Event[Any]") -> None:
         """Handle mouse press."""
         if self.enabled:
             self._set_state("pressed")
 
-    def _on_release(self, event: tk.Event) -> None:
+    def _on_release(self, event: "tk.Event[Any]") -> None:
         """Handle mouse release."""
         if not self.enabled:
             return
 
         # Check if still hovering
         x, y = event.x, event.y
-        if 0 <= x <= self.width and 0 <= y <= self.height:
+        if 0 <= x <= self.btn_width and 0 <= y <= self.btn_height:
             self._set_state("hover")
             if self.command:
                 try:
@@ -134,13 +137,13 @@ class PixelButton(tk.Canvas):
         Args:
             state: "normal"|"hover"|"pressed"
         """
-        self.state = state
+        self.btn_state = state
         self._render()
 
     def disable(self) -> None:
         """Disable button (grayed out, no interaction)."""
         self.enabled = False
-        self.state = "normal"
+        self.btn_state = "normal"
         # TODO: Add disabled visual state
         self._render()
 

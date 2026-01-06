@@ -4,21 +4,27 @@ Displays progress as filled pixel segments.
 """
 
 import tkinter as tk
-from typing import Optional
+from typing import Any, Union
 
 
 class PixelProgressBar(tk.Canvas):
     """Segmented progress bar with 8-bit styling.
-    
+
     Usage:
         pbar = PixelProgressBar(parent, segments=10, width=300, height=24)
         pbar.set_progress(0.75)  # 75%
     """
-    
-    def __init__(self, parent, segments: int = 20, width: int = 400, 
-                 height: int = 32, **kwargs):
+
+    def __init__(
+        self,
+        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        segments: int = 20,
+        width: int = 400,
+        height: int = 32,
+        **kwargs: Any
+    ) -> None:
         """Initialize progress bar.
-        
+
         Args:
             parent: Parent widget
             segments: Number of progress segments

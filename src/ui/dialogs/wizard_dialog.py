@@ -14,9 +14,9 @@ class WizardDialog(tk.Toplevel):
         result = wizard.show()
     """
     
-    def __init__(self, parent):
+    def __init__(self, parent: tk.Tk) -> None:
         """Initialize wizard dialog.
-        
+
         Args:
             parent: Parent window
         """

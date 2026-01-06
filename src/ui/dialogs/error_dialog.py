@@ -16,10 +16,15 @@ class ErrorDialog(tk.Toplevel):
         )
     """
     
-    def __init__(self, parent, message: str, details: Optional[str] = None, 
-                 hint: Optional[str] = None):
+    def __init__(
+        self,
+        parent: tk.Tk,
+        message: str,
+        details: Optional[str] = None,
+        hint: Optional[str] = None
+    ) -> None:
         """Initialize error dialog.
-        
+
         Args:
             parent: Parent window
             message: Error message
@@ -139,10 +144,15 @@ class ErrorDialog(tk.Toplevel):
         self.wait_window()
     
     @classmethod
-    def show_error(cls, parent, message: str, details: Optional[str] = None,
-                   hint: Optional[str] = None) -> None:
+    def show_error(
+        cls,
+        parent: tk.Tk,
+        message: str,
+        details: Optional[str] = None,
+        hint: Optional[str] = None
+    ) -> None:
         """Convenience method to show error.
-        
+
         Args:
             parent: Parent window
             message: Error message

@@ -11,9 +11,9 @@ class ConfirmDialog(tk.Toplevel):
             # User clicked Yes
     """
     
-    def __init__(self, parent, title: str, message: str, icon: str = "❓"):
+    def __init__(self, parent: tk.Tk, title: str, message: str, icon: str = "❓") -> None:
         """Initialize confirmation dialog.
-        
+
         Args:
             parent: Parent window
             title: Dialog title
@@ -99,15 +99,15 @@ class ConfirmDialog(tk.Toplevel):
         return self.result
     
     @classmethod
-    def ask(cls, parent, title: str, message: str, icon: str = "❓") -> bool:
+    def ask(cls, parent: tk.Tk, title: str, message: str, icon: str = "❓") -> bool:
         """Convenience method to show confirmation.
-        
+
         Args:
             parent: Parent window
             title: Dialog title
             message: Message text
             icon: Icon emoji
-            
+
         Returns:
             True if confirmed, False otherwise
         """

@@ -26,7 +26,7 @@ def is_admin() -> bool:
     """
     try:
         if platform.system() == "Windows":
-            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+            return bool(ctypes.windll.shell32.IsUserAnAdmin() != 0)  # type: ignore[attr-defined]
         else:
             # Unix: Check if running as root
             import os
@@ -57,13 +57,13 @@ def request_admin_elevation() -> bool:
         params = ' '.join(sys.argv[1:])
         
         # Request elevation via ShellExecute
-        ret = ctypes.windll.shell32.ShellExecuteW(
+        ret = ctypes.windll.shell32.ShellExecuteW(  # type: ignore[attr-defined]
             None, "runas", sys.executable, f'"{script}" {params}', None, 1
         )
-        
+
         # If ret > 32, elevation succeeded (app will restart)
         # If ret <= 32, user cancelled or error
-        return ret > 32
+        return bool(ret > 32)
     
     except Exception as e:
         logger.error(f"Admin elevation failed: {e}")
@@ -97,13 +97,13 @@ class GameProcessManager:
         ...             raise GameProcessError("Failed to close game")
     """
 
-    def __init__(self, close_launchers: bool = False) -> None:
+    def __init__(self, should_close_launchers: bool = False) -> None:
         """Initialize process manager.
 
         Args:
-            close_launchers: Whether to also close Origin/EA App
+            should_close_launchers: Whether to also close Origin/EA App
         """
-        self.close_launchers = close_launchers
+        self._should_close_launchers = should_close_launchers
         self._terminated_processes: list[dict] = []
 
     def __enter__(self) -> "GameProcessManager":
@@ -111,7 +111,12 @@ class GameProcessManager:
         logger.debug("GameProcessManager context entered")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object
+    ) -> None:
         """Exit context manager and cleanup."""
         logger.debug("GameProcessManager context exited")
         # Context manager ensures proper cleanup

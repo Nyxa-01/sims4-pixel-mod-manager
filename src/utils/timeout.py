@@ -68,7 +68,7 @@ def timeout(seconds: int) -> Callable:
                 if isinstance(result_container[0], Exception):
                     raise result_container[0]
                 
-                return result_container[0]
+                return result_container[0]  # type: ignore[no-any-return]
             
             else:
                 # Unix: Use signal.SIGALRM (more precise)

@@ -4,22 +4,28 @@ Provides container with thick retro borders.
 """
 
 import tkinter as tk
-from typing import Optional
+from typing import Any, Union
 
 
 class ChunkyFrame(tk.Frame):
     """Frame with thick pixel borders.
-    
+
     Usage:
         frame = ChunkyFrame(parent, border_color="#00e0ff", border_width=4)
         content = tk.Label(frame, text="Content")
         content.pack(padx=10, pady=10)
     """
-    
-    def __init__(self, parent, border_color: str = "#00e0ff", 
-                 border_width: int = 4, bg: str = "#1a1a1a", **kwargs):
+
+    def __init__(
+        self,
+        parent: Union[tk.Tk, tk.Toplevel, tk.Widget],
+        border_color: str = "#00e0ff",
+        border_width: int = 4,
+        bg: str = "#1a1a1a",
+        **kwargs: Any
+    ) -> None:
         """Initialize chunky frame.
-        
+
         Args:
             parent: Parent widget
             border_color: Border color

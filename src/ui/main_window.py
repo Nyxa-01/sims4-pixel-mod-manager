@@ -344,19 +344,19 @@ class MainWindow:
 
             if not incoming_path.exists():
                 # Prompt user for folder
-                incoming_path = filedialog.askdirectory(
+                folder_str = filedialog.askdirectory(
                     title="Select Incoming Mods Folder"
                 )
-                if not incoming_path:
+                if not folder_str:
                     self._update_status("Scan cancelled", 0.0)
                     return
 
-                incoming_path = Path(incoming_path)
+                incoming_path = Path(folder_str)
                 self.config.set("incoming_folder", str(incoming_path))
-                self.config.save_config()
+                self.config._save_config()
 
             # Run scan in background
-            def scan_thread():
+            def scan_thread() -> None:
                 try:
                     mods_by_category = self.scanner.scan_folder(incoming_path)
 
@@ -461,7 +461,7 @@ class MainWindow:
             return
 
         # Run deployment in background
-        def deploy_thread():
+        def deploy_thread() -> None:
             try:
                 self.root.after(0, lambda: self._update_status("Deploying...", 0.2))
 
@@ -473,7 +473,7 @@ class MainWindow:
                     raise DeployError("Could not detect game Mods folder")
 
                 # Progress callback
-                def progress_callback(step: str, pct: float):
+                def progress_callback(step: str, pct: float) -> None:
                     self.root.after(0, lambda: self._update_status(step, pct / 100.0))
 
                 # Deploy with transaction
@@ -514,7 +514,7 @@ class MainWindow:
                 return
 
             # Progress callback
-            def progress_callback(pct: float):
+            def progress_callback(pct: float) -> None:
                 self.root.after(0, lambda: self._update_status("Creating backup...", pct / 100.0))
 
             # Create backup
@@ -578,7 +578,7 @@ class MainWindow:
         folder = filedialog.askdirectory(title="Select Incoming Mods Folder")
         if folder:
             self.config.set("incoming_folder", folder)
-            self.config.save_config()
+            self.config._save_config()
             self._scan_mods()
 
     def _open_settings(self) -> None:
@@ -729,7 +729,7 @@ class SettingsDialog:
                     value = entry.get()
                     self.config.set(key, value)
 
-            self.config.save_config()
+            self.config._save_config()
             messagebox.showinfo("Success", "Settings saved successfully!")
             self.dialog.destroy()
 

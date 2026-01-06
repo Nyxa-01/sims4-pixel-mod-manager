@@ -13,9 +13,9 @@ class ProgressDialog(tk.Toplevel):
         dialog.show()
     """
     
-    def __init__(self, parent, title: str = "Progress", cancelable: bool = True):
+    def __init__(self, parent: tk.Tk, title: str = "Progress", cancelable: bool = True) -> None:
         """Initialize progress dialog.
-        
+
         Args:
             parent: Parent window
             title: Dialog title

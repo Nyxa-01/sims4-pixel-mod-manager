@@ -10,7 +10,7 @@ import zipfile
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 import zlib
 
@@ -122,13 +122,14 @@ class BackupManager:
                 )
 
             # Calculate file hashes and build manifest
-            manifest = {
+            manifest: dict[str, Any] = {
                 "timestamp": timestamp.isoformat(),
                 "game_version": game_version,
                 "total_files": total_files,
                 "total_size_mb": 0.0,
                 "files": {},
             }
+            manifest_files: dict[str, str] = manifest["files"]
 
             total_size = 0
 
@@ -143,7 +144,7 @@ class BackupManager:
                         relative_path = file_path.relative_to(source)
 
                         # Add to manifest
-                        manifest["files"][str(relative_path)] = f"{file_hash:08x}"
+                        manifest_files[str(relative_path)] = f"{file_hash:08x}"
 
                         # Add to zip
                         zf.write(file_path, relative_path)
@@ -270,7 +271,6 @@ class BackupManager:
                                 restored_file,
                                 expected_hash,
                                 actual_hash,
-                                recovery_hint="Backup may be corrupted",
                             )
 
                     # Report progress

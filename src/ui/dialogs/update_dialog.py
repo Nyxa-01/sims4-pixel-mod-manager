@@ -13,9 +13,9 @@ class UpdateDialog(tk.Toplevel):
             # User wants to download
     """
     
-    def __init__(self, parent, current: str, latest: str, changelog: str):
+    def __init__(self, parent: tk.Tk, current: str, latest: str, changelog: str) -> None:
         """Initialize update dialog.
-        
+
         Args:
             parent: Parent window
             current: Current version

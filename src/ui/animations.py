@@ -52,7 +52,7 @@ def animate_scale(
         new_height = int(start_height * scale)
 
         try:
-            widget.config(width=new_width, height=new_height)
+            widget.configure(width=new_width, height=new_height)  # type: ignore[call-arg]
         except tk.TclError:
             return  # Widget destroyed
 

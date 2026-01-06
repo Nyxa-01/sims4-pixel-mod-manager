@@ -25,7 +25,7 @@ class ModManagerException(Exception):
         message: str,
         error_code: str = "UNKNOWN",
         recovery_hint: Optional[str] = None,
-        **kwargs
+        **kwargs: object
     ) -> None:
         """Initialize base exception.
 
@@ -145,7 +145,7 @@ class BackupError(ModManagerException):
         reason: str = "Unknown error",
         error_code: str = "BACKUP001",
         recovery_hint: Optional[str] = None,
-        **kwargs
+        **kwargs: object
     ) -> None:
         """Initialize backup error.
 
@@ -196,7 +196,7 @@ class SecurityError(ModManagerException):
         details: Optional[str] = None,
         error_code: str = "SECURITY001",
         message: Optional[str] = None,
-        **kwargs
+        **kwargs: object
     ) -> None:
         """Initialize security error.
 
@@ -225,7 +225,8 @@ class SecurityError(ModManagerException):
                 message = "Security validation failed"
 
         # Extract recovery_hint from kwargs or use default
-        recovery_hint = kwargs.pop("recovery_hint", "Do not proceed. Review file source and scan for malware.")
+        recovery_hint_val = kwargs.pop("recovery_hint", None)
+        recovery_hint: Optional[str] = str(recovery_hint_val) if recovery_hint_val is not None else "Do not proceed. Review file source and scan for malware."
 
         super().__init__(message, error_code, recovery_hint, **kwargs)
 
@@ -252,7 +253,7 @@ class GameProcessError(ModManagerException):
         reason: str = "Unknown error",
         error_code: str = "GAME001",
         recovery_hint: Optional[str] = None,
-        **kwargs
+        **kwargs: object
     ) -> None:
         """Initialize game process error.
 
@@ -300,7 +301,7 @@ class PathError(ModManagerException):
         reason: str = "Unknown error",
         error_code: str = "PATH001",
         recovery_hint: Optional[str] = None,
-        **kwargs
+        **kwargs: object
     ) -> None:
         """Initialize path error.
 
