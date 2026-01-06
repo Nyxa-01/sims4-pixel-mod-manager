@@ -2,7 +2,8 @@
 
 import logging
 import tkinter as tk
-from typing import Callable, Optional
+from collections.abc import Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ def animate_scale(
     widget: tk.Widget,
     target_scale: float,
     duration_ms: int = 100,
-    on_complete: Optional[Callable[[], None]] = None,
+    on_complete: Callable[[], None] | None = None,
 ) -> None:
     """Animate widget scale transition.
 
@@ -52,7 +53,7 @@ def animate_scale(
         new_height = int(start_height * scale)
 
         try:
-            widget.config(width=new_width, height=new_height)
+            widget.configure(width=new_width, height=new_height)  # type: ignore[call-arg]
         except tk.TclError:
             return  # Widget destroyed
 
@@ -66,7 +67,7 @@ def animate_fade(
     widget: tk.Label,
     target_alpha: float,
     duration_ms: int = 200,
-    on_complete: Optional[Callable[[], None]] = None,
+    on_complete: Callable[[], None] | None = None,
 ) -> None:
     """Animate label text fade (color interpolation).
 
@@ -83,7 +84,7 @@ def animate_fade(
 
     # Parse current color
     try:
-        current_color = widget.cget("fg")
+        widget.cget("fg")  # Verify widget has fg attribute
     except tk.TclError:
         return
 
@@ -98,7 +99,7 @@ def animate_fade(
             return
 
         # Interpolate alpha by mixing with background
-        alpha = target_alpha * (current_step / steps)
+        _alpha = target_alpha * (current_step / steps)  # noqa: F841
         # Simplified: just adjust brightness
         # TODO: Implement proper color interpolation
 

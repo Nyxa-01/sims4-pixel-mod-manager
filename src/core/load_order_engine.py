@@ -7,10 +7,10 @@ prefixes, automatic categorization, and validation of file placement rules.
 import logging
 import re
 from pathlib import Path
-from typing import Optional
 
 from src.core.exceptions import LoadOrderError, PathError
 from src.core.mod_scanner import ModFile
+
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +93,7 @@ class LoadOrderEngine:
                 raise LoadOrderError(f"Failed to create slot folder: {prefix}") from e
 
         # Place mods in appropriate slots
-        for category, mod_list in mods.items():
+        for _category, mod_list in mods.items():
             for mod in mod_list:
                 try:
                     self._place_mod_file(mod, output)
@@ -122,7 +122,7 @@ class LoadOrderEngine:
         mod_category = mod.category.lower() if mod.category else ""
 
         # Check each slot's keywords
-        for prefix, description, keywords in self.slots:
+        for prefix, _description, keywords in self.slots:
             # Skip ZZZ_Overrides (only for explicit overrides)
             if prefix == "ZZZ_Overrides":
                 continue
@@ -268,25 +268,20 @@ class LoadOrderEngine:
         nested_scripts = self._find_nested_scripts(path)
         if nested_scripts:
             for script in nested_scripts:
-                warnings.append(
-                    f"Script file nested (must be in root): {script.relative_to(path)}"
-                )
+                warnings.append(f"Script file nested (must be in root): {script.relative_to(path)}")
 
         # Check path lengths
         for file_path in path.rglob("*"):
             if file_path.is_file():
                 if len(str(file_path)) > MAX_PATH_LENGTH:
-                    warnings.append(
-                        f"Path exceeds Windows limit: {file_path.relative_to(path)}"
-                    )
+                    warnings.append(f"Path exceeds Windows limit: {file_path.relative_to(path)}")
 
         # Check package nesting depth
         for file_path in path.rglob("*.package"):
             depth = len(file_path.relative_to(path).parts) - 1  # Exclude filename
             if depth > MAX_PACKAGE_DEPTH:
                 warnings.append(
-                    f"Package nested too deep ({depth} levels): "
-                    f"{file_path.relative_to(path)}"
+                    f"Package nested too deep ({depth} levels): " f"{file_path.relative_to(path)}"
                 )
 
         # Validate prefix format
@@ -363,7 +358,7 @@ class LoadOrderEngine:
         """
         return PREFIX_PATTERN.match(prefix) is not None
 
-    def get_slot_description(self, prefix: str) -> Optional[str]:
+    def get_slot_description(self, prefix: str) -> str | None:
         """Get description for a slot prefix.
 
         Args:

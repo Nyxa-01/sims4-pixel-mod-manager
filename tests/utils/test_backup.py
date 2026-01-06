@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.core.exceptions import BackupError, HashValidationError
+from src.core.exceptions import BackupError
 from src.utils.backup import (
     DEFAULT_RETENTION_COUNT,
     MANIFEST_FILENAME,
@@ -165,7 +165,7 @@ class TestBackupManager:
         assert len(manifest["files"]) == 3
 
         # Check hash format
-        for filename, hash_str in manifest["files"].items():
+        for _filename, hash_str in manifest["files"].items():
             assert len(hash_str) == 8  # CRC32 hex format
             int(hash_str, 16)  # Should be valid hex
 
@@ -204,9 +204,7 @@ class TestBackupManager:
         backup_path = manager.create_backup(sample_files, backup_dir)
 
         # Restore with verification
-        result = manager.restore_backup(
-            backup_path, restore_dir, verify_hashes=True
-        )
+        result = manager.restore_backup(backup_path, restore_dir, verify_hashes=True)
 
         assert result is True
 
@@ -278,8 +276,8 @@ class TestBackupManager:
         backup_dir = tmp_path / "backups"
 
         # Create multiple backups
-        backup1 = manager.create_backup(sample_files, backup_dir)
-        backup2 = manager.create_backup(sample_files, backup_dir)
+        manager.create_backup(sample_files, backup_dir)
+        manager.create_backup(sample_files, backup_dir)
 
         backups = manager.list_backups(backup_dir)
 

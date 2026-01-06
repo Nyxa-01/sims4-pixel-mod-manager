@@ -7,6 +7,7 @@ from .settings_dialog import SettingsDialog
 from .update_dialog import UpdateDialog
 from .wizard_dialog import WizardDialog
 
+
 __all__ = [
     "ConfirmDialog",
     "ErrorDialog",

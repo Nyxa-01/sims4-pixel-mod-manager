@@ -1,7 +1,8 @@
 """Tests for security layer."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from src.core.security import (
     PathEncryption,
@@ -77,7 +78,7 @@ class TestSanitizeFilename:
         dangerous = 'mod<name>:with*bad?chars|"test".package'
         sanitized = sanitize_filename(dangerous)
 
-        for char in ['<', '>', ':', '*', '?', '|', '"']:
+        for char in ["<", ">", ":", "*", "?", "|", '"']:
             assert char not in sanitized
 
     def test_sanitize_long_filename(self) -> None:

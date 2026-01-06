@@ -9,27 +9,28 @@ import logging
 import platform
 import sys
 import time
-from typing import Optional
 
 import psutil
 
 from src.core.exceptions import GameProcessError
+
 
 logger = logging.getLogger(__name__)
 
 
 def is_admin() -> bool:
     """Check if running with administrator privileges.
-    
+
     Returns:
         True if admin/root, False otherwise
     """
     try:
         if platform.system() == "Windows":
-            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+            return bool(ctypes.windll.shell32.IsUserAnAdmin() != 0)  # type: ignore[attr-defined]
         else:
             # Unix: Check if running as root
             import os
+
             return os.geteuid() == 0
     except Exception:
         return False
@@ -37,10 +38,10 @@ def is_admin() -> bool:
 
 def request_admin_elevation() -> bool:
     """Request admin elevation (Windows only).
-    
+
     Returns:
         True if elevation granted, False otherwise
-        
+
     Note:
         On Windows, this will restart the app with UAC prompt.
         User must handle restart logic.
@@ -48,26 +49,27 @@ def request_admin_elevation() -> bool:
     if platform.system() != "Windows":
         logger.warning("Admin elevation only supported on Windows")
         return False
-    
+
     if is_admin():
         return True  # Already admin
-    
+
     try:
         script = sys.argv[0]
-        params = ' '.join(sys.argv[1:])
-        
+        params = " ".join(sys.argv[1:])
+
         # Request elevation via ShellExecute
-        ret = ctypes.windll.shell32.ShellExecuteW(
+        ret = ctypes.windll.shell32.ShellExecuteW(  # type: ignore[attr-defined]
             None, "runas", sys.executable, f'"{script}" {params}', None, 1
         )
-        
+
         # If ret > 32, elevation succeeded (app will restart)
         # If ret <= 32, user cancelled or error
-        return ret > 32
-    
+        return bool(ret > 32)
+
     except Exception as e:
         logger.error(f"Admin elevation failed: {e}")
         return False
+
 
 # Process names to monitor
 GAME_PROCESS_NAMES = [
@@ -97,13 +99,13 @@ class GameProcessManager:
         ...             raise GameProcessError("Failed to close game")
     """
 
-    def __init__(self, close_launchers: bool = False) -> None:
+    def __init__(self, should_close_launchers: bool = False) -> None:
         """Initialize process manager.
 
         Args:
-            close_launchers: Whether to also close Origin/EA App
+            should_close_launchers: Whether to also close Origin/EA App
         """
-        self.close_launchers = close_launchers
+        self._should_close_launchers = should_close_launchers
         self._terminated_processes: list[dict] = []
 
     def __enter__(self) -> "GameProcessManager":
@@ -111,7 +113,12 @@ class GameProcessManager:
         logger.debug("GameProcessManager context entered")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
         """Exit context manager and cleanup."""
         logger.debug("GameProcessManager context exited")
         # Context manager ensures proper cleanup
@@ -128,10 +135,7 @@ class GameProcessManager:
             for proc in psutil.process_iter(["pid", "name"]):
                 try:
                     proc_name = proc.info.get("name", "")
-                    if any(
-                        game.lower() in proc_name.lower()
-                        for game in GAME_PROCESS_NAMES
-                    ):
+                    if any(game.lower() in proc_name.lower() for game in GAME_PROCESS_NAMES):
                         processes.append(proc)
                         logger.debug(f"Found game process: {proc_name} (PID: {proc.pid})")
 
@@ -160,13 +164,10 @@ class GameProcessManager:
                 try:
                     proc_name = proc.info.get("name", "")
                     if any(
-                        launcher.lower() in proc_name.lower()
-                        for launcher in LAUNCHER_PROCESS_NAMES
+                        launcher.lower() in proc_name.lower() for launcher in LAUNCHER_PROCESS_NAMES
                     ):
                         processes.append(proc)
-                        logger.debug(
-                            f"Found launcher process: {proc_name} (PID: {proc.pid})"
-                        )
+                        logger.debug(f"Found launcher process: {proc_name} (PID: {proc.pid})")
 
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
@@ -207,11 +208,13 @@ class GameProcessManager:
         # Store process info for potential restoration
         for proc in processes:
             try:
-                self._terminated_processes.append({
-                    "pid": proc.pid,
-                    "name": proc.name(),
-                    "exe": proc.exe(),
-                })
+                self._terminated_processes.append(
+                    {
+                        "pid": proc.pid,
+                        "name": proc.name(),
+                        "exe": proc.exe(),
+                    }
+                )
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 pass
 
@@ -222,12 +225,12 @@ class GameProcessManager:
                 proc.terminate()
             except psutil.NoSuchProcess:
                 logger.debug(f"Process {proc.pid} already exited")
-            except psutil.AccessDenied:
+            except psutil.AccessDenied as e:
                 logger.warning(f"Access denied for process {proc.pid}")
                 raise GameProcessError(
                     f"Insufficient permissions to close {proc.name()}",
                     recovery_hint="Run application as administrator",
-                )
+                ) from e
 
         # Step 2: Wait for graceful exit
         if self.wait_for_game_exit(timeout):
@@ -245,12 +248,12 @@ class GameProcessManager:
                 time.sleep(FORCE_KILL_DELAY)
             except psutil.NoSuchProcess:
                 pass
-            except psutil.AccessDenied:
+            except psutil.AccessDenied as e:
                 logger.error(f"Cannot force kill process {proc.pid}")
                 raise GameProcessError(
                     f"Failed to terminate {proc.name()}",
                     recovery_hint="Manually close the game and retry",
-                )
+                ) from e
 
         # Final verification
         if self.is_game_running():

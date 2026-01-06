@@ -10,15 +10,14 @@ import os
 import shutil
 import subprocess
 import zipfile
+import zlib
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Generator, Optional
-
-import zlib
 
 from src.core.exceptions import DeployError, HashValidationError, PathError
-from src.utils.game_detector import GameDetector
 from src.utils.process_manager import GameProcessManager
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,19 +48,19 @@ class DeployEngine:
         ...     )
     """
 
-    def __init__(self, backup_dir: Optional[Path] = None) -> None:
+    def __init__(self, backup_dir: Path | None = None) -> None:
         """Initialize deployment engine.
 
         Args:
             backup_dir: Directory for backups (auto-detect if None)
         """
         self.backup_dir = backup_dir
-        self._backup_path: Optional[Path] = None
-        self._deployed_path: Optional[Path] = None
+        self._backup_path: Path | None = None
+        self._deployed_path: Path | None = None
         self._in_transaction = False
-        self._deployment_method: Optional[str] = None
+        self._deployment_method: str | None = None
 
-    def transaction(self):
+    def transaction(self) -> "DeployEngine":
         """Context manager for transactional deployment.
 
         Example:
@@ -76,7 +75,12 @@ class DeployEngine:
         logger.info("=== BEGIN DEPLOYMENT TRANSACTION ===")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
         """Exit transaction context and handle rollback."""
         if exc_type is not None:
             logger.error(f"Transaction failed: {exc_val}")
@@ -94,7 +98,7 @@ class DeployEngine:
         self,
         active_mods_path: Path,
         game_mods_path: Path,
-        progress_callback: Optional[Callable[[str, float], None]] = None,
+        progress_callback: Callable[[str, float], None] | None = None,
         close_game: bool = True,
     ) -> bool:
         """Deploy mods with transactional guarantees.
@@ -169,7 +173,6 @@ class DeployEngine:
                 active_mods_path,
                 0,
                 0,
-                recovery_hint="Deployment verification failed, rolling back",
             )
 
         # Step 8: Final validation
@@ -291,7 +294,7 @@ class DeployEngine:
             True if syntax is valid
         """
         try:
-            with open(cfg_path, "r") as f:
+            with open(cfg_path) as f:
                 content = f.read()
 
             # Check for required directives
@@ -376,13 +379,13 @@ class DeployEngine:
 
         try:
             # Check for admin privileges
-            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            is_admin = bool(ctypes.windll.shell32.IsUserAnAdmin() != 0)  # type: ignore[attr-defined]
 
             if not is_admin:
                 logger.warning("Junction creation may require admin privileges")
 
             # Use mklink /J command
-            result = subprocess.run(
+            subprocess.run(
                 ["mklink", "/J", str(target), str(source)],
                 check=True,
                 capture_output=True,
@@ -448,7 +451,9 @@ class DeployEngine:
             deployed_path: Path to remove
         """
         try:
-            if deployed_path.is_symlink() or deployed_path.is_junction():
+            # Check if is_junction exists (Python 3.12+ on Windows)
+            is_junction = getattr(deployed_path, "is_junction", lambda: False)()
+            if deployed_path.is_symlink() or is_junction:
                 # Remove link without following
                 os.unlink(deployed_path)
                 logger.info(f"Removed link: {deployed_path}")
@@ -574,7 +579,7 @@ class DeployEngine:
 
     def _report_progress(
         self,
-        callback: Optional[Callable[[str, float], None]],
+        callback: Callable[[str, float], None] | None,
         step: str,
         percentage: float,
     ) -> None:
@@ -613,5 +618,5 @@ def _is_junction(path: Path) -> bool:
         return False
 
 
-# Add is_junction helper to Path
-Path.is_junction = lambda self: _is_junction(self)
+# Note: is_junction is available in Python 3.12+ on Windows
+# For earlier versions, use _is_junction helper function

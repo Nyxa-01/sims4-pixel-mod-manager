@@ -2,9 +2,9 @@
 
 import logging
 import shutil
-from pathlib import Path
-from typing import Optional
 import zlib
+from pathlib import Path
+
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +137,7 @@ class ModInstaller:
             logger.error(f"Uninstall failed: {e}")
             return False
 
-    def backup_mod(self, mod_path: Path, backup_dir: Path) -> Optional[Path]:
+    def backup_mod(self, mod_path: Path, backup_dir: Path) -> Path | None:
         """Create backup of mod file.
 
         Args:

@@ -8,9 +8,11 @@ import ctypes
 import logging
 import platform
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
 from tkinter import font as tkfont
-from typing import Any, Callable, Optional
+from typing import Any, Optional
+
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +61,9 @@ class PixelTheme:
 
         self.colors = COLORS
         self.scale_factor = 1.0
-        self.font_small: Optional[tkfont.Font] = None
-        self.font_normal: Optional[tkfont.Font] = None
-        self.font_large: Optional[tkfont.Font] = None
+        self.font_small: tkfont.Font | None = None
+        self.font_normal: tkfont.Font | None = None
+        self.font_large: tkfont.Font | None = None
         self._font_family = FONT_FALLBACK
 
     @classmethod
@@ -75,7 +77,34 @@ class PixelTheme:
             cls._instance = cls()
         return cls._instance
 
-    def setup_dpi_awareness(self, root: tk.Tk) -> None:
+    def scale_size(self, size: int) -> int:
+        """Scale a size value by the DPI factor.
+
+        Args:
+            size: Size in pixels
+
+        Returns:
+            Scaled size
+        """
+        return int(size * self.scale_factor)
+
+    def get_font(self, size: str = "normal") -> tkfont.Font | None:
+        """Get a font by size category.
+
+        Args:
+            size: "small", "normal", or "large"
+
+        Returns:
+            Font object or None if fonts not loaded
+        """
+        fonts = {
+            "small": self.font_small,
+            "normal": self.font_normal,
+            "large": self.font_large,
+        }
+        return fonts.get(size, self.font_normal)
+
+    def setup_dpi_awareness(self, root: tk.Tk | tk.Toplevel) -> None:
         """Configure DPI awareness for crisp rendering.
 
         Args:
@@ -87,7 +116,7 @@ class PixelTheme:
             if system == "Windows":
                 # Windows DPI awareness
                 try:
-                    ctypes.windll.shcore.SetProcessDpiAwareness(2)  # PROCESS_PER_MONITOR_DPI_AWARE
+                    ctypes.windll.shcore.SetProcessDpiAwareness(2)  # type: ignore[attr-defined]  # PROCESS_PER_MONITOR_DPI_AWARE
                     logger.info("Windows DPI awareness enabled")
                 except Exception as e:
                     logger.warning(f"Failed to set DPI awareness: {e}")
@@ -103,7 +132,7 @@ class PixelTheme:
             logger.error(f"DPI setup failed: {e}")
             self.scale_factor = 1.0
 
-    def get_scale_factor(self, root: tk.Tk) -> float:
+    def get_scale_factor(self, root: tk.Tk | tk.Toplevel) -> float:
         """Calculate DPI scale factor.
 
         Args:
@@ -120,7 +149,7 @@ class PixelTheme:
         except Exception:
             return 1.0
 
-    def load_fonts(self, root: tk.Tk) -> None:
+    def load_fonts(self, root: tk.Tk | tk.Toplevel) -> None:
         """Load Press Start 2P font or fallback.
 
         Args:
@@ -163,7 +192,7 @@ class PixelTheme:
 
         logger.debug(f"Fonts loaded: {self._font_family} at {base_size}pt base")
 
-    def apply_theme(self, root: tk.Tk) -> None:
+    def apply_theme(self, root: tk.Tk | tk.Toplevel) -> None:
         """Apply global theme to application.
 
         Args:
@@ -191,9 +220,9 @@ class PixelTheme:
 
     def create_pixel_button(
         self,
-        parent: tk.Widget,
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         text: str,
-        command: Optional[Callable] = None,
+        command: Callable[[], None] | None = None,
         **kwargs: Any,
     ) -> tk.Button:
         """Create pixel-styled button with hover effects.
@@ -212,25 +241,28 @@ class PixelTheme:
         padding_y = int(8 * self.scale_factor)
         border_width = int(4 * self.scale_factor)
 
-        button = tk.Button(
-            parent,
-            text=text,
-            command=command,
-            font=self.font_normal,
-            bg=self.colors["primary"],
-            fg=self.colors["text"],
-            activebackground=self.colors["highlight"],
-            activeforeground=self.colors["text"],
-            relief=tk.FLAT,
-            borderwidth=border_width,
-            highlightthickness=border_width,
-            highlightbackground=self.colors["border"],
-            highlightcolor=self.colors["secondary"],
-            padx=padding_x,
-            pady=padding_y,
-            cursor="hand2",
+        button_kwargs: dict[str, Any] = {
+            "text": text,
+            "bg": self.colors["primary"],
+            "fg": self.colors["text"],
+            "activebackground": self.colors["highlight"],
+            "activeforeground": self.colors["text"],
+            "relief": tk.FLAT,
+            "borderwidth": border_width,
+            "highlightthickness": border_width,
+            "highlightbackground": self.colors["border"],
+            "highlightcolor": self.colors["secondary"],
+            "padx": padding_x,
+            "pady": padding_y,
+            "cursor": "hand2",
             **kwargs,
-        )
+        }
+        if command is not None:
+            button_kwargs["command"] = command
+        if self.font_normal is not None:
+            button_kwargs["font"] = self.font_normal
+
+        button = tk.Button(parent, **button_kwargs)
 
         # Add hover effects
         self._add_button_hover_effects(button)
@@ -273,8 +305,8 @@ class PixelTheme:
 
     def create_chunky_frame(
         self,
-        parent: tk.Widget,
-        color: Optional[str] = None,
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
+        color: str | None = None,
         **kwargs: Any,
     ) -> tk.Frame:
         """Create pixel-styled frame with thick border.
@@ -303,7 +335,7 @@ class PixelTheme:
 
     def create_pixel_listbox(
         self,
-        parent: tk.Widget,
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         **kwargs: Any,
     ) -> tk.Listbox:
         """Create pixel-styled listbox with alternating colors.
@@ -317,27 +349,29 @@ class PixelTheme:
         """
         border_width = int(2 * self.scale_factor)
 
-        listbox = tk.Listbox(
-            parent,
-            font=self.font_small,
-            bg=self.colors["bg_dark"],
-            fg=self.colors["text"],
-            selectbackground=self.colors["secondary"],
-            selectforeground=self.colors["text"],
-            highlightthickness=border_width,
-            highlightbackground=self.colors["border"],
-            highlightcolor=self.colors["secondary"],
-            relief=tk.FLAT,
-            borderwidth=0,
-            activestyle="none",
+        listbox_kwargs: dict[str, Any] = {
+            "bg": self.colors["bg_dark"],
+            "fg": self.colors["text"],
+            "selectbackground": self.colors["secondary"],
+            "selectforeground": self.colors["text"],
+            "highlightthickness": border_width,
+            "highlightbackground": self.colors["border"],
+            "highlightcolor": self.colors["secondary"],
+            "relief": tk.FLAT,
+            "borderwidth": 0,
+            "activestyle": "none",
             **kwargs,
-        )
+        }
+        if self.font_small is not None:
+            listbox_kwargs["font"] = self.font_small
+
+        listbox = tk.Listbox(parent, **listbox_kwargs)
 
         return listbox
 
     def create_pixel_label(
         self,
-        parent: tk.Widget,
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         text: str,
         size: str = "normal",
         **kwargs: Any,
@@ -353,7 +387,7 @@ class PixelTheme:
         Returns:
             Styled label widget
         """
-        font_map = {
+        font_map: dict[str, tkfont.Font | None] = {
             "small": self.font_small,
             "normal": self.font_normal,
             "large": self.font_large,
@@ -361,20 +395,22 @@ class PixelTheme:
 
         label_font = font_map.get(size, self.font_normal)
 
-        label = tk.Label(
-            parent,
-            text=text,
-            font=label_font,
-            bg=self.colors["bg_dark"],
-            fg=self.colors["text"],
+        label_kwargs: dict[str, Any] = {
+            "text": text,
+            "bg": self.colors["bg_dark"],
+            "fg": self.colors["text"],
             **kwargs,
-        )
+        }
+        if label_font is not None:
+            label_kwargs["font"] = label_font
+
+        label = tk.Label(parent, **label_kwargs)
 
         return label
 
     def create_pixel_entry(
         self,
-        parent: tk.Widget,
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         **kwargs: Any,
     ) -> tk.Entry:
         """Create pixel-styled entry field.
@@ -388,25 +424,27 @@ class PixelTheme:
         """
         border_width = int(2 * self.scale_factor)
 
-        entry = tk.Entry(
-            parent,
-            font=self.font_normal,
-            bg=self.colors["bg_mid"],
-            fg=self.colors["text"],
-            insertbackground=self.colors["text"],
-            highlightthickness=border_width,
-            highlightbackground=self.colors["border"],
-            highlightcolor=self.colors["secondary"],
-            relief=tk.FLAT,
-            borderwidth=0,
+        entry_kwargs: dict[str, Any] = {
+            "bg": self.colors["bg_mid"],
+            "fg": self.colors["text"],
+            "insertbackground": self.colors["text"],
+            "highlightthickness": border_width,
+            "highlightbackground": self.colors["border"],
+            "highlightcolor": self.colors["secondary"],
+            "relief": tk.FLAT,
+            "borderwidth": 0,
             **kwargs,
-        )
+        }
+        if self.font_normal is not None:
+            entry_kwargs["font"] = self.font_normal
+
+        entry = tk.Entry(parent, **entry_kwargs)
 
         return entry
 
     def create_progress_bar(
         self,
-        parent: tk.Widget,
+        parent: tk.Tk | tk.Toplevel | tk.Widget,
         width: int = 200,
         height: int = 20,
         **kwargs: Any,
@@ -437,10 +475,10 @@ class PixelTheme:
             **kwargs,
         )
 
-        # Store progress bar metadata
-        canvas._progress_value = 0.0
-        canvas._progress_width = width
-        canvas._progress_height = height
+        # Store progress bar metadata (custom attributes for tracking)
+        canvas._progress_value = 0.0  # type: ignore[attr-defined]
+        canvas._progress_width = width  # type: ignore[attr-defined]
+        canvas._progress_height = height  # type: ignore[attr-defined]
 
         return canvas
 
@@ -456,7 +494,7 @@ class PixelTheme:
             value: Progress value (0.0-1.0)
         """
         value = max(0.0, min(1.0, value))  # Clamp 0-1
-        canvas._progress_value = value
+        canvas._progress_value = value  # type: ignore[attr-defined]
 
         # Clear canvas
         canvas.delete("all")
@@ -465,8 +503,8 @@ class PixelTheme:
         canvas.create_rectangle(
             0,
             0,
-            canvas._progress_width,
-            canvas._progress_height,
+            canvas._progress_width,  # type: ignore[attr-defined]
+            canvas._progress_height,  # type: ignore[attr-defined]
             fill=self.colors["bg_mid"],
             outline="",
         )
@@ -474,7 +512,7 @@ class PixelTheme:
         # Draw filled portion in chunks
         if value > 0:
             chunk_size = int(8 * self.scale_factor)
-            filled_width = int(canvas._progress_width * value)
+            filled_width = int(canvas._progress_width * value)  # type: ignore[attr-defined]
             num_chunks = filled_width // chunk_size
 
             for i in range(num_chunks):
@@ -483,7 +521,7 @@ class PixelTheme:
                     x + 2,
                     2,
                     x + chunk_size - 2,
-                    canvas._progress_height - 2,
+                    canvas._progress_height - 2,  # type: ignore[attr-defined]
                     fill=self.colors["success"],
                     outline="",
                 )
@@ -495,7 +533,7 @@ class PixelTheme:
         start_value: Any,
         end_value: Any,
         duration: int = ANIM_HOVER_DURATION,
-        callback: Optional[Callable] = None,
+        callback: Callable | None = None,
     ) -> None:
         """Animate widget property over time.
 
@@ -525,14 +563,14 @@ class PixelTheme:
 
         step(0)
 
-    def create_tooltip(self, widget: tk.Widget, text: str) -> None:
+    def create_tooltip(self, widget: tk.Tk | tk.Toplevel | tk.Widget, text: str) -> None:
         """Add tooltip to widget.
 
         Args:
             widget: Widget to add tooltip to
             text: Tooltip text
         """
-        tooltip: Optional[tk.Toplevel] = None
+        tooltip: tk.Toplevel | None = None
 
         def show_tooltip(event: tk.Event) -> None:
             nonlocal tooltip
@@ -546,17 +584,19 @@ class PixelTheme:
             tooltip.wm_overrideredirect(True)
             tooltip.wm_geometry(f"+{x}+{y}")
 
-            label = tk.Label(
-                tooltip,
-                text=text,
-                font=self.font_small,
-                bg=self.colors["bg_mid"],
-                fg=self.colors["text"],
-                relief=tk.SOLID,
-                borderwidth=1,
-                padx=5,
-                pady=3,
-            )
+            label_kwargs: dict[str, Any] = {
+                "text": text,
+                "bg": self.colors["bg_mid"],
+                "fg": self.colors["text"],
+                "relief": tk.SOLID,
+                "borderwidth": 1,
+                "padx": 5,
+                "pady": 3,
+            }
+            if self.font_small is not None:
+                label_kwargs["font"] = self.font_small
+
+            label = tk.Label(tooltip, **label_kwargs)
             label.pack()
 
         def hide_tooltip(event: tk.Event) -> None:
@@ -576,4 +616,3 @@ def get_theme() -> PixelTheme:
         PixelTheme instance
     """
     return PixelTheme.get_instance()
-

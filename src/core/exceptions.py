@@ -5,7 +5,6 @@ providing detailed error context and recovery hints for robust error handling.
 """
 
 from pathlib import Path
-from typing import Optional
 
 
 class ModManagerException(Exception):
@@ -24,8 +23,8 @@ class ModManagerException(Exception):
         self,
         message: str,
         error_code: str = "UNKNOWN",
-        recovery_hint: Optional[str] = None,
-        **kwargs
+        recovery_hint: str | None = None,
+        **kwargs: object,
     ) -> None:
         """Initialize base exception.
 
@@ -66,7 +65,7 @@ class ModScanError(ModManagerException):
         path: Path,
         reason: str,
         error_code: str = "SCAN001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
     ) -> None:
         """Initialize mod scan error.
 
@@ -100,9 +99,9 @@ class DeployError(ModManagerException):
     def __init__(
         self,
         operation: str,
-        affected_mods: Optional[list[Path]] = None,
+        affected_mods: list[Path] | None = None,
         error_code: str = "DEPLOY001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
     ) -> None:
         """Initialize deployment error.
 
@@ -139,13 +138,13 @@ class BackupError(ModManagerException):
 
     def __init__(
         self,
-        message: Optional[str] = None,
-        backup_path: Optional[Path] = None,
+        message: str | None = None,
+        backup_path: Path | None = None,
         operation_type: str = "unknown",
         reason: str = "Unknown error",
         error_code: str = "BACKUP001",
-        recovery_hint: Optional[str] = None,
-        **kwargs
+        recovery_hint: str | None = None,
+        **kwargs: object,
     ) -> None:
         """Initialize backup error.
 
@@ -166,7 +165,7 @@ class BackupError(ModManagerException):
                 message = f"Backup {operation_type} failed for '{backup_path}': {reason}"
             else:
                 message = reason
-        
+
         if recovery_hint is None:
             recovery_hint = "Ensure sufficient disk space and write permissions"
 
@@ -190,13 +189,13 @@ class SecurityError(ModManagerException):
 
     def __init__(
         self,
-        threat_type: Optional[str] = None,
-        affected_path: Optional[Path] = None,
+        threat_type: str | None = None,
+        affected_path: Path | None = None,
         severity: str = "HIGH",
-        details: Optional[str] = None,
+        details: str | None = None,
         error_code: str = "SECURITY001",
-        message: Optional[str] = None,
-        **kwargs
+        message: str | None = None,
+        **kwargs: object,
     ) -> None:
         """Initialize security error.
 
@@ -225,7 +224,12 @@ class SecurityError(ModManagerException):
                 message = "Security validation failed"
 
         # Extract recovery_hint from kwargs or use default
-        recovery_hint = kwargs.pop("recovery_hint", "Do not proceed. Review file source and scan for malware.")
+        recovery_hint_val = kwargs.pop("recovery_hint", None)
+        recovery_hint: str | None = (
+            str(recovery_hint_val)
+            if recovery_hint_val is not None
+            else "Do not proceed. Review file source and scan for malware."
+        )
 
         super().__init__(message, error_code, recovery_hint, **kwargs)
 
@@ -246,13 +250,13 @@ class GameProcessError(ModManagerException):
 
     def __init__(
         self,
-        message: Optional[str] = None,
+        message: str | None = None,
         process_name: str = "unknown",
         action: str = "unknown",
         reason: str = "Unknown error",
         error_code: str = "GAME001",
-        recovery_hint: Optional[str] = None,
-        **kwargs
+        recovery_hint: str | None = None,
+        **kwargs: object,
     ) -> None:
         """Initialize game process error.
 
@@ -270,7 +274,7 @@ class GameProcessError(ModManagerException):
         # If message not provided, build it from parameters
         if message is None:
             message = f"Game process '{process_name}' {action} failed: {reason}"
-        
+
         if recovery_hint is None:
             recovery_hint = "Close The Sims 4 manually and try again"
 
@@ -294,13 +298,13 @@ class PathError(ModManagerException):
 
     def __init__(
         self,
-        message: Optional[str] = None,
-        path: Optional[Path] = None,
+        message: str | None = None,
+        path: Path | None = None,
         path_type: str = "unknown",
         reason: str = "Unknown error",
         error_code: str = "PATH001",
-        recovery_hint: Optional[str] = None,
-        **kwargs
+        recovery_hint: str | None = None,
+        **kwargs: object,
     ) -> None:
         """Initialize path error.
 
@@ -321,7 +325,7 @@ class PathError(ModManagerException):
                 message = f"Invalid {path_type} path '{path}': {reason}"
             else:
                 message = reason
-        
+
         if recovery_hint is None:
             recovery_hint = f"Configure valid {path_type} path in Settings"
 
@@ -346,10 +350,10 @@ class LoadOrderError(ModManagerException):
     def __init__(
         self,
         validation_failure: str,
-        category: Optional[str] = None,
-        slot: Optional[int] = None,
+        category: str | None = None,
+        slot: int | None = None,
         error_code: str = "LOADORDER001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
     ) -> None:
         """Initialize load order error.
 
@@ -392,7 +396,7 @@ class ConflictError(ModManagerException):
         conflicting_mods: list[str],
         conflict_type: str = "resource",
         error_code: str = "CONFLICT001",
-        recovery_hint: Optional[str] = None,
+        recovery_hint: str | None = None,
     ) -> None:
         """Initialize conflict error.
 
@@ -415,8 +419,7 @@ class ConflictError(ModManagerException):
 
         if recovery_hint is None:
             recovery_hint = (
-                "Choose which mod to prioritize using load order, "
-                "or remove conflicting mods"
+                "Choose which mod to prioritize using load order, " "or remove conflicting mods"
             )
 
         super().__init__(message, error_code, recovery_hint)
@@ -436,8 +439,8 @@ class EncryptionError(ModManagerException):
     def __init__(
         self,
         operation: str,
-        key_path: Optional[Path] = None,
-        reason: Optional[str] = None,
+        key_path: Path | None = None,
+        reason: str | None = None,
         error_code: str = "ENCRYPT001",
     ) -> None:
         """Initialize encryption error.

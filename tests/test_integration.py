@@ -3,9 +3,8 @@
 Tests end-to-end scenarios involving multiple modules.
 """
 
-import zipfile
 from pathlib import Path
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -53,7 +52,7 @@ class TestFullWorkflow:
 
         # Assign mods to slots
         mods_by_slot = {}
-        for category, mods in mods_by_category.items():
+        for _category, mods in mods_by_category.items():
             for mod in mods:
                 slot = load_order.assign_mod_to_slot(mod)
                 if slot not in mods_by_slot:
@@ -245,8 +244,7 @@ class TestGameDetection:
         detector = GameDetector()
 
         # Mock Windows registry detection
-        with patch("winreg.OpenKey"), \
-             patch("winreg.QueryValueEx") as mock_query:
+        with patch("winreg.OpenKey"), patch("winreg.QueryValueEx") as mock_query:
 
             mock_query.return_value = (str(mock_game_install["game_dir"]), 1)
 
@@ -438,6 +436,7 @@ class TestErrorRecovery:
 
         # Simulate partial deployment (copy some files then fail)
         with patch("shutil.copytree") as mock_copy:
+
             def partial_copy(src, dst, *args, **kwargs):
                 # Copy first file then fail
                 dst.mkdir(exist_ok=True)

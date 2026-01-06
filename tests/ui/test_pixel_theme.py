@@ -6,8 +6,6 @@ from unittest.mock import Mock, patch
 import pytest
 
 from src.ui.pixel_theme import (
-    ANIM_HOVER_DURATION,
-    BASE_FONT_SIZE,
     COLORS,
     FONT_FALLBACK,
     PixelTheme,
@@ -327,7 +325,7 @@ class TestColorPalette:
 
     def test_color_format(self) -> None:
         """Test that colors are valid hex codes."""
-        for color_name, color_value in COLORS.items():
+        for _color_name, color_value in COLORS.items():
             assert color_value.startswith("#")
             assert len(color_value) == 7  # #RRGGBB format
             # Verify hex characters
@@ -353,8 +351,7 @@ class TestScaling:
 
         theme.load_fonts(root)
 
-        # Base size should be scaled
-        expected_base = int(BASE_FONT_SIZE * 2.0)
+        # Base size should be scaled (expected: BASE_FONT_SIZE * 2.0)
         # Fonts should exist
         assert theme.font_small is not None
         assert theme.font_normal is not None

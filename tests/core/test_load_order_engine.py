@@ -4,13 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from src.core.exceptions import LoadOrderError, PathError
+from src.core.exceptions import LoadOrderError
 from src.core.load_order_engine import (
     LOAD_ORDER_SLOTS,
     MAX_PACKAGE_DEPTH,
     MAX_PATH_LENGTH,
     PREFIX_PATTERN,
-    SCRIPT_EXTENSIONS,
     LoadOrderEngine,
     get_default_engine,
 )
