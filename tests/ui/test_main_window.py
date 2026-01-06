@@ -323,7 +323,7 @@ class TestSettingsDialog:
 
         # Verify
         config.set.assert_called()
-        config.save_config.assert_called_once()
+        config._save_config.assert_called_once()
 
 
 class TestHelpDialog:
