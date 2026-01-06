@@ -110,7 +110,7 @@ class GameProcessManager:
         self._should_close_launchers = close_launchers
         self._terminated_processes: list[dict] = []
 
-    def __enter__(self) -> "GameProcessManager":
+    def __enter__(self) -> GameProcessManager:
         """Enter context manager."""
         logger.debug("GameProcessManager context entered")
         return self

@@ -11,17 +11,12 @@ import logging
 import os
 import shutil
 import subprocess
-import sys
 import zipfile
 import zlib
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from types import TracebackType
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from typing import Any
 
 from src.core.exceptions import DeployError, HashValidationError, PathError
 from src.utils.process_manager import GameProcessManager
