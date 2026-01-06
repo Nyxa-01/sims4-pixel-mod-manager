@@ -92,22 +92,22 @@ class Builder:
 
     def clean(self):
         """Remove previous build artifacts."""
-        print("🧹 Cleaning previous builds...")
+        print("Cleaning previous builds...")
         if self.config.dist_dir.exists():
             shutil.rmtree(self.config.dist_dir)
         if self.config.build_dir.exists():
             shutil.rmtree(self.config.build_dir)
-        print("✓ Clean complete")
+        print("[OK] Clean complete")
 
     def validate_environment(self):
         """Check required tools are installed."""
-        print("🔍 Validating build environment...")
+        print("Validating build environment...")
 
         # Check Python version
         py_version = sys.version_info
         if py_version < (3, 10):
             raise OSError(f"Python 3.10+ required, found {py_version.major}.{py_version.minor}")
-        print(f"  ✓ Python {py_version.major}.{py_version.minor}.{py_version.micro}")
+        print(f"  [OK] Python {py_version.major}.{py_version.minor}.{py_version.micro}")
 
         # Check PyInstaller
         try:
@@ -117,18 +117,18 @@ class Builder:
                 text=True,
                 check=True,
             )
-            print(f"  ✓ PyInstaller {result.stdout.strip()}")
+            print(f"  [OK] PyInstaller {result.stdout.strip()}")
         except (FileNotFoundError, subprocess.CalledProcessError) as e:
             raise OSError("PyInstaller not found. Install: pip install pyinstaller") from e
 
         # Check spec file exists
         if not self.config.spec_file.exists():
             raise FileNotFoundError(f"Spec file not found: {self.config.spec_file}")
-        print(f"  ✓ Spec file: {self.config.spec_file.name}")
+        print(f"  [OK] Spec file: {self.config.spec_file.name}")
 
     def build(self, target_platform: str) -> Path:
         """Run PyInstaller build for target platform."""
-        print(f"\n🔨 Building for {target_platform}...")
+        print(f"\nBuilding for {target_platform}...")
         print(f"  Version: {self.version}")
 
         # Update spec file with version (in-memory modification)
@@ -158,7 +158,7 @@ class Builder:
             if not exe_path.exists():
                 raise FileNotFoundError(f"Build succeeded but executable not found: {exe_path}")
 
-            print(f"✓ Build complete: {exe_path}")
+            print(f"[OK] Build complete: {exe_path}")
             return exe_path
 
         finally:
@@ -168,18 +168,18 @@ class Builder:
 
     def sign_windows(self, exe_path: Path, cert_path: str | None = None):
         """Sign Windows executable with SignTool."""
-        print("\n🔐 Signing Windows executable...")
+        print("\nSigning Windows executable...")
 
         # Check for SignTool (Windows SDK)
         signtool = self._find_signtool()
         if not signtool:
-            print("⚠️  SignTool not found. Skipping signing.")
-            print("    Install Windows SDK for code signing.")
+            print("[WARNING] SignTool not found. Skipping signing.")
+            print("          Install Windows SDK for code signing.")
             return
 
         if not cert_path:
-            print("⚠️  No certificate path provided. Skipping signing.")
-            print("    Use --cert-path to specify certificate.")
+            print("[WARNING] No certificate path provided. Skipping signing.")
+            print("          Use --cert-path to specify certificate.")
             return
 
         cmd = [
@@ -195,17 +195,17 @@ class Builder:
 
         try:
             subprocess.run(cmd, check=True)
-            print(f"✓ Signed: {exe_path.name}")
+            print(f"[OK] Signed: {exe_path.name}")
         except subprocess.CalledProcessError as e:
-            print(f"✗ Signing failed: {e}")
+            print(f"[FAIL] Signing failed: {e}")
 
     def sign_macos(self, app_path: Path, identity: str | None = None, notarize: bool = False):
         """Sign macOS app bundle with codesign."""
-        print("\n🔐 Signing macOS app bundle...")
+        print("\nSigning macOS app bundle...")
 
         if not identity:
-            print("⚠️  No signing identity provided. Skipping signing.")
-            print("    Use --identity 'Developer ID Application: Your Name'")
+            print("[WARNING] No signing identity provided. Skipping signing.")
+            print("          Use --identity 'Developer ID Application: Your Name'")
             return
 
         # Sign the app
@@ -222,29 +222,29 @@ class Builder:
 
         try:
             subprocess.run(cmd, check=True)
-            print(f"✓ Signed: {app_path.name}")
+            print(f"[OK] Signed: {app_path.name}")
 
             # Verify signature
             verify_cmd = ["codesign", "--verify", "--verbose", str(app_path)]
             subprocess.run(verify_cmd, check=True)
-            print("✓ Signature verified")
+            print("[OK] Signature verified")
 
             if notarize:
                 self._notarize_macos(app_path)
 
         except subprocess.CalledProcessError as e:
-            print(f"✗ Signing failed: {e}")
+            print(f"[FAIL] Signing failed: {e}")
 
     def _notarize_macos(self, app_path: Path):
         """Submit app for Apple notarization."""
-        print("\n📤 Submitting for notarization...")
-        print("⚠️  Notarization requires Apple Developer account and app-specific password.")
+        print("\nSubmitting for notarization...")
+        print("[WARNING] Notarization requires Apple Developer account and app-specific password.")
         print(
             "    See: https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution"
         )
 
         # This is a placeholder - actual notarization requires Apple ID credentials
-        print("⚠️  Automatic notarization not implemented. Manual steps:")
+        print("[WARNING] Automatic notarization not implemented. Manual steps:")
         print(f"    1. Create ZIP: ditto -c -k --keepParent {app_path} {app_path}.zip")
         print(
             f"    2. Submit: xcrun notarytool submit {app_path}.zip --apple-id <email> --password <password> --team-id <team>"
@@ -281,7 +281,7 @@ class Builder:
         Handles both single-file executables (Windows/macOS) and
         directory-based builds (Linux).
         """
-        print(f"\n🔒 Generating checksums for {exe_path.name}...")
+        print(f"\nGenerating checksums for {exe_path.name}...")
 
         checksums = {}
 
@@ -297,7 +297,7 @@ class Builder:
                         actual_exe = item
                         break
             if not actual_exe.exists():
-                print(f"⚠️  No executable found in {exe_path}")
+                print(f"[WARNING] No executable found in {exe_path}")
                 return checksums
             target_file = actual_exe
             print(f"  Found executable: {target_file.name}")
@@ -316,13 +316,13 @@ class Builder:
         # Write to file (next to the exe_path, not inside directory)
         checksum_file = exe_path.with_suffix(exe_path.suffix + ".sha256")
         checksum_file.write_text(f"{checksums['sha256']} *{target_file.name}\n")
-        print(f"✓ Checksums saved: {checksum_file.name}")
+        print(f"[OK] Checksums saved: {checksum_file.name}")
 
         return checksums
 
     def create_version_file(self):
         """Create version.json with build metadata."""
-        print("\n📝 Creating version metadata...")
+        print("\nCreating version metadata...")
 
         metadata = {
             "version": self.version,
@@ -347,7 +347,7 @@ class Builder:
         with open(version_file, "w") as f:
             json.dump(metadata, f, indent=2)
 
-        print(f"✓ Version file: {version_file}")
+        print(f"[OK] Version file: {version_file}")
 
 
 def main():
@@ -388,7 +388,7 @@ def main():
         if args.platform == "current":
             target_platform = config.native_platform
         elif args.platform == "all":
-            print("✗ Cross-platform builds not supported in this script.")
+            print("[FAIL] Cross-platform builds not supported in this script.")
             print("  Build on each platform natively or use CI/CD pipeline.")
             return 1
         else:
@@ -396,7 +396,7 @@ def main():
 
         # Check cross-compilation
         if target_platform != config.native_platform:
-            print(f"✗ Cannot build for {target_platform} on {config.native_platform}")
+            print(f"[FAIL] Cannot build for {target_platform} on {config.native_platform}")
             print("  PyInstaller requires native builds on each platform.")
             return 1
 
@@ -410,7 +410,7 @@ def main():
             elif target_platform == BuildConfig.MACOS:
                 builder.sign_macos(exe_path, args.identity, args.notarize)
             else:
-                print("⚠️  Code signing not implemented for Linux")
+                print("[WARNING] Code signing not implemented for Linux")
 
         # Generate checksums
         if not args.no_verify:
@@ -419,14 +419,14 @@ def main():
         # Create version metadata
         builder.create_version_file()
 
-        print("\n✅ Build complete!")
+        print("\n[SUCCESS] Build complete!")
         print(f"   Executable: {exe_path}")
         print(f"   Version: {builder.version}")
 
         return 0
 
     except Exception as e:
-        print(f"\n✗ Build failed: {e}")
+        print(f"\n[FAIL] Build failed: {e}")
         import traceback
 
         traceback.print_exc()
