@@ -67,9 +67,13 @@ class PixelButton(tk.Canvas):
         # Draw button background
         border = 3
         self.create_rectangle(
-            border, border,
-            self.btn_width - border, self.btn_height - border,
-            fill=bg_color, outline=self.theme.colors["border"], width=2
+            border,
+            border,
+            self.btn_width - border,
+            self.btn_height - border,
+            fill=bg_color,
+            outline=self.theme.colors["border"],
+            width=2,
         )
 
         # Draw text (centered)

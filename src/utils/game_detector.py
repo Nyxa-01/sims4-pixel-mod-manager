@@ -39,7 +39,13 @@ COMMON_PATHS = {
     "Linux": [
         Path.home() / "Documents" / "Electronic Arts" / "The Sims 4",
         Path.home() / ".steam" / "steam" / "steamapps" / "common" / "The Sims 4",
-        Path.home() / ".local" / "share" / "Steam" / "steamapps" / "common" / "The Sims 4",
+        Path.home()
+        / ".local"
+        / "share"
+        / "Steam"
+        / "steamapps"
+        / "common"
+        / "The Sims 4",
     ],
 }
 
@@ -172,19 +178,23 @@ class GameDetector:
 
         if self.system == "Windows":
             # Common Steam paths on Windows
-            steam_paths.extend([
-                Path("C:/Program Files (x86)/Steam"),
-                Path("C:/Program Files/Steam"),
-            ])
+            steam_paths.extend(
+                [
+                    Path("C:/Program Files (x86)/Steam"),
+                    Path("C:/Program Files/Steam"),
+                ]
+            )
         elif self.system == "Darwin":
             steam_paths.append(
                 Path.home() / "Library" / "Application Support" / "Steam"
             )
         else:  # Linux
-            steam_paths.extend([
-                Path.home() / ".steam" / "steam",
-                Path.home() / ".local" / "share" / "Steam",
-            ])
+            steam_paths.extend(
+                [
+                    Path.home() / ".steam" / "steam",
+                    Path.home() / ".local" / "share" / "Steam",
+                ]
+            )
 
         for steam_root in steam_paths:
             if not steam_root.exists():

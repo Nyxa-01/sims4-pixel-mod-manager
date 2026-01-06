@@ -316,7 +316,9 @@ class BackupManager:
 
                 try:
                     with zipfile.ZipFile(backup_file, "r") as zf:
-                        manifest = json.loads(zf.read(MANIFEST_FILENAME).decode("utf-8"))
+                        manifest = json.loads(
+                            zf.read(MANIFEST_FILENAME).decode("utf-8")
+                        )
                         file_count = manifest["total_files"]
                         is_valid = self._test_zip_integrity(backup_file)
                 except Exception:
@@ -378,10 +380,10 @@ class BackupManager:
 
     def verify_backup(self, backup_path: Path) -> tuple[bool, str]:
         """Verify backup integrity using CRC32 manifest.
-        
+
         Args:
             backup_path: Path to backup ZIP file
-            
+
         Returns:
             Tuple of (is_valid, error_message)
             - (True, "") if backup is valid
@@ -389,10 +391,10 @@ class BackupManager:
         """
         if not backup_path.exists():
             return (False, f"Backup not found: {backup_path}")
-        
+
         if not zipfile.is_zipfile(backup_path):
             return (False, "Not a valid ZIP file")
-        
+
         try:
             # Test zip integrity
             if not self._test_zip_integrity(backup_path):
@@ -410,19 +412,19 @@ class BackupManager:
                 required_keys = ["timestamp", "total_files", "files"]
                 if not all(key in manifest for key in required_keys):
                     return (False, "Manifest has invalid structure")
-                
+
                 # Verify each file's CRC32 hash
                 for file_info in manifest.get("files", []):
                     filepath = file_info["path"]
                     expected_crc = file_info["crc32"]
-                    
+
                     if filepath not in zf.namelist():
                         return (False, f"Missing file in backup: {filepath}")
-                    
+
                     # Calculate actual CRC32
                     file_data = zf.read(filepath)
-                    actual_crc = zlib.crc32(file_data) & 0xffffffff
-                    
+                    actual_crc = zlib.crc32(file_data) & 0xFFFFFFFF
+
                     if actual_crc != expected_crc:
                         return (False, f"CRC mismatch for {filepath}")
 

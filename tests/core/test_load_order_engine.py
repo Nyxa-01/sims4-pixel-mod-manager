@@ -413,7 +413,9 @@ class TestLoadOrderEngine:
         assert load_order[0] == "script_a.ts4script"
         assert load_order[1] == "script_z.ts4script"
 
-    def test_get_load_order_empty(self, engine: LoadOrderEngine, tmp_path: Path) -> None:
+    def test_get_load_order_empty(
+        self, engine: LoadOrderEngine, tmp_path: Path
+    ) -> None:
         """Test load order for empty directory."""
         base = tmp_path / "ActiveMods"
 

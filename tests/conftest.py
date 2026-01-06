@@ -212,6 +212,7 @@ def malicious_mod(tmp_path: Path) -> Path:
     mal_file = tmp_path / "malicious.package"
     # High entropy data (appears encrypted/packed)
     import random
+
     random.seed(42)  # Reproducible
     mal_file.write_bytes(bytes([random.randint(0, 255) for _ in range(1000)]))
     return mal_file
@@ -292,7 +293,9 @@ def mock_config(tmp_path: Path) -> dict:
         "active_mods_folder": str(tmp_path / "ActiveMods"),
         "backup_folder": str(tmp_path / "backups"),
         "game_path": str(tmp_path / "The Sims 4"),
-        "mods_path": str(tmp_path / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"),
+        "mods_path": str(
+            tmp_path / "Documents" / "Electronic Arts" / "The Sims 4" / "Mods"
+        ),
         "max_mod_size_mb": 500,
         "backup_retention_count": 10,
         "scan_timeout_seconds": 30,
@@ -316,6 +319,7 @@ def mock_encryption_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
 
     # Generate test key
     from cryptography.fernet import Fernet
+
     key = Fernet.generate_key()
     key_file.write_bytes(key)
 
@@ -351,6 +355,7 @@ def sample_backup_zip(tmp_path: Path) -> Path:
             },
         }
         import json
+
         zf.writestr("manifest.json", json.dumps(manifest, indent=2))
 
         # Add mock mod files

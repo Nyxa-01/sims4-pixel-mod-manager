@@ -93,29 +93,51 @@ class MainWindow:
 
     def _create_menu_bar(self) -> None:
         """Create menu bar with File, Tools, Help."""
-        menubar = tk.Menu(self.root, bg=self.theme.colors["bg_dark"], fg=self.theme.colors["text"])
+        menubar = tk.Menu(
+            self.root, bg=self.theme.colors["bg_dark"], fg=self.theme.colors["text"]
+        )
 
         # File menu
         file_menu = tk.Menu(menubar, tearoff=0)
-        file_menu.add_command(label="Open Incoming Folder...", command=self._open_incoming_folder, accelerator="Ctrl+O")
-        file_menu.add_command(label="Refresh", command=self._refresh_display, accelerator="F5")
+        file_menu.add_command(
+            label="Open Incoming Folder...",
+            command=self._open_incoming_folder,
+            accelerator="Ctrl+O",
+        )
+        file_menu.add_command(
+            label="Refresh", command=self._refresh_display, accelerator="F5"
+        )
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
         menubar.add_cascade(label="File", menu=file_menu)
 
         # Tools menu
         tools_menu = tk.Menu(menubar, tearoff=0)
-        tools_menu.add_command(label="Scan Mods", command=self._scan_mods, accelerator="Ctrl+S")
-        tools_menu.add_command(label="Generate Load Order", command=self._generate_load_order, accelerator="Ctrl+G")
-        tools_menu.add_command(label="Deploy", command=self._deploy_mods, accelerator="Ctrl+D")
-        tools_menu.add_command(label="Backup", command=self._create_backup, accelerator="Ctrl+B")
+        tools_menu.add_command(
+            label="Scan Mods", command=self._scan_mods, accelerator="Ctrl+S"
+        )
+        tools_menu.add_command(
+            label="Generate Load Order",
+            command=self._generate_load_order,
+            accelerator="Ctrl+G",
+        )
+        tools_menu.add_command(
+            label="Deploy", command=self._deploy_mods, accelerator="Ctrl+D"
+        )
+        tools_menu.add_command(
+            label="Backup", command=self._create_backup, accelerator="Ctrl+B"
+        )
         tools_menu.add_separator()
-        tools_menu.add_command(label="Settings...", command=self._open_settings, accelerator="Ctrl+,")
+        tools_menu.add_command(
+            label="Settings...", command=self._open_settings, accelerator="Ctrl+,"
+        )
         menubar.add_cascade(label="Tools", menu=tools_menu)
 
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
-        help_menu.add_command(label="Documentation", command=self._show_help, accelerator="F1")
+        help_menu.add_command(
+            label="Documentation", command=self._show_help, accelerator="F1"
+        )
         help_menu.add_command(label="About", command=self._show_about)
         menubar.add_cascade(label="Help", menu=help_menu)
 
@@ -141,7 +163,9 @@ class MainWindow:
 
     def _create_header(self) -> None:
         """Create header with title and action buttons."""
-        header = self.theme.create_chunky_frame(self.root, color=self.theme.colors["primary"])
+        header = self.theme.create_chunky_frame(
+            self.root, color=self.theme.colors["primary"]
+        )
         header.pack(fill=tk.X, padx=10, pady=10)
 
         # Title
@@ -156,13 +180,19 @@ class MainWindow:
         button_frame = tk.Frame(header, bg=self.theme.colors["bg_mid"])
         button_frame.pack(side=tk.RIGHT, padx=10, pady=10)
 
-        scan_btn = self.theme.create_pixel_button(button_frame, "SCAN", command=self._scan_mods)
+        scan_btn = self.theme.create_pixel_button(
+            button_frame, "SCAN", command=self._scan_mods
+        )
         scan_btn.pack(side=tk.LEFT, padx=5)
 
-        generate_btn = self.theme.create_pixel_button(button_frame, "GENERATE", command=self._generate_structure)
+        generate_btn = self.theme.create_pixel_button(
+            button_frame, "GENERATE", command=self._generate_structure
+        )
         generate_btn.pack(side=tk.LEFT, padx=5)
 
-        deploy_btn = self.theme.create_pixel_button(button_frame, "DEPLOY", command=self._deploy_mods)
+        deploy_btn = self.theme.create_pixel_button(
+            button_frame, "DEPLOY", command=self._deploy_mods
+        )
         deploy_btn.pack(side=tk.LEFT, padx=5)
 
     def _create_incoming_panel(self, parent: tk.Frame) -> None:
@@ -172,11 +202,15 @@ class MainWindow:
             parent: Parent frame
         """
         incoming_frame = tk.Frame(parent, bg=self.theme.colors["bg_dark"])
-        incoming_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=False, padx=(10, 5), pady=10)
+        incoming_frame.pack(
+            side=tk.LEFT, fill=tk.BOTH, expand=False, padx=(10, 5), pady=10
+        )
         incoming_frame.config(width=250)
 
         # Label
-        label = self.theme.create_pixel_label(incoming_frame, "INCOMING MODS", size="normal")
+        label = self.theme.create_pixel_label(
+            incoming_frame, "INCOMING MODS", size="normal"
+        )
         label.pack(anchor=tk.W, pady=(0, 10))
 
         # Listbox with scrollbar
@@ -212,10 +246,14 @@ class MainWindow:
             parent: Parent frame
         """
         load_order_frame = tk.Frame(parent, bg=self.theme.colors["bg_dark"])
-        load_order_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(5, 10), pady=10)
+        load_order_frame.pack(
+            side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(5, 10), pady=10
+        )
 
         # Label
-        label = self.theme.create_pixel_label(load_order_frame, "LOAD ORDER", size="normal")
+        label = self.theme.create_pixel_label(
+            load_order_frame, "LOAD ORDER", size="normal"
+        )
         label.pack(anchor=tk.W, pady=(0, 10))
 
         # Scrollable slots
@@ -242,7 +280,9 @@ class MainWindow:
         for slot_prefix, description, _ in self.load_order_engine.slots:
             self._create_slot_widget(scrollable_frame, slot_prefix, description)
 
-    def _create_slot_widget(self, parent: tk.Frame, prefix: str, description: str) -> None:
+    def _create_slot_widget(
+        self, parent: tk.Frame, prefix: str, description: str
+    ) -> None:
         """Create individual load order slot.
 
         Args:
@@ -277,7 +317,9 @@ class MainWindow:
 
     def _create_status_bar(self) -> None:
         """Create status bar with progress."""
-        status_frame = self.theme.create_chunky_frame(self.root, color=self.theme.colors["secondary"])
+        status_frame = self.theme.create_chunky_frame(
+            self.root, color=self.theme.colors["secondary"]
+        )
         status_frame.pack(fill=tk.X, side=tk.BOTTOM, padx=10, pady=10)
 
         # Status text
@@ -298,7 +340,7 @@ class MainWindow:
 
     def _bind_shortcuts(self) -> None:
         """Bind keyboard shortcuts.
-        
+
         Shortcuts:
             Ctrl+S: Scan incoming mods
             Ctrl+G: Generate load order
@@ -315,7 +357,7 @@ class MainWindow:
         self.root.bind("<Control-comma>", lambda e: self._open_settings())
         self.root.bind("<F1>", lambda e: self._show_help())
         self.root.bind("<F5>", lambda e: self._refresh_display())
-        
+
         # Legacy shortcuts (keep for compatibility)
         self.root.bind("<Control-o>", lambda e: self._open_incoming_folder())
 
@@ -367,9 +409,12 @@ class MainWindow:
 
                     # Update UI (must be on main thread)
                     self.root.after(0, self._update_incoming_list)
-                    self.root.after(0, lambda: self._update_status(
-                        f"Scanned {len(self.incoming_mods)} mods", 1.0
-                    ))
+                    self.root.after(
+                        0,
+                        lambda: self._update_status(
+                            f"Scanned {len(self.incoming_mods)} mods", 1.0
+                        ),
+                    )
 
                 except Exception as e:
                     logger.error(f"Scan failed: {e}")
@@ -404,7 +449,9 @@ class MainWindow:
 
         try:
             # Get output path
-            active_mods_path = Path(self.config.get("active_mods_folder", "./ActiveMods"))
+            active_mods_path = Path(
+                self.config.get("active_mods_folder", "./ActiveMods")
+            )
             active_mods_path.mkdir(parents=True, exist_ok=True)
 
             # Collect mods from slots
@@ -427,7 +474,9 @@ class MainWindow:
             self.load_order_engine.generate_structure(mods_by_slot, active_mods_path)
 
             self._update_status(f"Structure generated: {active_mods_path}", 1.0)
-            messagebox.showinfo("Success", f"ActiveMods structure created at:\n{active_mods_path}")
+            messagebox.showinfo(
+                "Success", f"ActiveMods structure created at:\n{active_mods_path}"
+            )
 
         except Exception as e:
             logger.error(f"Structure generation failed: {e}")
@@ -466,7 +515,9 @@ class MainWindow:
                 self.root.after(0, lambda: self._update_status("Deploying...", 0.2))
 
                 # Get paths
-                active_mods_path = Path(self.config.get("active_mods_folder", "./ActiveMods"))
+                active_mods_path = Path(
+                    self.config.get("active_mods_folder", "./ActiveMods")
+                )
                 game_mods_path = self.game_detector.detect_mods_path()
 
                 if not game_mods_path:
@@ -486,16 +537,24 @@ class MainWindow:
                     )
 
                 if success:
-                    self.root.after(0, lambda: messagebox.showinfo(
-                        "Success",
-                        "Mods deployed successfully!"
-                    ))
-                    self.root.after(0, lambda: self._update_status("Deployed successfully", 1.0))
+                    self.root.after(
+                        0,
+                        lambda: messagebox.showinfo(
+                            "Success", "Mods deployed successfully!"
+                        ),
+                    )
+                    self.root.after(
+                        0, lambda: self._update_status("Deployed successfully", 1.0)
+                    )
 
             except Exception as e:
                 logger.error(f"Deployment failed: {e}")
-                self.root.after(0, lambda: self._show_error("Deployment Failed", str(e)))
-                self.root.after(0, lambda: self._update_status("Deployment failed", 0.0))
+                self.root.after(
+                    0, lambda: self._show_error("Deployment Failed", str(e))
+                )
+                self.root.after(
+                    0, lambda: self._update_status("Deployment failed", 0.0)
+                )
 
         thread = threading.Thread(target=deploy_thread, daemon=True)
         thread.start()
@@ -505,7 +564,9 @@ class MainWindow:
         self._update_status("Creating backup...", 0.2)
 
         try:
-            active_mods_path = Path(self.config.get("active_mods_folder", "./ActiveMods"))
+            active_mods_path = Path(
+                self.config.get("active_mods_folder", "./ActiveMods")
+            )
             backup_dir = Path(self.config.get("backup_folder", "./backups"))
 
             if not active_mods_path.exists():
@@ -515,7 +576,9 @@ class MainWindow:
 
             # Progress callback
             def progress_callback(pct: float) -> None:
-                self.root.after(0, lambda: self._update_status("Creating backup...", pct / 100.0))
+                self.root.after(
+                    0, lambda: self._update_status("Creating backup...", pct / 100.0)
+                )
 
             # Create backup
             backup_path = self.backup_manager.create_backup(
@@ -609,14 +672,14 @@ class MainWindow:
             message: Error message
         """
         messagebox.showerror(title, message)
-    
+
     def _generate_load_order(self) -> None:
         """Alias for _generate_structure for keyboard shortcut."""
         self._generate_structure()
-    
+
     def _refresh_display(self) -> None:
         """Refresh mod lists and display.
-        
+
         Re-scans incoming folder and updates UI.
         """
         logger.info("Refreshing display")
@@ -685,10 +748,14 @@ class SettingsDialog:
         button_frame = tk.Frame(self.dialog, bg=self.theme.colors["bg_dark"])
         button_frame.pack(pady=20)
 
-        save_btn = self.theme.create_pixel_button(button_frame, "SAVE", command=self._save)
+        save_btn = self.theme.create_pixel_button(
+            button_frame, "SAVE", command=self._save
+        )
         save_btn.pack(side=tk.LEFT, padx=5)
 
-        cancel_btn = self.theme.create_pixel_button(button_frame, "CANCEL", command=self.dialog.destroy)
+        cancel_btn = self.theme.create_pixel_button(
+            button_frame, "CANCEL", command=self.dialog.destroy
+        )
         cancel_btn.pack(side=tk.LEFT, padx=5)
 
     def _create_path_setting(
@@ -777,7 +844,9 @@ class HelpDialog:
         )
         help_text.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        help_text.insert(tk.END, """
+        help_text.insert(
+            tk.END,
+            """
 SIMS 4 PIXEL MOD MANAGER - HELP
 
 QUICK START:
@@ -809,7 +878,8 @@ FEATURES:
 - Encrypted config storage
 
 For more information, visit the GitHub repository.
-        """)
+        """,
+        )
 
         help_text.config(state=tk.DISABLED)
 

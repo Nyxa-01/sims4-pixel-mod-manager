@@ -182,9 +182,7 @@ class TestModScanner:
 
         # Check files were scanned
         total_valid = sum(
-            len(mods)
-            for category, mods in results.items()
-            if category != "Invalid"
+            len(mods) for category, mods in results.items() if category != "Invalid"
         )
         assert total_valid > 0
 

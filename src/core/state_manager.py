@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 class AppState(Enum):
     """Application lifecycle states."""
+
     INITIALIZING = "initializing"
     READY = "ready"
     SCANNING = "scanning"
@@ -30,6 +31,7 @@ class AppState(Enum):
 @dataclass
 class ModFile:
     """Represents a mod file with metadata."""
+
     path: Path
     size: int
     hash: str
@@ -42,6 +44,7 @@ class ModFile:
 @dataclass
 class ApplicationState:
     """Application state data structure."""
+
     app_state: AppState = AppState.INITIALIZING
     game_path: Optional[Path] = None
     mods_path: Optional[Path] = None
@@ -56,32 +59,32 @@ class ApplicationState:
 
 class StateManager:
     """Thread-safe singleton state manager with observer pattern.
-    
+
     Usage:
         state = StateManager.get_instance()
         state.set_state(AppState.SCANNING)
         state.register_observer(my_callback)
     """
-    
-    _instance: Optional['StateManager'] = None
+
+    _instance: Optional["StateManager"] = None
     _lock: Lock = Lock()
-    
+
     def __init__(self) -> None:
         """Private constructor. Use get_instance() instead."""
         if StateManager._instance is not None:
             raise RuntimeError("Use StateManager.get_instance() instead")
-        
+
         self._state = ApplicationState()
         self._state_lock = RLock()  # Reentrant lock for nested calls
         self._observers: List[Callable[[ApplicationState], None]] = []
         self._observers_lock = Lock()
-        
+
         logger.info("StateManager initialized")
-    
+
     @classmethod
-    def get_instance(cls) -> 'StateManager':
+    def get_instance(cls) -> "StateManager":
         """Get singleton instance (thread-safe).
-        
+
         Returns:
             StateManager singleton instance
         """
@@ -90,26 +93,26 @@ class StateManager:
                 if cls._instance is None:  # Double-checked locking
                     cls._instance = cls()
         return cls._instance
-    
+
     @classmethod
     def reset_instance(cls) -> None:
         """Reset singleton (for testing only)."""
         with cls._lock:
             cls._instance = None
-    
+
     def get_state(self) -> ApplicationState:
         """Get current state snapshot (thread-safe).
-        
+
         Returns:
             Copy of current application state
         """
         with self._state_lock:
             # Return a copy to prevent external modification
             return copy.deepcopy(self._state)
-    
+
     def set_state(self, new_state: AppState) -> None:
         """Set application state (thread-safe).
-        
+
         Args:
             new_state: New application state
         """
@@ -118,11 +121,12 @@ class StateManager:
             self._state.app_state = new_state
             logger.info(f"State transition: {old_state.value} → {new_state.value}")
             self._notify_observers()
-    
-    def update_paths(self, game_path: Optional[Path] = None, 
-                    mods_path: Optional[Path] = None) -> None:
+
+    def update_paths(
+        self, game_path: Optional[Path] = None, mods_path: Optional[Path] = None
+    ) -> None:
         """Update game paths (thread-safe).
-        
+
         Args:
             game_path: Path to Sims 4 installation
             mods_path: Path to Mods folder
@@ -135,10 +139,10 @@ class StateManager:
                 self._state.mods_path = mods_path
                 logger.info(f"Mods path updated: {mods_path}")
             self._notify_observers()
-    
+
     def set_incoming_mods(self, mods: List[ModFile]) -> None:
         """Set incoming mods list (thread-safe).
-        
+
         Args:
             mods: List of scanned mod files
         """
@@ -146,10 +150,10 @@ class StateManager:
             self._state.incoming_mods = mods
             logger.info(f"Incoming mods updated: {len(mods)} files")
             self._notify_observers()
-    
+
     def set_active_mods(self, mods: Dict[str, List[ModFile]]) -> None:
         """Set active mods by category (thread-safe).
-        
+
         Args:
             mods: Dictionary mapping category to mod files
         """
@@ -158,7 +162,7 @@ class StateManager:
             total = sum(len(files) for files in mods.values())
             logger.info(f"Active mods updated: {total} files in {len(mods)} categories")
             self._notify_observers()
-    
+
     def increment_deploy_count(self) -> None:
         """Increment deployment counter (thread-safe)."""
         with self._state_lock:
@@ -166,10 +170,10 @@ class StateManager:
             self._state.last_deploy = datetime.now()
             logger.info(f"Deploy count: {self._state.total_deploys}")
             self._notify_observers()
-    
+
     def set_game_running(self, is_running: bool) -> None:
         """Set game running status (thread-safe).
-        
+
         Args:
             is_running: True if game is running
         """
@@ -177,10 +181,10 @@ class StateManager:
             self._state.is_game_running = is_running
             logger.info(f"Game running: {is_running}")
             self._notify_observers()
-    
+
     def set_operation(self, operation: Optional[str], progress: float = 0.0) -> None:
         """Set current operation and progress (thread-safe).
-        
+
         Args:
             operation: Description of current operation (None if idle)
             progress: Progress from 0.0 to 1.0
@@ -189,10 +193,10 @@ class StateManager:
             self._state.current_operation = operation
             self._state.progress = max(0.0, min(1.0, progress))
             self._notify_observers()
-    
+
     def register_observer(self, callback: Callable[[ApplicationState], None]) -> None:
         """Register observer for state changes.
-        
+
         Args:
             callback: Function called with state on each change
         """
@@ -200,10 +204,10 @@ class StateManager:
             if callback not in self._observers:
                 self._observers.append(callback)
                 logger.debug(f"Observer registered: {callback.__name__}")
-    
+
     def unregister_observer(self, callback: Callable[[ApplicationState], None]) -> None:
         """Unregister observer.
-        
+
         Args:
             callback: Previously registered callback
         """
@@ -211,11 +215,11 @@ class StateManager:
             if callback in self._observers:
                 self._observers.remove(callback)
                 logger.debug(f"Observer unregistered: {callback.__name__}")
-    
+
     def _notify_observers(self) -> None:
         """Notify all observers of state change (internal)."""
         state_copy = self.get_state()  # Get copy outside observer lock
-        
+
         with self._observers_lock:
             for observer in self._observers:
                 try:

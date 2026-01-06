@@ -80,7 +80,7 @@ class DeployEngine:
         self,
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
-        exc_tb: object
+        exc_tb: object,
     ) -> None:
         """Exit transaction context and handle rollback."""
         if exc_type is not None:
@@ -453,7 +453,7 @@ class DeployEngine:
         """
         try:
             # Check if is_junction exists (Python 3.12+ on Windows)
-            is_junction = getattr(deployed_path, 'is_junction', lambda: False)()
+            is_junction = getattr(deployed_path, "is_junction", lambda: False)()
             if deployed_path.is_symlink() or is_junction:
                 # Remove link without following
                 os.unlink(deployed_path)

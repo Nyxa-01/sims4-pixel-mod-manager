@@ -317,7 +317,7 @@ class TestGameDetector:
         tmp_path: Path,
     ) -> None:
         """Test parsing Steam library folders VDF."""
-        vdf_content = '''
+        vdf_content = """
         "libraryfolders"
         {
             "0"
@@ -329,7 +329,7 @@ class TestGameDetector:
                 "path"		"D:\\\\SteamLibrary"
             }
         }
-        '''
+        """
 
         vdf_file = tmp_path / "libraryfolders.vdf"
         vdf_file.write_text(vdf_content)

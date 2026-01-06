@@ -138,7 +138,9 @@ class LoadOrderManager:
 
         # Sort within each category
         sorted_mods = []
-        for category in sorted(categorized.keys(), key=lambda c: self.categories.get(c, 999)):
+        for category in sorted(
+            categorized.keys(), key=lambda c: self.categories.get(c, 999)
+        ):
             category_mods = sorted(categorized[category], key=lambda p: p.stem.lower())
             sorted_mods.extend(category_mods)
 
