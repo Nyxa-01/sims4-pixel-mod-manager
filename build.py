@@ -276,23 +276,46 @@ class Builder:
         return None
 
     def generate_checksums(self, exe_path: Path) -> dict[str, str]:
-        """Generate SHA256 checksums for verification."""
+        """Generate SHA256 checksums for verification.
+
+        Handles both single-file executables (Windows/macOS) and
+        directory-based builds (Linux).
+        """
         print(f"\n🔒 Generating checksums for {exe_path.name}...")
 
         checksums = {}
 
+        # Determine the actual file to checksum
+        # On Linux, exe_path is a directory containing the executable
+        if exe_path.is_dir():
+            # Linux: Find the actual executable inside the directory
+            actual_exe = exe_path / exe_path.name
+            if not actual_exe.exists():
+                # Fallback: look for any executable file
+                for item in exe_path.iterdir():
+                    if item.is_file() and not item.suffix:
+                        actual_exe = item
+                        break
+            if not actual_exe.exists():
+                print(f"⚠️  No executable found in {exe_path}")
+                return checksums
+            target_file = actual_exe
+            print(f"  Found executable: {target_file.name}")
+        else:
+            target_file = exe_path
+
         # SHA256
         sha256 = hashlib.sha256()
-        with open(exe_path, "rb") as f:
+        with open(target_file, "rb") as f:
             while chunk := f.read(8192):
                 sha256.update(chunk)
         checksums["sha256"] = sha256.hexdigest()
 
         print(f"  SHA256: {checksums['sha256']}")
 
-        # Write to file
+        # Write to file (next to the exe_path, not inside directory)
         checksum_file = exe_path.with_suffix(exe_path.suffix + ".sha256")
-        checksum_file.write_text(f"{checksums['sha256']} *{exe_path.name}\n")
+        checksum_file.write_text(f"{checksums['sha256']} *{target_file.name}\n")
         print(f"✓ Checksums saved: {checksum_file.name}")
 
         return checksums
